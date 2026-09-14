@@ -1,0 +1,29 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
+  "files": { "includes": ["**", "!!.jj", "!!node_modules"] },
+  "formatter": { "indentStyle": "space" },
+  "plugins": ["./biome/arrow-functions.grit"],
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "complexity": { "useArrowFunction": "error" },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "node:fs": {
+                "allowImportNames": ["existsSync"],
+                "message": "Use node:fs/promises for filesystem operations."
+              },
+              "fs": {
+                "allowImportNames": ["existsSync"],
+                "message": "Use node:fs/promises for filesystem operations."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+[tools]
+node = "22.18.0"
+bun = "1.3.14"
+
+[tasks.install]
+description = "Install locked development dependencies"
+run = "bun install --frozen-lockfile"
+
+[tasks.typecheck]
+description = "Check TypeScript types"
+depends = ["install"]
+run = "node node_modules/typescript/bin/tsc --noEmit"
+
+[tasks.test]
+description = "Run tests on Node"
+depends = ["install"]
+run = "node --test scripts/*.test.ts"
+
+[tasks.validate]
+description = "Validate skill metadata and collection layout"
+depends = ["install"]
+run = "node scripts/validate-skills.ts"
+
+[tasks.check]
+description = "Run all CI checks"
+depends = ["lint", "typecheck", "test", "validate"]
+
+[tasks.lint]
+description = "Check formatting and lint rules with Biome"
+depends = ["install"]
+run = "node node_modules/@biomejs/biome/bin/biome check ."
+
+[tasks.format]
+description = "Apply Biome formatting and safe fixes"
+depends = ["install"]
+run = "node node_modules/@biomejs/biome/bin/biome check --write ."
+
+[tasks."release:check"]
+description = "Run checks and require a nonempty skill catalog"
+depends = ["check"]
+run = "node scripts/validate-skills.ts --require-skills"
+
+[tasks."skills:list"]
+description = "Check local discovery with the skills CLI"
+run = "bunx skills add . --list"

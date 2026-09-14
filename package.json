@@ -1,0 +1,14 @@
+{
+  "name": "@prismatic-io/agent-skills",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "2.5.13",
+    "@types/node": "22",
+    "typescript": "7.0.2",
+    "yaml": "2.9.1"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

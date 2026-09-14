@@ -1,0 +1,10 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+  JsFunctionDeclaration(),
+  JsFunctionExpression(),
+  JsFunctionExportDefaultDeclaration()
+} as $function where {
+  register_diagnostic(span=$function, message="Use an arrow function.", severity="error")
+}
