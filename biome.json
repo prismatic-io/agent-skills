@@ -1,6 +1,14 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
-  "files": { "includes": ["**", "!!.jj", "!!node_modules"] },
+  "files": {
+    "includes": [
+      "**",
+      "!!.jj",
+      "!!**/node_modules",
+      "!!evals/.lux-runs",
+      "!!evals/.lux-cache"
+    ]
+  },
   "formatter": { "indentStyle": "space" },
   "plugins": ["./biome/arrow-functions.grit"],
   "linter": {
