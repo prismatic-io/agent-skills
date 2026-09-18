@@ -49,7 +49,7 @@ description = "Link local Lux and incur Prism builds for evaluation"
 run = '''
 bun install --cwd evals --frozen-lockfile
 mkdir -p evals/.lux-cache/bin
-ln -sf "${PRISM_ROOT:-$PWD/../prism}/lib/run.js" evals/.lux-cache/bin/prism
+ln -sf "${PRISM_ROOT:-$PWD/../prismatic/prism}/lib/run.js" evals/.lux-cache/bin/prism
 evals/.lux-cache/bin/prism components init --schema --format json > evals/.lux-cache/prism-init.schema.json
 '''
 
@@ -57,10 +57,14 @@ evals/.lux-cache/bin/prism components init --schema --format json > evals/.lux-c
 description = "Validate Lux cases and driver availability without model calls"
 depends = ["install", "eval:prepare"]
 dir = "evals"
-run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor"]
+run = [
+  "node ../node_modules/typescript/bin/tsc --noEmit",
+  "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor",
+  "claude auth status",
+]
 
 [tasks."eval:run"]
-description = "Run the inaugural Files.com connector evaluation"
+description = "Run all skill evaluations with Claude Code"
 depends = ["eval:doctor"]
 dir = "evals"
-run = "node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-components/files-com --verbose"
+run = "node node_modules/@prismatic-io/lux/lib/cli/bin.js run --verbose"

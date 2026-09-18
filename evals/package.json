@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@prismatic-io/lux": "file:../../lux/packages/lux"
+    "@prismatic-io/lux": "file:../../prismatic/lux/packages/lux"
   }
 }

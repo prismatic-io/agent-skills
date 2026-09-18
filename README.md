@@ -15,10 +15,7 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 | Skill | Purpose |
 | --- | --- |
 | [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. Initial scaffold; evaluated with Lux. |
-
-```sh
-npx skills add prismatic-io/agent-skills --skill prismatic-components
-```
+| [prismatic-build-integration](skills/prismatic-build-integration/SKILL.md) | Turn integration requirements into a locally validated, buildable Prismatic Code Native Integration without deploying it. |
 
 ## Installation
 
