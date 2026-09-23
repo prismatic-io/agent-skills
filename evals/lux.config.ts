@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
 import type { LuxConfig } from "@prismatic-io/lux";
+import { prismBin } from "./component-case.ts";
 
 const config: LuxConfig = {
   casesRoot: "./cases",
@@ -9,14 +9,14 @@ const config: LuxConfig = {
     name: "claude-code",
     config: {
       model: "claude-sonnet-5",
-      effort: "medium",
+      reasoningEffort: "medium",
       interactionMode: "defer-resume",
       idleTimeoutMs: 1_200_000,
       maxInterrupts: 6,
       allowedTools: ["WebSearch", "WebFetch"],
       extraArgs: ["--setting-sources", "", "--strict-mcp-config"],
       env: {
-        PATH: `${resolve(import.meta.dirname, ".lux-cache/bin")}:${process.env.PATH}`,
+        PATH: `${prismBin}:${process.env.PATH}`,
         CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1",
         CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
       },

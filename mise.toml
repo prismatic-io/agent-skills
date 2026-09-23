@@ -12,9 +12,9 @@ depends = ["install"]
 run = "node node_modules/typescript/bin/tsc --noEmit"
 
 [tasks.test]
-description = "Run tests on Node"
+description = "Run unit tests with Vitest"
 depends = ["install"]
-run = "node --test scripts/*.test.ts"
+run = "node node_modules/vitest/vitest.mjs run"
 
 [tasks.validate]
 description = "Validate skill metadata and collection layout"
@@ -48,20 +48,17 @@ run = "bunx skills add . --list"
 description = "Link local Lux and incur Prism builds for evaluation"
 run = '''
 bun install --cwd evals --frozen-lockfile
-mkdir -p evals/.lux-cache/bin
-ln -sf "${PRISM_ROOT:-$PWD/../prismatic/prism}/lib/run.js" evals/.lux-cache/bin/prism
-evals/.lux-cache/bin/prism components init --schema --format json > evals/.lux-cache/prism-init.schema.json
+prism_cache="$PWD/evals/.lux-cache/$(basename "${PRISM_ROOT:-$PWD/../prism}")/bin"
+mkdir -p "$prism_cache"
+ln -sf "${PRISM_ROOT:-$PWD/../prism}/lib/run.js" "$prism_cache/prism"
+"$prism_cache/prism" components init --schema --format json > "${prism_cache%/bin}/prism-init.schema.json"
 '''
 
 [tasks."eval:doctor"]
 description = "Validate Lux cases and driver availability without model calls"
 depends = ["install", "eval:prepare"]
 dir = "evals"
-run = [
-  "node ../node_modules/typescript/bin/tsc --noEmit",
-  "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor",
-  "claude auth status",
-]
+run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/vitest/vitest.mjs run", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor", "claude auth status"]
 
 [tasks."eval:run"]
 description = "Run all skill evaluations with Claude Code"

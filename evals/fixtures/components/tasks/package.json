@@ -1,0 +1,24 @@
+{
+  "name": "eval-baseline-tasks",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prismatic-io/spectral": "10.30.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.0",
+    "tsdown": "0.22.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9",
+    "vite": "8.0.8"
+  }
+}

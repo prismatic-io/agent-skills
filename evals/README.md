@@ -6,8 +6,8 @@ installable skill contains only `SKILL.md`; eval code is development tooling.
 ## Setup and run
 
 Prerequisites: repository mise tools, an authenticated Claude Code CLI, a built
-Lux checkout at `../../prismatic/lux/packages/lux`, and a built incur-based Prism
-checkout at `../../prismatic/prism` (paths relative to this directory). Follow each checkout's build
+Lux checkout at `../../lux/packages/lux`, and a built incur-based Prism
+checkout at `../../prism` (paths relative to this directory). Follow each checkout's build
 instructions. `PRISM_ROOT` can select another Prism checkout. Lux is a local file
 dependency while its distribution is being finalized; installable skills have no
 Lux dependency.
