@@ -1,0 +1,8 @@
+{
+  "name": "@prismatic-io/agent-skills-evals",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@prismatic-io/lux": "file:../../lux/packages/lux"
+  }
+}

@@ -43,3 +43,24 @@ run = "node scripts/validate-skills.ts --require-skills"
 [tasks."skills:list"]
 description = "Check local discovery with the skills CLI"
 run = "bunx skills add . --list"
+
+[tasks."eval:prepare"]
+description = "Link local Lux and incur Prism builds for evaluation"
+run = '''
+bun install --cwd evals --frozen-lockfile
+mkdir -p evals/.lux-cache/bin
+ln -sf "${PRISM_ROOT:-$PWD/../prism}/lib/run.js" evals/.lux-cache/bin/prism
+evals/.lux-cache/bin/prism components init --schema --format json > evals/.lux-cache/prism-init.schema.json
+'''
+
+[tasks."eval:doctor"]
+description = "Validate Lux cases and driver availability without model calls"
+depends = ["install", "eval:prepare"]
+dir = "evals"
+run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor"]
+
+[tasks."eval:run"]
+description = "Run the inaugural Files.com connector evaluation"
+depends = ["eval:doctor"]
+dir = "evals"
+run = "node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-components/files-com --verbose"

@@ -12,8 +12,13 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 
 ## Available skills
 
-The collection is being initialized. No installable skills are included yet.
-Each completed skill will appear here with its purpose and installation command.
+| Skill | Purpose |
+| --- | --- |
+| [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. Initial scaffold; evaluated with Lux. |
+
+```sh
+npx skills add prismatic-io/agent-skills --skill prismatic-components
+```
 
 ## Installation
 
@@ -52,6 +57,7 @@ Skills live in `skills/<skill-name>/SKILL.md`. Each folder contains its own
 instructions and any supporting scripts, references, or assets.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, and
 [AGENTS.md](AGENTS.md) for authoring guidance.
+See [evals/README.md](evals/README.md) for the Lux workflow and current coverage.
 
 ## Releases
 
