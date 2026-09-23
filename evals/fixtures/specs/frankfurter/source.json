@@ -1,0 +1,7 @@
+{
+  "source": "https://raw.githubusercontent.com/lineofflight/frankfurter/main/lib/public/v2/openapi.json",
+  "retrieved": "2026-09-23",
+  "sha256": "9115239b7a6b8fa6cde814c1b48c052222e062fa1b4c6bc8086a753261aff7be",
+  "license": "MIT",
+  "changes": "Whitespace formatting only"
+}

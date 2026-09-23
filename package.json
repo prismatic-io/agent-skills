@@ -7,7 +7,8 @@
     "@biomejs/biome": "2.5.13",
     "@types/node": "22",
     "typescript": "7.0.2",
-    "yaml": "2.9.1"
+    "yaml": "2.9.1",
+    "vitest": "4.1.9"
   },
   "engines": {
     "node": ">=22.18.0"
