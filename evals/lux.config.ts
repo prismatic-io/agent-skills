@@ -4,7 +4,7 @@ import type { LuxConfig } from "@prismatic-io/lux";
 const config: LuxConfig = {
   casesRoot: "./cases",
   runsRoot: "./.lux-runs",
-  subjectRoot: "../skills/prismatic-components",
+  subjectRoot: "../skills",
   defaultDriver: {
     name: "claude-code",
     config: {

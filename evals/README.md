@@ -6,8 +6,8 @@ installable skill contains only `SKILL.md`; eval code is development tooling.
 ## Setup and run
 
 Prerequisites: repository mise tools, an authenticated Claude Code CLI, a built
-Lux checkout at `../../lux/packages/lux`, and a built incur-based Prism checkout
-at `../../prism` (paths relative to this directory). Follow each checkout's build
+Lux checkout at `../../prismatic/lux/packages/lux`, and a built incur-based Prism
+checkout at `../../prismatic/prism` (paths relative to this directory). Follow each checkout's build
 instructions. `PRISM_ROOT` can select another Prism checkout. Lux is a local file
 dependency while its distribution is being finalized; installable skills have no
 Lux dependency.
@@ -21,7 +21,7 @@ From the repository root:
 
 ```sh
 mise run eval:doctor  # install dependencies, check Prism schema, typecheck cases
-mise run eval:run     # model calls and sandbox publication
+mise run eval:run     # run all evaluations
 ```
 
 `eval:prepare` places a symlink to the chosen Prism build on the subject's PATH.
@@ -72,7 +72,7 @@ package. Published eval components remain for review; the suite does not delete 
 overwrite unrelated components.
 Files.com API calls are mocked; live file operations are not verified.
 
-The case binds the skill with `subjectPath()`, keeping it usable with immutable
+Each case binds its skill with `subjectPath()`, keeping it usable with immutable
 Lux experiment candidates. The short harness preamble explicitly loads the skill:
 this measures output quality, **not automatic activation**. Automatic discovery,
 existing-component edits, and no-skill baselines remain additional eval cases.

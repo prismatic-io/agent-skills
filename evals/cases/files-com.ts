@@ -26,7 +26,7 @@ const evidence = {
 
 export default defineEvalCase({
   id: "prismatic-components/files-com",
-  prompt: `Use the skill at ${subjectPath("SKILL.md")}. Work in the current directory. Use Prism's existing authentication. Publish to the Prismatic sandbox using a fresh files-com-lux-* component key and verify it is available. Leave it for review. Do not change other components or live Files.com accounts.\n\n${request}`,
+  prompt: `Use the skill at ${subjectPath("prismatic-components/SKILL.md")}. Work in the current directory. Use Prism's existing authentication. Publish to the Prismatic sandbox using a fresh files-com-lux-* component key and verify it is available. Leave it for review. Do not change other components or live Files.com accounts.\n\n${request}`,
   ...(process.env.PRISM_EVAL_FIXTURE
     ? {
         fixtures: {
