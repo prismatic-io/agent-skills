@@ -1,4 +1,4 @@
-# Component evaluations
+# Skill evaluations
 
 Lux owns execution, persona answers, grading, traces, and comparisons. The
 installable skill contains instructions and bundled references; eval code is
