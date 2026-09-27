@@ -1,0 +1,1 @@
+Ticket Mirror forwards incoming ticket webhooks to the configured archive using an idempotent PUT. Configure the Ticket Archive base URL and bearer token. Health reports local readiness without calling the archive.

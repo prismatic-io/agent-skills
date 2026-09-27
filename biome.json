@@ -6,7 +6,9 @@
       "!!.jj",
       "!!**/node_modules",
       "!!evals/.lux-runs",
-      "!!evals/.lux-cache"
+      "!!evals/.lux-cache",
+      "!!evals/fixtures/integrations/orders",
+      "!!evals/fixtures/integrations/tickets"
     ]
   },
   "formatter": { "indentStyle": "space" },
