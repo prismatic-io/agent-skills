@@ -41,6 +41,7 @@ export interface QualityReport {
   execution: { completion: State; componentChecks: State };
   legacy: { casePassed: boolean | null; caseScore: number | null };
   assertions: GradeEntry[] | null;
+  scope: GradeEntry[];
   feedback: Array<{
     dimension: Dimension;
     criterion: string;
@@ -53,7 +54,7 @@ export interface QualityReport {
 const anchors = ["absent", "limited", "partial", "solid", "strong"] as const;
 const dimensions: Dimension[] = ["behavior", "validation", "usability"];
 const dimensionOf = (id: string, type: string): Dimension | null => {
-  if (type !== "rubric") return null;
+  if (type !== "rubric" || id === "local-scope") return null;
   if (id === "meaningful-tests" || id === "tests") return "validation";
   if (
     id === "nondeveloper-experience" ||
@@ -173,6 +174,9 @@ export const reportQuality = (
       caseScore: grade?.caseScore ?? null,
     },
     assertions: grade?.assertions ?? null,
+    scope: entries.filter(
+      (entry) => entry.type === "rubric" && entry.id === "local-scope",
+    ),
     feedback: ranked,
     caveat:
       "Ordinal ratings are estimates mapped from saved Lux scores, not a qualitative regrade. Expected assertion inventory is not verified. Older judges were calibrated for pass/fail. Inspect source and independent probes before treating small differences as meaningful; independent probes do not add authored validation coverage.",
@@ -226,12 +230,16 @@ if (import.meta.main) {
       for (const dimension of dimensions) {
         const value = report.dimensions[dimension];
         console.log(
-          `  ${dimension}: ${value.rating === null ? "unassessed" : `${value.rating}/4 ${anchors[value.rating]}`} (${value.observed} observed, ${value.missing} missing)`,
+          `  ${dimension}: ${value.rating === null ? "unassessed" : `${value.meanScore?.toFixed(2)} (anchor ${value.rating}/4 ${anchors[value.rating]})`} (${value.observed} observed, ${value.missing} missing)`,
         );
       }
       console.log(
         `  execution: completion=${report.execution.completion}, component-checks=${report.execution.componentChecks}`,
       );
+      for (const scope of report.scope)
+        console.log(
+          `  local scope: ${isObserved(scope) ? scope.score.toFixed(2) : "unassessed"}; ${scope.comment ?? scope.errorMessage ?? scope.abstention ?? "no feedback"}`,
+        );
       for (const item of report.feedback)
         console.log(
           `  feedback (${item.dimension}/${item.criterion}, ${item.score.toFixed(2)}): ${item.comment}`,
