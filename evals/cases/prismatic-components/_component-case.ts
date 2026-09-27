@@ -52,6 +52,8 @@ const makeRubric = (
 ): BuiltinAssertion => ({
   id,
   type: "rubric",
+  // Quality is graded continuously, without Lux's implicit 0.8 pass gate.
+  threshold: 0,
   evidence: { ...evidence, ...overrides },
   maxArtifactExcerpt: 20_000,
   criteria,
@@ -67,7 +69,7 @@ export const componentAssertions = (
   ) =>
     makeRubric(
       id,
-      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion on a continuous 0–1 scale: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficient for this task, not exhaustive. Give proportional credit for working parts and explain one observed strength and the highest-impact improvement; do not force a bell curve. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
+      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion on a continuous 0–1 scale: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficiently successful for this task, not perfect; useful improvements may remain at any score. Give proportional credit for working parts and explain a strength plus a useful improvement when supported; do not invent shortcomings or force a bell curve. Extra polish and coverage have diminishing returns. Judge the request actually received, not undisclosed evaluator preferences. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
       overrides,
     );
   return [
@@ -87,7 +89,7 @@ export const componentAssertions = (
       ? [
           rubric(
             "requested-operations",
-            `The artifacts implement and register usable Spectral actions for these ${spec.service} operations: ${list(spec.operations)}. Reject stubs, invented API methods, and silently omitted operations. Documented service limitations must be explained with an actionable alternative rather than presented as implemented functionality. Newly introduced actions must serve the requested workflow; retaining unrelated generated endpoints fails this criterion. Preserve pre-existing actions when editing a component. Grade triggers separately.`,
+            `The artifacts implement and register usable Spectral actions for these ${spec.service} operations: ${list(spec.operations)}. Give credit for working operations; stubs, invented API methods, and omitted operations do not establish those capabilities. Documented service limitations must be explained with an actionable alternative rather than presented as implemented functionality. Newly introduced actions must serve the requested workflow; unrelated generated endpoints do not add credit. Preserve pre-existing actions when editing a component. Grade triggers separately.`,
           ),
         ]
       : []),
@@ -109,7 +111,7 @@ export const componentAssertions = (
       ? [
           rubric(
             "documentation-accuracy",
-            `The agent's explanation of ${spec.service} capabilities and of its chosen mechanisms is factually accurate. Known facts: ${spec.facts} Choosing a simpler supported mechanism is acceptable; misstating what the service supports fails this criterion. Assess factual claims actually made. Omitting unchosen supported alternatives does not imply they do not exist; no alternatives catalog is required. Identify the contradicted statement when assigning a factual-accuracy failure.`,
+            `The agent's explanation of ${spec.service} capabilities and of its chosen mechanisms is factually accurate. Known facts: ${spec.facts} Choosing a simpler supported mechanism is acceptable; deduct proportionally for material misstatements about what the service supports. Assess factual claims actually made. Omitting unchosen supported alternatives does not imply they do not exist; no alternatives catalog is required. Identify the contradicted statement when assigning a factual-accuracy failure.`,
             {
               eventTypes: ["agent-message", "terminal"],
               maxEvents: 30,
