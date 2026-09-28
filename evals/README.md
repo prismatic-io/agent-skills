@@ -22,7 +22,8 @@ From the repository root:
 
 ```sh
 mise run eval:doctor  # install dependencies, check Prism schema, typecheck cases
-mise run eval:run     # run all 13 cases against Claude Code, Codex, and Grok Build
+mise run eval:run     # run 13 component cases across Claude Code, Codex, and Grok Build
+mise run eval:cni     # run 12 CNI cases across the same profiles
 ```
 
 `eval:prepare` places a symlink to the chosen Prism build on the subject's PATH.
@@ -71,6 +72,46 @@ The wrapper treats legacy rubric thresholds as diagnostic: a completed suite wit
 only rubric threshold failures can exit successfully while reporting its quality
 scores. Execution failures, failed non-rubric checks, and grading errors still
 produce a nonzero exit. Direct Lux commands retain Lux's original exit behavior.
+
+## Local Code Native Integration evaluations
+
+Run `mise run eval:cni` from the repository root, or `node run-integrations.ts
+--list` from `evals/` for discovery without model calls. The runner selects the
+`integration-skill` cases and the same Claude Code, Codex, and Grok Build profile
+matrix as components, retaining per-profile artifacts and qualitative reports.
+The CNI suite contains **six net-new and six existing-project requests**; case
+source, shared rubrics, verification helpers, and their tests live together in
+`cases/prismatic-build-integration/`. Business-specific criteria stay in each case;
+underscore-prefixed helpers are excluded from Lux case discovery. The component suite has the
+same 6/6 expansion plus its original Files.com case (13 total).
+The prior seven-case CNI baseline does not establish results for the five added
+requests; report expanded runtime results only after running and reviewing them.
+
+These requests authorize local implementation only: no import, deployment,
+publication, platform tests, or service mutations. The CNI runner sets
+`PRISM_READ_ONLY=true` on Lux and its inherited environment as defense in depth;
+it is not a security sandbox and cannot prevent arbitrary direct HTTP calls or
+a subject overriding its environment. Review execution traces for scope.
+Component runs retain their existing publication behavior.
+
+`cases/prismatic-build-integration/_verify-generated-cni.mjs` accepts a root or nested Spectral project, rejects
+ambiguous projects, requires a build script, and runs every available
+typecheck/lint/test/build script. Each
+child check has a two-minute bound and POSIX timeout cleanup includes its process
+group. The checker does not install packages; dependency installation is subject
+work. After a successful build, it loads the entry selected by the installed
+Prism 11 importer: project-root `index.js` when present, otherwise
+`dist/index.js`. It checks for a default CNI definition with
+`codeNativeIntegrationYAML` and catches SDK registration errors in a bounded
+Node subprocess. `package.json` `main` does not select Prism's CNI entry;
+other package layouts are outside this local diagnostic's supported contract.
+Run generated scripts in disposable copies/environments. Passing scripts and an
+entry load establish local readiness only, not correct flow behavior, complete
+configuration, or meaningful tests. A no-op build without a Prism entry fails
+the local entry diagnostic. Inspect actual
+registered integration/flow artifacts and representative mocked execution
+independently, and grade behavior, validation, and usability separately.
+No live credentials are required for mocked verification.
 
 ## First case: Files.com
 
@@ -197,8 +238,8 @@ when comparing agents. Keep detailed baseline traces and notes under the ignored
 4. Add an existing-component request and a held-out service before claiming broad
    workflow quality. Add installation/activation and no-skill baseline cases.
 5. Once train/validation/test cases are disjoint, author a Lux experiment with
-   mutable paths limited to the skill, quality regression gates, and objectives
-   that minimize subject bytes and agent usage. Run `experiment --plan` first.
+   mutable paths limited to the skill, graded quality comparisons, and objectives
+   that balance workflow quality with instruction size and agent usage. Run `experiment --plan` first.
    Do not optimize and promote against this single training prompt.
 
 ## Design references

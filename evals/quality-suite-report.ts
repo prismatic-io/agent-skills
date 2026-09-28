@@ -193,8 +193,10 @@ export const readSuiteQuality = async (
   };
 };
 
-const label = (rating: number | null) =>
-  rating === null ? "unassessed" : `${rating}/4`;
+const label = (dimension: QualityReport["dimensions"]["behavior"]) =>
+  dimension.meanScore === null
+    ? "unassessed"
+    : `${dimension.meanScore.toFixed(2)} (anchor ${dimension.rating}/4)`;
 
 export const formatSuiteQuality = (
   suite: SuiteQualityReport | null,
@@ -222,15 +224,19 @@ export const formatSuiteQuality = (
   for (const item of suite.items) {
     const { behavior, validation, usability } = item.quality.dimensions;
     lines.push(
-      `  ${item.caseId}: behavior ${label(behavior.rating)}, validation ${label(validation.rating)}, usability ${label(usability.rating)}; execution ${item.status}${item.exitReason ? `/${item.exitReason}` : ""}`,
+      `  ${item.caseId}: behavior ${label(behavior)}, validation ${label(validation)}, usability ${label(usability)}; execution ${item.status}${item.exitReason ? `/${item.exitReason}` : ""}`,
     );
+    for (const scope of item.quality.scope)
+      lines.push(
+        `    local scope: ${scope.errorMessage === undefined && scope.abstention === undefined && typeof scope.score === "number" && Number.isFinite(scope.score) && scope.score >= 0 && scope.score <= 1 ? scope.score.toFixed(2) : "unassessed"}; ${scope.comment ?? scope.errorMessage ?? scope.abstention ?? "no feedback"}`,
+      );
     for (const note of item.quality.feedback.slice(0, 2))
       lines.push(`    ${note.dimension}: ${note.comment}`);
     if (item.quality.provisional || item.status !== "completed")
       lines.push("    provisional: evidence incomplete");
   }
   lines.push(
-    "  Ratings projected from saved Lux rubric scores; older binary-calibrated grades are historical diagnostics, not a fresh qualitative regrade.",
+    "  Expected assertion inventory is not verified. Ratings projected from saved Lux rubric scores; older binary-calibrated grades are historical diagnostics, not a fresh qualitative regrade.",
   );
   lines.push(`  Suite: ${suite.suiteDir}`);
   return lines.join("\n");

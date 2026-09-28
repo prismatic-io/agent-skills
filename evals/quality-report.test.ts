@@ -10,6 +10,19 @@ const entry = (id: string, score: number, passed = true) => ({
 });
 
 describe("component quality report", () => {
+  it("keeps continuous functional credit independent of scope compliance", () => {
+    for (const scopeScore of [0, 1]) {
+      const report = reportQuality({
+        assertions: [
+          entry("requested-integration", 0.63),
+          entry("local-scope", scopeScore),
+        ],
+      });
+      expect(report.dimensions.behavior.meanScore).toBe(0.63);
+      expect(report.scope).toEqual([entry("local-scope", scopeScore)]);
+      expect(report.assertions).toHaveLength(2);
+    }
+  });
   it("keeps ordinal dimensions separate from legacy binary pass", () => {
     const report = reportQuality({
       casePassed: false,

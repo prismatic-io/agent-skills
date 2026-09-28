@@ -55,6 +55,9 @@ instructions and any supporting scripts, references, or assets.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, and
 [AGENTS.md](AGENTS.md) for authoring guidance.
 See [evals/README.md](evals/README.md) for the Lux workflow and current coverage.
+`mise run eval:cni` evaluates local CNI creation and edits across the three subject
+profiles without authorizing deployment or live-service mutations; local checks
+and qualitative workflow assessments are reported separately.
 
 ## Releases
 

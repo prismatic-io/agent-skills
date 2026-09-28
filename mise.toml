@@ -65,3 +65,9 @@ description = "Run component evaluations across Claude Code, Codex, and Grok Bui
 depends = ["eval:doctor"]
 dir = "evals"
 run = "node run-components.ts --verbose"
+
+[tasks."eval:cni"]
+description = "Run local CNI evaluations across Claude Code, Codex, and Grok Build"
+depends = ["eval:doctor"]
+dir = "evals"
+run = "node run-integrations.ts --verbose"
