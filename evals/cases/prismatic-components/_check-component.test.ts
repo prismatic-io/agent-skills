@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
   access,
   mkdir,
@@ -236,6 +237,90 @@ test("dependency-free frozen evidence is restored without modifying the snapshot
     await assert.rejects(access(join(root, "node_modules")));
     await assert.rejects(access(join(root, ".npm-cache")));
     assert.equal(await readFile(join(root, "package-lock.json"), "utf8"), lock);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("fresh dependency restoration ignores stale subject modules and preserves the locked source", async () => {
+  const root = await mkdtemp(join(tmpdir(), "component-host-dependencies-"));
+  let workspace = "";
+  try {
+    const dependency = join(root, "vendor/locked-probe");
+    await mkdir(dependency, { recursive: true });
+    await writeFile(
+      join(dependency, "package.json"),
+      JSON.stringify({ name: "locked-probe", version: "1.0.0" }),
+    );
+    await writeFile(
+      join(dependency, "index.js"),
+      "module.exports = 'locked dependency';\n",
+    );
+    const pkg = JSON.stringify({
+      name: "host-check",
+      version: "1.0.0",
+      dependencies: { "locked-probe": "file:vendor/locked-probe" },
+    });
+    await writeFile(join(root, "package.json"), pkg);
+    await writeFile(join(root, ".npmrc"), "cache=./.npm-cache\n");
+    const lockInstall = spawnSync(
+      "npm",
+      [
+        "install",
+        "--package-lock-only",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+      ],
+      { cwd: root, encoding: "utf8", timeout: 30000 },
+    );
+    assert.ifError(lockInstall.error);
+    assert.equal(lockInstall.status, 0, lockInstall.stderr);
+    const lock = await readFile(join(root, "package-lock.json"), "utf8");
+    await rm(join(root, ".npm-cache"), { recursive: true, force: true });
+    await mkdir(join(root, "node_modules/locked-probe"), { recursive: true });
+    const stale = "throw new Error('foreign or stale installed dependency');\n";
+    await writeFile(join(root, "node_modules/locked-probe/index.js"), stale);
+    await writeFile(
+      join(root, "node_modules/foreign-platform-marker"),
+      "foreign",
+    );
+    await withComponentWorkspace(
+      root,
+      async (directory) => {
+        workspace = directory;
+        assert.equal(
+          await readFile(
+            join(directory, "node_modules/locked-probe/index.js"),
+            "utf8",
+          ),
+          "module.exports = 'locked dependency';\n",
+        );
+        await assert.rejects(
+          access(join(directory, "node_modules/foreign-platform-marker")),
+        );
+        assert.equal(
+          await readFile(join(directory, "package-lock.json"), "utf8"),
+          lock,
+        );
+      },
+      { dependencyMode: "install" },
+    );
+    await assert.rejects(access(workspace));
+    await assert.rejects(access(join(root, ".npm-cache")));
+    assert.equal(await readFile(join(root, "package.json"), "utf8"), pkg);
+    assert.equal(await readFile(join(root, "package-lock.json"), "utf8"), lock);
+    assert.equal(
+      await readFile(join(root, "node_modules/locked-probe/index.js"), "utf8"),
+      stale,
+    );
+    assert.equal(
+      await readFile(
+        join(root, "node_modules/foreign-platform-marker"),
+        "utf8",
+      ),
+      "foreign",
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
