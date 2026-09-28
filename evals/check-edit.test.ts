@@ -251,7 +251,7 @@ const goodComponent = (): Component =>
               undefined,
               "DELETE",
             );
-          return { crossFlowState: { [key]: undefined } };
+          return { crossFlowState: { [key]: null } };
         },
       },
     },
@@ -408,6 +408,89 @@ test("structured employee fields may use descriptive names", async () => {
   action.perform = (context, params) =>
     original(context, { ...params, name: params.employeeName });
   await checkCompiledEdit(component, "edit-structured-input");
+});
+
+test("structured metadata is bound by behavior rather than a new input key", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  const externalId = action.inputs.find(({ key }) => key === "externalId");
+  assert.ok(externalId);
+  externalId.key = "partnerReference";
+  externalId.label = "Metadata External ID";
+  action.inputs.unshift(input("unrelatedOptionalNote"));
+  action.perform = (context, params) =>
+    original(context, { ...params, externalId: params.partnerReference });
+  await checkCompiledEdit(component, "edit-structured-input");
+});
+
+test("a correctly named but ignored metadata input is rejected", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, { ...params, externalId: undefined });
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-structured-input"),
+    /No optional designer input/,
+  );
+});
+
+test("metadata must preserve the supplied identifier rather than a fixed value", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, {
+      ...params,
+      externalId: params.externalId ? "external-1" : undefined,
+    });
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-structured-input"),
+    /No optional designer input/,
+  );
+});
+
+test("metadata must remain absent when its input is omitted", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, {
+      ...params,
+      externalId: params.externalId || "unrequested-default",
+    });
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-structured-input"),
+    /No optional designer input/,
+  );
+});
+
+test("metadata external ID must not be a required designer input", async () => {
+  const component = goodComponent();
+  const externalId = component.actions.employeeFields.inputs.find(
+    ({ key }) => key === "externalId",
+  );
+  assert.ok(externalId);
+  externalId.required = true;
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-structured-input"),
+    /No optional designer input/,
+  );
+});
+
+test("a correct final employee request does not hide duplicate creation", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = async (context, params) => {
+    await original(context, params);
+    return original(context, params);
+  };
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-structured-input"),
+    /Expected exactly one creation write/,
+  );
 });
 
 test("dynamic configuration fields may use supported structured groups", async () => {
@@ -572,4 +655,51 @@ test("instance-only lifecycle handlers cannot pass Listening Mode", async () => 
     () => checkCompiledEdit(component, "edit-webhook-listening"),
     /Listening Mode/,
   );
+});
+
+test("webhook cleanup must survive serialized returned state", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  const remove = trigger.webhookDelete;
+  assert.ok(remove);
+  trigger.webhookDelete = async (context, params) => {
+    await remove(context, params);
+    return { crossFlowState: { [context.flow.stableId]: undefined } };
+  };
+  await assert.rejects(
+    () => checkCompiledEdit(component, "edit-webhook-listening"),
+    /stale persisted state/,
+  );
+});
+
+test("webhook state supports context mutation and direct deletion", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  for (const key of ["webhookCreate", "webhookDelete"] as const) {
+    const handler = trigger[key];
+    assert.ok(handler);
+    trigger[key] = async (context, params) => {
+      const result = await handler(context, params);
+      for (const [stateKey, value] of Object.entries(
+        result?.crossFlowState ?? {},
+      )) {
+        if (value === null) delete context.crossFlowState[stateKey];
+        else context.crossFlowState[stateKey] = value;
+      }
+    };
+  }
+  await checkCompiledEdit(component, "edit-webhook-listening");
+});
+
+test("failed webhook cleanup does not commit context mutations", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  const remove = trigger.webhookDelete;
+  assert.ok(remove);
+  trigger.webhookDelete = async (context, params) => {
+    const snapshot = structuredClone(context.crossFlowState);
+    delete context.crossFlowState[context.flow.stableId];
+    return remove({ ...context, crossFlowState: snapshot }, params);
+  };
+  await checkCompiledEdit(component, "edit-webhook-listening");
 });

@@ -188,7 +188,7 @@ if (import.meta.main) {
     );
     assert.ok(
       typeof signature === "string" && signature.length > 0,
-      "Published component signature does not match the local build",
+      "No matching published component version found: publication is missing or differs from the local build",
     );
     console.log(`Published signature ${signature} matches ${directory}`);
     const caseFlag = process.argv.indexOf("--case-id");

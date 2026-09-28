@@ -358,37 +358,69 @@ export const checkCompiledEdit = async (
           child(input.inputs ?? [], "street"),
       );
       const name = inputs.find(({ input }) => child([input], "name"));
-      const externalId = inputs.find(({ input }) =>
-        child([input], "externalId"),
-      );
-      assert.ok(
-        address && name && externalId,
-        "Missing address, name, or optional external ID fields",
+      assert.ok(address && name, "Missing address or name fields");
+      // New input keys are implementation choices. Identify the optional
+      // metadata field by its registered behavior, not a particular spelling.
+      const candidates = inputs.filter(
+        ({ input, path }) =>
+          input.type === "string" &&
+          !input.required &&
+          input !== name.input &&
+          input.key !== "connection" &&
+          !address.path.every((part, index) => path[index] === part),
       );
       const addressValue = {
         street: "1 Main St",
         city: "London",
         country: "GB",
       };
-      for (const supplied of [true, false]) {
-        const params: Json = { connection };
-        setValue(params, name.path, "Ada");
-        setValue(
-          params,
-          address.path,
-          fields(address.input.inputs ?? [], addressValue),
-        );
-        if (supplied) setValue(params, externalId.path, "external-1");
-        const expected = {
-          name: "Ada",
-          address: addressValue,
-          ...(supplied ? { metadata: { externalId: "external-1" } } : {}),
-        };
-        const result = object(await harness.action(key, params));
-        assert.deepEqual(calls.at(-1)?.body, expected);
-        assert.equal(calls.at(-1)?.path, "/employees");
-        assert.deepEqual(result.data, { id: "created", ...expected });
+      const failures: string[] = [];
+      let matched = false;
+      for (const externalId of candidates) {
+        try {
+          for (const value of ["external-1", "partner/second-id", undefined]) {
+            const params: Json = { connection };
+            setValue(params, name.path, "Ada");
+            setValue(
+              params,
+              address.path,
+              fields(address.input.inputs ?? [], addressValue),
+            );
+            if (value !== undefined) setValue(params, externalId.path, value);
+            const expected = {
+              name: "Ada",
+              address: addressValue,
+              ...(value !== undefined
+                ? { metadata: { externalId: value } }
+                : {}),
+            };
+            const before = calls.length;
+            const result = object(await harness.action(key, params));
+            const writes = calls
+              .slice(before)
+              .filter(
+                ({ method }) => !["GET", "HEAD", "OPTIONS"].includes(method),
+              );
+            assert.equal(
+              writes.length,
+              1,
+              "Expected exactly one creation write",
+            );
+            assert.deepEqual(writes[0].body, expected);
+            assert.equal(writes[0].method, "POST");
+            assert.equal(writes[0].path, "/employees");
+            assert.deepEqual(result.data, { id: "created", ...expected });
+          }
+          matched = true;
+          break;
+        } catch (error) {
+          failures.push(`${externalId.path.join(".")}: ${String(error)}`);
+        }
       }
+      assert.ok(
+        matched,
+        `No optional designer input correctly supplies metadata.externalId and omits metadata when unset. ${failures.join("; ")}`,
+      );
     } else if (caseId === "edit-dynamic-input") {
       const added = Object.entries(component.actions).filter(
         ([key]) => !baselineActions.has(key),
@@ -495,11 +527,13 @@ export const checkCompiledEdit = async (
           ...component,
           triggers: { oracle: { ...trigger, onInstanceDeploy: handler } },
         });
+        const invocationState = structuredClone(state);
         const result = await lifecycle.triggerOnInstanceDeploy(
           "oracle",
           { connection },
           {
-            crossFlowState: state,
+            crossFlowState: invocationState,
+            instanceState: undefined,
             flow: {
               id: `versioned-${flowId}-${revisions.get(flowId) ?? 1}`,
               stableId: flowId,
@@ -511,8 +545,15 @@ export const checkCompiledEdit = async (
             },
           },
         );
-        if (result?.crossFlowState)
-          state = { ...state, ...result.crossFlowState };
+        // State commits only after success. Preserve supported context mutations,
+        // but returned deltas cross a JSON boundary: undefined is not a tombstone.
+        // https://prismatic.io/docs/integrations/persist-data/
+        const delta = JSON.parse(JSON.stringify(result?.crossFlowState ?? {}));
+        state = JSON.parse(JSON.stringify(invocationState));
+        for (const [key, value] of Object.entries(delta)) {
+          if (value === null) delete state[key];
+          else state[key] = value;
+        }
       };
       await invoke(create, "flow-a");
       assert.equal(subscriptions.size, 1);
@@ -563,6 +604,19 @@ export const checkCompiledEdit = async (
       await invoke(remove, "flow-b");
       await invoke(remove, "flow-b");
       assert.equal(subscriptions.size, 0);
+      controls.deleteStatus = 204;
+      await invoke(create, "flow-a", "https://hooks.example.test/replacement");
+      await invoke(create, "flow-b");
+      assert.deepEqual(
+        [...subscriptions.values()].sort(),
+        [
+          "https://hooks.example.test/replacement",
+          "https://hooks.example.test/flow-b",
+        ].sort(),
+        "Cleanup left stale persisted state that prevents registration restarting",
+      );
+      await invoke(remove, "flow-a");
+      await invoke(remove, "flow-b");
       for (const call of calls.filter(({ method }) => method === "POST"))
         assert.equal(call.body.event, "contact.changed");
     } else throw new Error(`Unknown edit case ${caseId}`);
