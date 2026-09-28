@@ -117,7 +117,7 @@ test("baseline verification allows added tests in the existing file", async () =
   }
 });
 
-test("disposable checks preserve source, build output and dependency caches", async () => {
+test("disposable checks restore dependencies instead of reusing incomplete or foreign subject binaries", async () => {
   const root = await mkdtemp(join(tmpdir(), "component-workspace-source-"));
   let workspace = "";
   try {
@@ -126,8 +126,26 @@ test("disposable checks preserve source, build output and dependency caches", as
       "dist",
       "node_modules/example",
       "node_modules/.vite",
+      "vendor/example",
     ])
       await mkdir(join(root, dir), { recursive: true });
+    await writeFile(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "dependency-isolation",
+        version: "1.0.0",
+        dependencies: { example: "file:./vendor/example" },
+      }),
+    );
+    await writeFile(join(root, ".npmrc"), "cache=./.npm-cache\n");
+    await writeFile(
+      join(root, "vendor/example/package.json"),
+      JSON.stringify({ name: "example", version: "1.0.0" }),
+    );
+    await writeFile(
+      join(root, "vendor/example/index.js"),
+      "restored dependency",
+    );
     await writeFile(join(root, "src/index.ts"), "original source");
     await writeFile(join(root, "dist/index.js"), "original build");
     await writeFile(join(root, "node_modules/example/index.js"), "dependency");
@@ -144,7 +162,7 @@ test("disposable checks preserve source, build output and dependency caches", as
           join(directory, "node_modules/example/index.js"),
           "utf8",
         ),
-        "dependency",
+        "restored dependency",
       );
       await writeFile(join(directory, "src/index.ts"), "mutated copy");
       await writeFile(
@@ -153,7 +171,7 @@ test("disposable checks preserve source, build output and dependency caches", as
       );
       await mkdir(join(directory, "dist"));
       await writeFile(join(directory, "dist/index.js"), "rebuilt copy");
-      await mkdir(join(directory, "node_modules/.vite"));
+      await mkdir(join(directory, "node_modules/.vite"), { recursive: true });
       await writeFile(join(directory, "node_modules/.vite/cache"), "new cache");
     });
     await assert.rejects(access(workspace));
@@ -184,6 +202,7 @@ test("disposable check cleanup also runs after a failed assertion", async () => 
   try {
     await mkdir(join(root, "node_modules"));
     await writeFile(join(root, "package.json"), "{}");
+    await writeFile(join(root, ".npmrc"), "cache=./.npm-cache\n");
     await assert.rejects(
       withComponentWorkspace(root, async (directory) => {
         workspace = directory;
@@ -320,6 +339,105 @@ test("fresh dependency restoration ignores stale subject modules and preserves t
         "utf8",
       ),
       "foreign",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("failed dependency restoration removes its disposable workspace", async () => {
+  const root = await mkdtemp(join(tmpdir(), "component-install-failure-"));
+  const marker = join(root, "install-directory.txt");
+  try {
+    await writeFile(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "failed-install",
+        version: "1.0.0",
+        scripts: { preinstall: "node fail-install.cjs" },
+      }),
+    );
+    await writeFile(join(root, ".npmrc"), "cache=./.npm-cache\n");
+    await writeFile(
+      join(root, "fail-install.cjs"),
+      `require('node:fs').writeFileSync(${JSON.stringify(marker)}, process.cwd()); process.exit(1);`,
+    );
+    await assert.rejects(
+      withComponentWorkspace(root, async () => {
+        assert.fail("checks must not run after installation fails");
+      }),
+      /npm install .* failed/,
+    );
+    const directory = await readFile(marker, "utf8");
+    await assert.rejects(access(directory));
+    await assert.rejects(access(join(root, "node_modules")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("explicit dependency reuse preserves source, build output and dependency caches", async () => {
+  const root = await mkdtemp(join(tmpdir(), "component-workspace-source-"));
+  let workspace = "";
+  try {
+    for (const dir of [
+      "src",
+      "dist",
+      "node_modules/example",
+      "node_modules/.vite",
+    ])
+      await mkdir(join(root, dir), { recursive: true });
+    await writeFile(join(root, "src/index.ts"), "original source");
+    await writeFile(join(root, "dist/index.js"), "original build");
+    await writeFile(join(root, "node_modules/example/index.js"), "dependency");
+    await writeFile(join(root, "node_modules/.vite/cache"), "original cache");
+    await withComponentWorkspace(
+      root,
+      async (directory) => {
+        workspace = directory;
+        assert.equal(
+          await readFile(join(directory, "src/index.ts"), "utf8"),
+          "original source",
+        );
+        await assert.rejects(access(join(directory, "dist")));
+        assert.equal(
+          await readFile(
+            join(directory, "node_modules/example/index.js"),
+            "utf8",
+          ),
+          "dependency",
+        );
+        await writeFile(join(directory, "src/index.ts"), "mutated copy");
+        await writeFile(
+          join(directory, "node_modules/example/index.js"),
+          "changed dependency copy",
+        );
+        await mkdir(join(directory, "dist"));
+        await writeFile(join(directory, "dist/index.js"), "rebuilt copy");
+        await mkdir(join(directory, "node_modules/.vite"));
+        await writeFile(
+          join(directory, "node_modules/.vite/cache"),
+          "new cache",
+        );
+      },
+      { dependencyMode: "reuse" },
+    );
+    await assert.rejects(access(workspace));
+    assert.equal(
+      await readFile(join(root, "src/index.ts"), "utf8"),
+      "original source",
+    );
+    assert.equal(
+      await readFile(join(root, "dist/index.js"), "utf8"),
+      "original build",
+    );
+    assert.equal(
+      await readFile(join(root, "node_modules/example/index.js"), "utf8"),
+      "dependency",
+    );
+    assert.equal(
+      await readFile(join(root, "node_modules/.vite/cache"), "utf8"),
+      "original cache",
     );
   } finally {
     await rm(root, { recursive: true, force: true });

@@ -100,7 +100,8 @@ export const withComponentWorkspace = async <T>(
       filter: (path) => path === source || !excluded.has(basename(path)),
     });
     const dependencies = join(source, "node_modules");
-    if (options.dependencyMode !== "install" && (await exists(dependencies))) {
+    // Clean installs avoid incomplete dependencies and foreign-platform binaries.
+    if (options.dependencyMode === "reuse" && (await exists(dependencies))) {
       // Keep module paths local: external symlinks change bundler output and signatures.
       await cp(await realpath(dependencies), join(directory, "node_modules"), {
         recursive: true,
