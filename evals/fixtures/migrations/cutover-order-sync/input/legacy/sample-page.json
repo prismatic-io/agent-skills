@@ -1,0 +1,23 @@
+{
+  "orders": [
+    {
+      "id": "WEB/1042",
+      "status": "paid",
+      "currency": "USD",
+      "customer": { "email": " Shipping@Example.invalid " },
+      "items": [
+        { "sku": "MUG-RED", "quantity": 2, "unit_price_cents": 1295 },
+        { "sku": "WRAP", "quantity": 1, "unit_price_cents": 0 }
+      ]
+    },
+    {
+      "id": "WEB/1043",
+      "status": "cancelled",
+      "currency": "USD",
+      "customer": { "email": "buyer@example.invalid" },
+      "items": [{ "sku": "MUG-BLUE", "quantity": 1, "unit_price_cents": 1295 }]
+    }
+  ],
+  "next_cursor": "page:1842/next+1",
+  "has_more": true
+}

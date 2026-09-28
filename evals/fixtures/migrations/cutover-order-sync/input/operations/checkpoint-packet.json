@@ -1,0 +1,20 @@
+{
+  "account": "shop-west",
+  "copied_at": "2026-09-24T15:55:00Z",
+  "cron_enabled_at_copy": true,
+  "process_active_at_copy": true,
+  "files": [
+    {
+      "name": "cursor-current.json",
+      "source_path": "/var/lib/order-bridge/cursor.json",
+      "last_modified": "2026-09-24T15:50:03Z",
+      "contents": { "cursor": "west:page/54+resume==" }
+    },
+    {
+      "name": "cursor-recovery.json",
+      "last_modified": "2026-09-15T09:30:00Z",
+      "operator_note": "Verified readable after host restore",
+      "contents": { "cursor": "west:page/12+resume==" }
+    }
+  ]
+}

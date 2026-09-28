@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "receipt": "lease/814+a",
+      "body": {
+        "eventId": "change-192",
+        "customerId": "account/0041",
+        "email": "billing@example.invalid",
+        "active": false
+      }
+    },
+    {
+      "receipt": "lease/815+b",
+      "body": {
+        "eventId": "change-193",
+        "customerId": "account/0042",
+        "email": "ops@example.invalid",
+        "active": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+2026-09-24T15:50:03Z page-complete account=shop-west cursor=west:page/54+resume== paid_orders=4
+2026-09-24T15:55:00Z job-start account=shop-west after=west:page/54+resume==
+2026-09-24T15:55:01Z destination-upsert order=ORDER-114 result=204
+2026-09-24T15:55:02Z destination-upsert order=ORDER-115 result=503 attempt=1
+2026-09-24T15:55:02Z operator-copy cursor-file snapshot-created

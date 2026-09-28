@@ -1,0 +1,4 @@
+customer_ref,crm_account,legacy_oauth_app,secret_reference,target_instance,connection_key,connection_scope,refresh_at_utc,notes
+cedar,crm-410,crm-production,vault:crm/cedar,cedar-pilot,CRM Connection,instance,2026-10-06T09:40:00Z,Existing target instance with customer-specific config
+juniper,crm-825,crm-production,vault:crm/juniper,juniper-pilot,CRM Connection,instance,2026-10-06T09:50:00Z,Target app client differs from legacy inventory
+maple,crm-990,crm-production,vault:crm/maple,,CRM Connection,user,2026-10-06T10:10:00Z,No target instance yet; target user mapping absent

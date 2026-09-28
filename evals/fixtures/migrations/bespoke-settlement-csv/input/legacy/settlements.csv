@@ -1,0 +1,6 @@
+settlement_id,merchant_id,amount,currency,memo
+000184,0072,124.50,USD,"Payout, weekly"
+000185,0072,-4.25,USD,"Refund
+processed"
+000186,0081,1.005,EUR,Needs finance review
+000187,0090,90071992547409.93,USD,Consolidated historical balance

@@ -1,0 +1,6 @@
+ORDER_FEED_URL=https://orders.example.invalid
+FULFILLMENT_URL=https://fulfillment.example.invalid
+ORDER_FEED_TOKEN=replace-from-secret-manager
+FULFILLMENT_TOKEN=replace-from-secret-manager
+CURSOR_FILE=/var/lib/order-sync/cursor.json
+INITIAL_CURSOR=2026-01-01T00:00:00Z
