@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:weave="http://www.mulesoft.org/schema/mule/ee/weave" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/ee/weave http://www.mulesoft.org/schema/mule/ee/weave/current/weave.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd http://www.mulesoft.org/schema/mule/imap http://www.mulesoft.org/schema/mule/imap/current/mule-imap.xsd http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:request-config basePath="/api/" doc:name="HTTP Request Configuration" host="localhost" name="HTTP_Request_Configuration" port="${http.port}">
+        <http:raml-api-configuration location="currency.raml"/>
+    </http:request-config>
+
+    <flow name="OrderFlow">
+        <file:inbound-endpoint doc:name="File" metadata:id="a009b7a6-084d-4049-933e-7275d27ca96d" path="src/main/resources/input" responseTimeout="10000"/>
+        <enricher doc:name="Message Enricher" target="flowVars.currencies">
+            <http:request config-ref="HTTP_Request_Configuration" doc:name="Get Currencies" metadata:id="48459530-f32c-4203-bd57-ebb1aa1da23c" method="GET" path="/currencies"/>
+        </enricher>
+        <dw:transform-message doc:name="Process Orders and Create Report" metadata:id="b655d2ff-ec13-4d22-ad14-63d66b61fbd6">
+            <dw:input-payload doc:sample="orders.xml"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	orders: payload.orders.*item filter $.properties.year > 2004 map 
+		using (item = $) {
+		title: $.properties.title,
+		prices: flowVars.currencies.USD map {
+			price: $.ratio * item.price,
+			currency: $.currency
+		},
+		authors: $.properties.authors distinctBy $ map {
+			author: $
+		}
+	}
+}]]></dw:set-payload>
+            <dw:set-variable variableName="report"><![CDATA[%dw 1.0
+%output application/csv
+---
+[{
+	totalNumberOfItems: sizeOf payload.orders.*item,
+	totalAmount: sum payload.orders.*item.price,
+	averageSellingPrice: avg payload.orders.*item.price
+}]]]></dw:set-variable>
+        </dw:transform-message>
+        <file:outbound-endpoint doc:name="File" metadata:id="3db3753d-f71e-45d5-93f4-d39c76560757" outputPattern="orders.json" path="src/main/resources/output" responseTimeout="10000"/>
+
+        <set-payload doc:name="Set Report" value="#[report]"/>
+        <file:outbound-endpoint doc:name="File" outputPattern="report.csv" path="src/main/resources/output" responseTimeout="10000"/>
+    </flow>
+</mule>

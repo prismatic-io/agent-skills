@@ -1,0 +1,19 @@
+{
+  "name": "warehouse-integration",
+  "version": "1.4.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prismatic-io/spectral": "10.30.3"
+  },
+  "devDependencies": {
+    "tsdown": "0.22.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

@@ -1,0 +1,3 @@
+We are evaluating moving the Slack action in our assistant prototype from Paragon to Prismatic. Start with “3) Agentic Action Tutorial - Send Slack Message”; the Salesforce and synchronization workflows are out of scope. The assistant sends a message and waits for a result it can show to the person using it. We want that person’s connected Slack account to remain the sender.
+
+Build the locally testable part from the attached Paragraph project and explain what our team must recover or decide before trying it in our Slack workspace. The channel in this prototype is only a test destination; do not contact it. We have no live credentials available in this session. Keep the caller contract clear and make any proposed changes explicit. Do not deploy or send real messages.

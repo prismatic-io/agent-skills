@@ -8,15 +8,29 @@
       "!!evals/.lux-runs",
       "!!evals/.lux-cache",
       "!!evals/fixtures/integrations/orders",
-      "!!evals/fixtures/integrations/tickets"
+      "!!evals/fixtures/integrations/tickets",
+      "!!evals/fixtures/migrations/paragon-send-slack-message/input/legacy",
+      "!!evals/fixtures/migrations/paragon-create-contact/input/legacy",
+      "!!evals/fixtures/migrations/github-actions-discord/input/legacy",
+      "!!evals/fixtures/migrations/github-actions-slack/input/legacy",
+      "!!evals/fixtures/migrations/mulesoft-order-processing/input/source",
+      "!!evals/fixtures/migrations/mulesoft-order-processing/expected",
+      "!!evals/fixtures/migrations/cyclr-order-sync-incomplete/input/cycle.json",
+      "!!evals/fixtures/migrations/workato-contact/input/legacy/upsert-contact.json",
+      "!!evals/fixtures/migrations/bespoke-office-onboarding-reminders/input/legacy/offices.json",
+      "!!evals/fixtures/migrations/logic-apps-*/input/legacy/*.json"
     ]
   },
-  "formatter": { "indentStyle": "space" },
+  "formatter": {
+    "indentStyle": "space"
+  },
   "plugins": ["./biome/arrow-functions.grit"],
   "linter": {
     "rules": {
       "preset": "recommended",
-      "complexity": { "useArrowFunction": "error" },
+      "complexity": {
+        "useArrowFunction": "error"
+      },
       "style": {
         "noRestrictedImports": {
           "level": "error",

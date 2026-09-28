@@ -1,0 +1,58 @@
+name: "The Slack GitHub Action"
+author: "slackapi"
+description: "Post a message, call a Web API method, start a Slack workflow, or run a Slack CLI command from GitHub Actions"
+inputs:
+  api:
+    description: "A custom API URL to send Slack API method requests to."
+    required: false
+  errors:
+    default: "false"
+    description: "If the step exits with an error on errors or continues."
+    required: false
+  method:
+    description: "The Slack API method to call."
+    required: false
+  payload:
+    description: "Attributes that create the content of the request using JSON or YAML."
+    required: false
+  payload-delimiter:
+    description: "Field separator for nested attributes in the input payload."
+    required: false
+  payload-file-path:
+    description: "Path to a file containing a valid input payload made of JSON or YAML."
+    required: false
+  payload-templated:
+    default: "false"
+    description: "If templated variables in input payloads should be replaced."
+    required: false
+  proxy:
+    description: "An optional proxied route for HTTPS connections."
+    required: false
+  retries:
+    default: "5"
+    description: "The strategy to use when performing retried requests."
+  token:
+    description: "The authentication value used with the Slack API."
+    required: false
+  webhook:
+    description: "A location for posting request payloads."
+    required: false
+  webhook-type:
+    description: "Option to use either an incoming webhook or webhook trigger."
+    required: false
+outputs:
+  ok:
+    description: "If the request completed without returning errors."
+  response:
+    description: "A JSON stringified version of the Slack API response."
+  time:
+    description: "The Unix epoch time that the step completed."
+  channel_id:
+    description: "The channel ID returned with some of the Slack API methods."
+  thread_ts:
+    description: "The timestamp of a parent Slack message with threaded replies."
+  ts:
+    description: "The timestamp of a Slack message or event in the response."
+runs:
+  using: "node24"
+  main: "dist/index.js"
