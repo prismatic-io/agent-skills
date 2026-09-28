@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-petstore",
   service: "the supplied Petstore API",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/petstore"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/petstore"),
   request:
     "Build a connector from openapi.yaml so I can list pets with an optional result limit, create a pet, and retrieve a pet by its ID. I only need these three actions. Use the supplied version of the API.",
   persona:

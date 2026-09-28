@@ -1,5 +1,5 @@
 import { disabledCodexSkills, grokIsolationEnv } from "./agent-isolation.ts";
-import { prismBin } from "./component-case.ts";
+import { prismBin } from "./prism.ts";
 
 const env = {
   PATH: `${prismBin}:${process.env.PATH}`,

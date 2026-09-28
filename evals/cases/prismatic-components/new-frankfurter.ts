@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-frankfurter",
   service: "Frankfurter v2",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/frankfurter"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/frankfurter"),
   request:
     "Build a connector from openapi.json to list available currencies and get the rate for a currency pair. I normally want the latest rate, but sometimes supply a historical date. Keep the date and numeric rate that the service actually returns. These two actions are enough.",
   persona:

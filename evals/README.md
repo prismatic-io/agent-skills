@@ -38,10 +38,10 @@ For other Lux operations, run from `evals/`:
 ```sh
 node run-components.ts --list
 node run-components.ts new-petstore --verbose
-node node_modules/@prismatic-io/lux/lib/cli/bin.js run --tag components --profile codex
-node node_modules/@prismatic-io/lux/lib/cli/bin.js run files-com --loop 3
-node node_modules/@prismatic-io/lux/lib/cli/bin.js view
-node node_modules/@prismatic-io/lux/lib/cli/bin.js compare <before-suite> <after-suite>
+npm run lux -- run --tag components --profile codex
+npm run lux -- run files-com --loop 3
+npm run lux -- view
+npm run lux -- compare <before-suite> <after-suite>
 ```
 
 Runs are retained in ignored `.lux-runs/`. Inspect the run, trace, grading, and
@@ -74,7 +74,7 @@ produce a nonzero exit. Direct Lux commands retain Lux's original exit behavior.
 
 ## First case: Files.com
 
-The case in `cases/files-com.ts` holds the inaugural user prompt verbatim.
+The case in `cases/prismatic-components/files-com.ts` holds the inaugural user prompt verbatim.
 The persona is a low-code integration builder who knows the business outcome but
 cannot supply API design decisions. It can clarify file-change timing and partner
 file encryption. It has no Files.com credentials. Success includes publication to
@@ -90,7 +90,7 @@ Success means:
 - The agent makes technical choices without an upfront questionnaire and explains
   configuration in terms a low-code builder understands.
 
-`check-component.ts` discovers the generated package and reruns its checks.
+`cases/prismatic-components/_check-component.ts` discovers the generated package and reruns its checks. Edit cases in that skill directory export their own feature check; the generic checker receives `--case` with the authored case path and imports that check. Underscore-prefixed helpers stay out of Lux case discovery.
 Rubrics inspect implementation, tests, and interaction where command exit codes
 cannot establish correctness. A passing build alone cannot prove API correctness.
 The `sandbox-publication` assertion inspects the recorded `prism components publish`

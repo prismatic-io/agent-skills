@@ -1,10 +1,11 @@
-import { basename, resolve } from "node:path";
+import { resolve } from "node:path";
 import {
   type BuiltinAssertion,
   defineEvalCase,
   type RubricEvidence,
   subjectPath,
 } from "@prismatic-io/lux";
+import { prismBin, prismEnv } from "../../prism.ts";
 
 export interface ComponentCase {
   id: string;
@@ -24,20 +25,6 @@ export interface ComponentCase {
   contract?: string;
 }
 
-const prismEnv = [
-  "PRISMATIC_URL",
-  "PRISM_PROFILE",
-  "PRISM_CONFIG_FILE",
-  "PRISM_ACCESS_TOKEN",
-  "PRISM_REFRESH_TOKEN",
-  "PRISMATIC_TENANT_ID",
-];
-export const prismBin = resolve(
-  import.meta.dirname,
-  ".lux-cache",
-  basename(process.env.PRISM_ROOT ?? "prism"),
-  "bin",
-);
 const shellQuote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 const list = (items: string[]) => items.join(", ");
 const evidence = {
@@ -88,7 +75,7 @@ export const componentAssertions = (
     {
       id: "component-checks",
       type: "command-exits-zero",
-      command: `node ${shellQuote(resolve(import.meta.dirname, "check-component.ts"))}${spec.mode === "edit" && spec.fixture ? ` --baseline ${shellQuote(spec.fixture)} --case-id ${shellQuote(spec.id)}` : ""}`,
+      command: `node ${shellQuote(resolve(import.meta.dirname, "_check-component.ts"))}${spec.mode === "edit" && spec.fixture ? ` --baseline ${shellQuote(spec.fixture)} --case ${shellQuote(resolve(import.meta.dirname, `${spec.id}.ts`))}` : ""}`,
       env: {
         PATH: `${prismBin}:${process.env.PATH}`,
         PRISM_AGENT: "1",

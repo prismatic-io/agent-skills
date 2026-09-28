@@ -1,6 +1,6 @@
 import type { LuxConfig } from "@prismatic-io/lux";
 import { additionalComponentProfiles } from "./component-agents.ts";
-import { prismBin } from "./component-case.ts";
+import { prismBin } from "./prism.ts";
 
 const claudeDriver: LuxConfig["defaultDriver"] = {
   name: "claude-code",

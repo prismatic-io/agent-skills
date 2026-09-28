@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-partner-catalog",
   service: "the fictional Partner Catalog API",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/partner-catalog"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/partner-catalog"),
   request:
     "Build a connector using service.md so I can list products and get one product by ID. Each customer gives us application credentials, and nobody signs into a browser. I want to configure those credentials once on the connection and keep using the actions after access tokens expire. We do not have real credentials for this exercise.",
   persona:

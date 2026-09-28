@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-employees",
   service: "the supplied employee API",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/employees"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/employees"),
   request:
     "Build a connector from openapi.json that creates an employee with their address. Sometimes I also attach arbitrary metadata; when I leave metadata blank it should not be sent. I have an API key to configure later. This only needs one action.",
   persona:

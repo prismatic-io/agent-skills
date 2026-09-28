@@ -1,11 +1,14 @@
+import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import type { Component, EditCheck, Input, Json } from "./_check-edit.ts";
+import { baselineActions, fields, object } from "./_check-edit.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "edit-dynamic-input",
   service: "Partner Records",
   mode: "edit",
-  fixture: resolve(import.meta.dirname, "../fixtures/components/records"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/components/records"),
   request:
     "Add one Create Record action to the existing Partner Records connector. Choosing Person should show first name, last name, and email; choosing Company should instead show company name and website. I want the relevant fields to change in the designer, without writing JSON. Keep the existing Create Person action working. API.md has the request formats.",
   persona:
@@ -33,3 +36,60 @@ export default defineComponentCase({
   ],
   tags: ["edit", "dynamic-input", "compatibility"],
 });
+
+export const check: EditCheck = {
+  kind: "actions",
+  member: (component: Component) =>
+    Object.entries(component.actions).find(
+      ([key, action]) =>
+        !baselineActions.has(key) &&
+        action.inputs.some(({ type }) => type === "dynamicObject"),
+    )?.[0],
+  feature: async ({ component, harness, connection, calls }) => {
+    const added = Object.entries(component.actions).filter(
+      ([key]) => !baselineActions.has(key),
+    );
+    const match = added.find(([, action]) =>
+      action.inputs.some((input) => input.type === "dynamicObject"),
+    );
+    assert.ok(match, "No added action exposes a dynamic object input");
+    const [key, action] = match;
+    const input = action.inputs.find((entry) => entry.type === "dynamicObject");
+    assert.ok(input);
+    for (const [kind, expected, endpoint] of [
+      [
+        "Person",
+        { firstName: "Ada", lastName: "Lovelace", email: "ada@example.test" },
+        "/people",
+      ],
+      [
+        "Company",
+        {
+          companyName: "Analytical Engines",
+          website: "https://example.test",
+        },
+        "/companies",
+      ],
+    ] as const) {
+      const configuration: Input | undefined = input.inputs?.find(
+        (entry) =>
+          entry.key.toLowerCase() === kind.toLowerCase() ||
+          entry.label.toLowerCase() === kind.toLowerCase(),
+      );
+      assert.ok(configuration, `Missing ${kind} configuration`);
+      const values = fields(configuration.inputs ?? [], expected);
+      const result: Json = object(
+        await harness.action(key, {
+          connection,
+          [input.key]: {
+            configuration: configuration.key,
+            values,
+          },
+        }),
+      );
+      assert.equal(calls.at(-1)?.path, endpoint);
+      assert.deepEqual(calls.at(-1)?.body, expected);
+      assert.deepEqual(result.data, { id: "created", ...expected });
+    }
+  },
+};

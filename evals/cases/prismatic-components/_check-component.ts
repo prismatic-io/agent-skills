@@ -12,7 +12,8 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 interface ComponentPackage {
   directory: string;
@@ -146,7 +147,10 @@ export const checkBaseline = async (directory: string, fixture: string) => {
       directory,
       process.execPath,
       [
-        resolve(import.meta.dirname, "node_modules/vitest/vitest.mjs"),
+        resolve(
+          dirname(fileURLToPath(import.meta.resolve("vitest/package.json"))),
+          "vitest.mjs",
+        ),
         "run",
         "--config",
         configPath,
@@ -191,13 +195,13 @@ if (import.meta.main) {
       "No matching published component version found: publication is missing or differs from the local build",
     );
     console.log(`Published signature ${signature} matches ${directory}`);
-    const caseFlag = process.argv.indexOf("--case-id");
+    const caseFlag = process.argv.indexOf("--case");
     if (caseFlag !== -1) {
-      const caseId = process.argv[caseFlag + 1];
-      assert.ok(caseId, "Missing edit case ID");
-      const { checkEdit } = await import("./check-edit.ts");
-      await checkEdit(directory, caseId);
-      console.log(`Independent feature checks passed for ${caseId}`);
+      const casePath = process.argv[caseFlag + 1];
+      assert.ok(casePath, "Missing case path");
+      const { checkEdit } = await import("./_check-edit.ts");
+      await checkEdit(directory, casePath);
+      console.log(`Independent feature checks passed for ${casePath}`);
     }
   });
 }

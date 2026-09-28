@@ -1,4 +1,4 @@
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "files-com",

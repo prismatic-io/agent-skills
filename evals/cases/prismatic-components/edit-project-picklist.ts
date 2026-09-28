@@ -1,11 +1,14 @@
+import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import type { EditCheck } from "./_check-edit.ts";
+import { object } from "./_check-edit.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "edit-project-picklist",
   service: "Partner Tasks",
   mode: "edit",
-  fixture: resolve(import.meta.dirname, "../fixtures/components/tasks"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/components/tasks"),
   request:
     "In the embedded workflow builder, customers using our existing Create Task action should choose a project by name rather than find and paste its ID. Use the projects from their connected account. Keep existing integrations that already supply a project ID working. The connector is here and API.md describes the service.",
   persona:
@@ -30,3 +33,42 @@ export default defineComponentCase({
   ],
   tags: ["edit", "data-source", "embedded-workflow-builder"],
 });
+
+export const check: EditCheck = {
+  kind: "actions",
+  member: () => "createTask",
+  feature: async ({ component, harness, connection, calls, controls }) => {
+    const input = component.actions.createTask.inputs.find(
+      ({ key }) => key === "projectId",
+    );
+    assert.ok(input?.dataSource, "Project input lacks a data source reference");
+    assert.equal(
+      component.dataSources[input.dataSource]?.dataSourceType,
+      "picklist",
+    );
+    const first = await harness.dataSource(input.dataSource, { connection });
+    assert.ok(Array.isArray(first.result));
+    assert.deepEqual(
+      [...first.result].sort((a, b) =>
+        String(object(a).key).localeCompare(String(object(b).key)),
+      ),
+      [
+        { key: "a/b", label: "Same name" },
+        { key: "p2", label: "Same name" },
+      ],
+    );
+    assert.equal(calls.at(-1)?.path, "/projects");
+    controls.emptyProjects = true;
+    assert.deepEqual(
+      (await harness.dataSource(input.dataSource, { connection })).result,
+      [],
+    );
+    await harness.action("createTask", {
+      connection,
+      projectId: "a/b",
+      title: "New task",
+    });
+    assert.equal(calls.at(-1)?.path, "/projects/a%2Fb/tasks");
+    assert.deepEqual(calls.at(-1)?.body, { title: "New task" });
+  },
+};

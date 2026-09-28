@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-github-issues",
   service: "GitHub repository issues",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/github-issues"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/github-issues"),
   request:
     "Build a connector with an action to list issues in one repository and a trigger that checks every few minutes for new or updated issues, including closed ones. On the first check, establish a baseline without notifying me about old issues. After that, notify me once per issue update, including updates beyond the first page. Pull requests should never count. Two different issues updated in the same second must both be noticed, even if one first appears on the next check. If a check fails partway through, retry without losing updates. I can provide a repository read token later. Background is in service.md.",
   persona:

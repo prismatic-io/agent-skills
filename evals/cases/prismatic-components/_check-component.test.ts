@@ -16,7 +16,7 @@ import {
   dependencyInstall,
   findComponents,
   withComponentWorkspace,
-} from "./check-component.ts";
+} from "./_check-component.ts";
 
 test("component discovery excludes dependencies and generated build folders", async () => {
   const root = await mkdtemp(join(tmpdir(), "component-discovery-"));

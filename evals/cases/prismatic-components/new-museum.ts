@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-museum",
   service: "the supplied Museum API",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/museum"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/museum"),
   request:
     "Build a connector from openapi.yaml so I can list special events, buy either a general-admission or special-event ticket, and download the ticket’s QR image to send as an attachment. I only need these three actions. The downloaded image must be usable as a file.",
   persona:
