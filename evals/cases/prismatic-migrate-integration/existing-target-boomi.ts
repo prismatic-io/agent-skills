@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { defineMigrationCase } from "../../migration-case.ts";
+import { defineMigrationCase } from "./_migration-case.ts";
 
 const migration = defineMigrationCase({
   id: "existing-target-boomi",
@@ -38,7 +38,7 @@ export default {
     {
       id: "existing-receipt-contract",
       type: "command-exits-zero" as const,
-      command: `node '${resolve(import.meta.dirname, "../../scripts/verify-existing-receipt.mjs").replaceAll("'", "'\\''")}'`,
+      command: `node '${resolve(import.meta.dirname, "./_verify-existing-receipt.mjs").replaceAll("'", "'\\''")}'`,
       inheritEnv: ["PATH"],
       timeout: "4 minutes",
     },

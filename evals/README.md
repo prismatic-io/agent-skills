@@ -266,7 +266,9 @@ These are grader research pointers, not answers supplied to the persona.
 
 ## Migration evaluations
 
-Run the 21 vendor-export and bespoke-code cases with `mise run eval:migrations`.
+Run the 21 vendor-export and bespoke-code cases across the shared agent profiles
+with `mise run eval:migrations`. The runner produces the same continuous quality
+reports as the component and CNI suites; deterministic build checks remain separate.
 They authorize local ports and assessments, not deployment or live mutations.
 Python 3.11+ and system IANA timezone data are required for source checks.
 Until the next Lux release, the eval dependency resolves from
@@ -291,7 +293,7 @@ cases, not held-out tests or automatic activation checks.
 Buildable ports get independent build and registration checks. Source tests
 characterize supplied fixtures; rubric scores and generated tests do not prove
 full behavioral equivalence. Accept useful milestones with honest limits and
-normal human corrections. Optional `evals/scripts/verify-*.mjs` checkers require
+normal human corrections. Optional `evals/cases/prismatic-migrate-integration/_verify-*.mjs` checkers require
 reviewer-approved interface adapters and isolated execution against local services;
 unsupported interfaces need review. Registration-evidence helpers produce manual
 review attachments, not automatic grading evidence. Inspect checker tests for

@@ -10,7 +10,7 @@ test("Paragon fixture source declarations remain bounded to the supplied graph",
       "--test",
       resolve(
         import.meta.dirname,
-        "fixtures/migrations/paragon-send-slack-message/source-declarations.test.mjs",
+        "../../fixtures/migrations/paragon-send-slack-message/source-declarations.test.mjs",
       ),
     ],
     { encoding: "utf8", timeout: 30_000 },

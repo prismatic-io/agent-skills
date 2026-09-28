@@ -16,10 +16,7 @@ import {
 import { test } from "vitest";
 import { parse, stringify } from "yaml";
 
-const helper = new URL(
-  "./scripts/inspect-cni-registration.mjs",
-  import.meta.url,
-);
+const helper = new URL("./_inspect-cni-registration.mjs", import.meta.url);
 const { summarizeRegistration } = await import(helper.href);
 
 // Same real-Spectral positive control as existing verify-generated-cni.test.ts.

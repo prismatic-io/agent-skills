@@ -145,14 +145,23 @@ export const reportQuality = (
     )
     .sort((a, b) => a.score - b.score)
     .slice(0, 2);
+  const checkStates = entries
+    .filter((entry) =>
+      [
+        "component-checks",
+        "local-checks",
+        "local-build",
+        "project-checks",
+      ].includes(entry.id),
+    )
+    .map(stateOf);
   const execution = {
     completion: stateOf(entries.find((entry) => entry.id === "completed")),
-    componentChecks: stateOf(
-      entries.find(
-        (entry) =>
-          entry.id === "component-checks" || entry.id === "local-checks",
-      ),
-    ),
+    componentChecks: (checkStates.includes("fail")
+      ? "fail"
+      : !checkStates.length || checkStates.includes("unknown")
+        ? "unknown"
+        : "pass") as State,
   };
   return {
     policy: qualityPolicy,

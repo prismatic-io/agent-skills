@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { defineMigrationCase } from "../../migration-case.ts";
+import { defineMigrationCase } from "./_migration-case.ts";
 
 const packet = resolve(
   import.meta.dirname,

@@ -15,12 +15,12 @@ import {
   readRunArtifactText,
 } from "@prismatic-io/lux";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { sampleArtifacts } from "../../node_modules/@prismatic-io/lux/lib/assertions/rubric/internal.js";
+import { bindRunArtifactEvidence } from "../../node_modules/@prismatic-io/lux/lib/core/artifact-evidence.js";
 import {
   createMigrationRubric,
   prioritizeMigrationArtifacts,
-} from "./migration-rubric.ts";
-import { sampleArtifacts } from "./node_modules/@prismatic-io/lux/lib/assertions/rubric/internal.js";
-import { bindRunArtifactEvidence } from "./node_modules/@prismatic-io/lux/lib/core/artifact-evidence.js";
+} from "./_migration-rubric.ts";
 
 const roots: string[] = [];
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");

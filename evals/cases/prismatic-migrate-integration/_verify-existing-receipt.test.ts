@@ -10,7 +10,7 @@ import { test } from "vitest";
 const require = createRequire(import.meta.url);
 const spectral = require.resolve("@prismatic-io/spectral");
 const verifier = fileURLToPath(
-  new URL("./scripts/verify-existing-receipt.mjs", import.meta.url),
+  new URL("./_verify-existing-receipt.mjs", import.meta.url),
 );
 
 // Real Spectral registration exercises the checker across implementation layouts.

@@ -2,20 +2,19 @@ import assert from "node:assert/strict";
 import { readdir } from "node:fs/promises";
 import { matchesGlob, resolve } from "node:path";
 import { test } from "vitest";
-import config from "./lux.config.ts";
 import {
   defineMigrationCase,
   type MigrationCase,
   migrationAssertions,
   migrationVariant,
   summarizeSuppliedFiles,
-} from "./migration-case.ts";
+} from "./_migration-case.ts";
 
 const spec: MigrationCase = {
   id: "harness-test",
   fixture: resolve(
     import.meta.dirname,
-    "fixtures/migrations/bespoke-order-sync/input",
+    "../../fixtures/migrations/bespoke-order-sync/input",
   ),
   request: "Migrate the supplied integration.",
   persona: "No production credentials are available.",
@@ -82,20 +81,15 @@ test("assessment cases can disclose genuine blockers without fabricating a build
     deliverable: "assessment",
   });
   assert.ok(!assessment.assertions?.some(({ id }) => id === "local-build"));
-  assert.ok(
-    assessment.assertions?.some(({ id }) => id === "behavioral-verification"),
-  );
-  assert.ok(assessment.assertions?.some(({ id }) => id === "local-boundary"));
+  assert.ok(assessment.assertions?.some(({ id }) => id === "meaningful-tests"));
+  assert.ok(assessment.assertions?.some(({ id }) => id === "local-scope"));
   assert.match(assessment.prompt, /available evidence/);
 });
 
 test("authored cases copy only input directories, excluding grader answers", async () => {
-  const directory = resolve(
-    import.meta.dirname,
-    "cases/prismatic-migrate-integration",
-  );
-  const cases = (await readdir(directory)).filter((name) =>
-    name.endsWith(".ts"),
+  const directory = resolve(import.meta.dirname, ".");
+  const cases = (await readdir(directory)).filter(
+    (name) => name.endsWith(".ts") && !name.startsWith("_"),
   );
   assert.equal(cases.length, 21);
   for (const filename of cases) {
@@ -103,24 +97,24 @@ test("authored cases copy only input directories, excluding grader answers", asy
     assert.equal(
       authored.driver,
       undefined,
-      `${filename} must use the Claude Code driver`,
+      `${filename} must inherit the shared driver`,
     );
     assert.equal(
       authored.answerer,
       undefined,
-      `${filename} must use the configured Claude Code answerer`,
+      `${filename} must use the configured answerer`,
     );
     assert.equal(authored.fixtures.kind, "dir");
     for (const assertion of authored.assertions ?? []) {
-      if (assertion.type === "rubric" || assertion.type === "rubric") {
+      if (assertion.type === "rubric") {
         assert.ok(
           String(assertion.criteria).length <= 8_000,
           `${filename}: ${assertion.id} exceeds Lux rubric budget`,
         );
         assert.equal(
-          assertion.scoring,
-          "binary",
-          `${filename}: binary decisions require evaluator support, not only a threshold`,
+          assertion.threshold,
+          0,
+          `${filename}: quality rubrics must not impose a pass threshold`,
         );
       }
     }
@@ -136,7 +130,7 @@ test("authored cases copy only input directories, excluding grader answers", asy
 
 test("behavioral grading receives execution results and missing trace cannot prove a clean run", () => {
   const assertions = migrationAssertions(spec);
-  for (const id of ["behavioral-verification", "local-boundary"]) {
+  for (const id of ["meaningful-tests", "local-scope"]) {
     const assertion = assertions.find((entry) => entry.id === id);
     assert.ok(assertion && "evidence" in assertion && "criteria" in assertion);
     const selected = assertion.evidence as {
@@ -152,7 +146,7 @@ test("behavioral grading receives execution results and missing trace cannot pro
 
 test("grader includes generated JSON test inputs without normal dependency lockfiles", () => {
   const assertion = migrationAssertions(spec).find(
-    (entry) => entry.id === "behavioral-verification",
+    (entry) => entry.id === "meaningful-tests",
   );
   assert.ok(assertion && "evidence" in assertion);
   const patterns = (assertion.evidence as { artifactPatterns: string[] })
@@ -184,19 +178,6 @@ test("grader includes generated JSON test inputs without normal dependency lockf
     "port/pnpm-lock.yaml.json",
   ])
     assert.ok(!patterns.some((pattern) => matchesGlob(file, pattern)), file);
-});
-
-test("migration evaluation uses Claude Code for subjects, answers, and grading", () => {
-  const driver = config.defaultDriver;
-  assert.ok(driver && typeof driver === "object");
-  assert.equal(driver.name, "claude-code");
-  const answerer = config.defaultAnswerer;
-  assert.ok(answerer && typeof answerer === "object");
-  assert.equal(
-    (answerer.config as { provider?: string }).provider,
-    "claude-code",
-  );
-  assert.equal(config.harness?.provider, "claude-code");
 });
 
 test("existing integration cases extend the supplied project and retain build verification", () => {

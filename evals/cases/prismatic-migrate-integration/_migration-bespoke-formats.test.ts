@@ -9,7 +9,7 @@ import { test } from "vitest";
 
 const legacy = (name: string, file: string) =>
   new URL(
-    `./fixtures/migrations/${name}/input/legacy/${file}`,
+    `../../fixtures/migrations/${name}/input/legacy/${file}`,
     import.meta.url,
   );
 const webhook = await import(

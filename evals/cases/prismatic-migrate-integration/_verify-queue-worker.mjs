@@ -13,10 +13,11 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import { parse } from "yaml";
-import { withComponentWorkspace } from "../cases/prismatic-components/_check-component.ts";
-import { reconcile } from "../fixtures/migrations/bespoke-membership-reconcile/input/legacy/reconcile.mjs";
-import { resolveCniEntrypoint } from "./cni-entrypoint.mjs";
+import { drainOnce } from "../../fixtures/migrations/bespoke-queue-worker/input/legacy/worker.mjs";
+import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
+import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
 
 export class UnsupportedInterface extends Error {}
 const canonicalPath = (path) =>
@@ -51,12 +52,41 @@ const bounded = async (invoke, timeoutMs) => {
     clearTimeout(timer);
   }
 };
+const messages = [
+  {
+    receipt: "lease/first +α",
+    body: {
+      eventId: "event-first",
+      customerId: "customer/α +",
+      email: "one@example.test",
+      active: false,
+    },
+  },
+  {
+    receipt: "lease/second",
+    body: {
+      eventId: "event-second",
+      customerId: "customer-2",
+      email: "two@example.test",
+      active: true,
+    },
+  },
+  {
+    receipt: "lease/third",
+    body: {
+      eventId: "event-third",
+      customerId: "customer-3",
+      email: "three@example.test",
+      active: false,
+    },
+  },
+];
 export const scenarios = [
-  "mixed-paged-snapshot",
-  "incomplete-snapshot",
-  "empty-snapshot",
-  "add-failure-and-reconcile",
-  "remove-failure-and-reconcile",
+  "success",
+  "empty",
+  "lease-failure",
+  "second-write-failure",
+  "ack-failure-and-redelivery",
 ];
 const logger = { info() {}, warn() {}, error() {}, debug() {}, metric() {} };
 const fill = (value, replacements) => {
@@ -73,202 +103,160 @@ const fill = (value, replacements) => {
   return value;
 };
 
-// Compare observable policy and partial effects, not internal data structures,
-// return values, read count, or ordering between independent successful adds.
-export const observeMembership = async (invoke, scenario, timeoutMs = 5000) => {
-  if (!scenarios.includes(scenario))
-    throw new UnsupportedInterface("Unknown scenario");
-  const group = "training/eu +α";
-  const pages =
-    scenario === "empty-snapshot" || scenario === "remove-failure-and-reconcile"
-      ? [{ members: [], nextCursor: null }]
-      : [
-          {
-            members: [
-              { id: "manual", enabled: true, kind: "employee" },
-              { id: "Case/1 +α", enabled: true, kind: "employee" },
-              { id: "disabled", enabled: false, kind: "employee" },
-              { id: "contractor", enabled: true, kind: "contractor" },
-            ],
-            nextCursor: "page+/=2",
-          },
-          {
-            members: [
-              { id: "Case/1 +α", enabled: true, kind: "employee" },
-              { id: "case/1 +α", enabled: true, kind: "employee" },
-              { id: "truthy", enabled: "true", kind: "employee" },
-            ],
-            nextCursor: null,
-          },
-        ];
-  const grants = new Map([
-    ["manual", "helpdesk"],
-    ["exception", "helpdesk"],
-    ["stale-one", "directory-bridge"],
-    ["stale-two", "directory-bridge"],
-    ["stale-three", "directory-bridge"],
-  ]);
+// Actual HTTP works with fetch, axios and node:http; no subject test/helper is loaded.
+export const observeQueue = async (invoke, scenario, timeoutMs = 5000) => {
+  const trace = [];
+  const effects = new Map();
+  const acknowledged = new Set();
   let round = 0;
-  let complete = false;
   let count = 0;
-  const traces = [];
-  let trace;
-  const violations = [];
-  const serve = (service) => async (request, response) => {
+  const server = createServer(async (request, response) => {
     const chunks = [];
     for await (const chunk of request) chunks.push(chunk);
-    const raw = Buffer.concat(chunks).toString();
-    let body;
+    const body = Buffer.concat(chunks).toString();
+    let parsedBody = null;
     try {
-      body = raw ? JSON.parse(raw) : undefined;
+      parsedBody = body ? JSON.parse(body) : null;
     } catch {
-      body = { invalidJson: raw };
+      parsedBody = { invalidJson: body };
     }
     const url = new URL(request.url, "http://localhost");
-    const path = canonicalPath(url.pathname);
-    const prefix = `/v1/groups/${encodeURIComponent(group)}`;
+    const service = url.pathname.startsWith("/queue/") ? "queue" : "crm";
+    const path = canonicalPath(url.pathname.replace(/^\/(queue|crm)/, ""));
     const entry = {
-      service,
       method: request.method,
+      service,
       path,
-      query: [...url.searchParams.entries()],
-      body,
+      query: [...url.searchParams.entries()].sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+      authorization: request.headers.authorization,
+      idempotencyKey: request.headers["idempotency-key"],
+      body: parsedBody,
     };
     trace.push(entry);
     const reply = (status, value) => {
       response.writeHead(status, { "content-type": "application/json" });
       response.end(value === undefined ? undefined : JSON.stringify(value));
     };
-    if (++count > 60) return reply(429, {});
-    if (request.headers.authorization !== `Bearer ${service}-secret`) {
-      violations.push("wrong-service-credential");
+    if (++count > 30) return reply(429, {});
+    if (request.headers.authorization !== `Bearer ${service}-secret`)
       return reply(401, {});
-    }
     if (
-      service === "directory" &&
+      service === "queue" &&
       request.method === "GET" &&
-      path === `${prefix}/members`
+      path === "/messages"
     ) {
-      const cursor = url.searchParams.get("cursor");
-      if (cursor && cursor !== "page+/=2") return reply(400, {});
-      const index = cursor ? 1 : 0;
-      if (scenario === "incomplete-snapshot" && index === 1)
-        return reply(503, {});
-      if (!pages[index]) return reply(400, {});
-      if (!pages[index].nextCursor) complete = true;
-      return reply(200, pages[index]);
+      if (scenario === "lease-failure") return reply(503, {});
+      const batch =
+        scenario === "empty"
+          ? []
+          : messages
+              .filter((message) => !acknowledged.has(message.body.eventId))
+              .map((message) => ({
+                ...message,
+                receipt: round
+                  ? `${message.receipt}/redelivered`
+                  : message.receipt,
+              }));
+      return reply(200, { messages: batch });
     }
-    if (
-      service === "access" &&
-      request.method === "GET" &&
-      path === `${prefix}/grants`
-    )
-      return reply(200, {
-        grants: [...grants].map(([personId, managedBy]) => ({
-          personId,
-          managedBy,
-        })),
-      });
-    if (
-      service === "access" &&
-      ["PUT", "DELETE"].includes(request.method) &&
-      path.startsWith(`${prefix}/grants/`)
-    ) {
-      if (!complete) violations.push("write-before-complete-snapshot");
-      const segment = path.slice(`${prefix}/grants/`.length);
-      if (segment.includes("/")) return reply(400, {});
-      const personId = decodeURIComponent(segment);
+    if (service === "crm" && request.method === "PUT") {
       if (
-        round === 0 &&
-        scenario === "add-failure-and-reconcile" &&
-        request.method === "PUT" &&
-        personId === "case/1 +α"
+        scenario === "second-write-failure" &&
+        path === `/customers/${encodeURIComponent(messages[1].body.customerId)}`
       )
         return reply(503, {});
-      if (
-        round === 0 &&
-        scenario === "remove-failure-and-reconcile" &&
-        request.method === "DELETE" &&
-        personId === "stale-two"
-      )
-        return reply(503, {});
-      if (request.method === "PUT") {
-        if (body?.managedBy !== "directory-bridge") return reply(400, {});
-        grants.set(personId, body.managedBy);
-      } else grants.delete(personId);
+      const key = request.headers["idempotency-key"];
+      if (effects.has(key) && !isDeepStrictEqual(effects.get(key), parsedBody))
+        return reply(409, {});
+      effects.set(key, parsedBody);
       return reply(204);
     }
-    violations.push("undocumented-request");
+    if (service === "queue" && request.method === "DELETE") {
+      if (scenario === "ack-failure-and-redelivery" && round === 0)
+        return reply(409, {});
+      let receipt;
+      try {
+        receipt = decodeURIComponent(path.slice("/messages/".length));
+      } catch {
+        return reply(400, {});
+      }
+      const message = messages.find(
+        (item) =>
+          receipt === (round ? `${item.receipt}/redelivered` : item.receipt),
+      );
+      if (!message) return reply(409, {});
+      acknowledged.add(message.body.eventId);
+      return reply(204);
+    }
     return reply(404, {});
-  };
-  const directory = createServer(serve("directory"));
-  const access = createServer(serve("access"));
-  directory.listen(0, "127.0.0.1");
-  access.listen(0, "127.0.0.1");
-  await Promise.all([once(directory, "listening"), once(access, "listening")]);
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const base = `http://127.0.0.1:${server.address().port}`;
   const config = {
-    directoryUrl: `http://127.0.0.1:${directory.address().port}`,
-    directoryToken: "directory-secret",
-    accessUrl: `http://127.0.0.1:${access.address().port}`,
-    accessToken: "access-secret",
-    group,
+    queueUrl: `${base}/queue/`,
+    queueToken: "queue-secret",
+    crmUrl: `${base}/crm/`,
+    crmToken: "crm-secret",
   };
-  const observations = [];
+  // Legacy constructs absolute paths. Separate loopback ports preserve service identity.
+  const crmServer = createServer((req, res) => {
+    req.url = `/crm${req.url}`;
+    server.emit("request", req, res);
+  });
+  const queueServer = createServer((req, res) => {
+    req.url = `/queue${req.url}`;
+    server.emit("request", req, res);
+  });
+  crmServer.listen(0, "127.0.0.1");
+  queueServer.listen(0, "127.0.0.1");
+  await Promise.all([
+    once(crmServer, "listening"),
+    once(queueServer, "listening"),
+  ]);
+  config.crmUrl = `http://127.0.0.1:${crmServer.address().port}`;
+  config.queueUrl = `http://127.0.0.1:${queueServer.address().port}`;
+  const outcomes = [];
   try {
-    const rounds = scenario.endsWith("-and-reconcile") ? 2 : 1;
+    const rounds = scenario === "ack-failure-and-redelivery" ? 2 : 1;
     for (round = 0; round < rounds; round++) {
-      trace = [];
-      traces.push(trace);
-      complete = false;
-      let outcome = "success";
       try {
         await bounded(() => invoke(config), timeoutMs);
+        outcomes.push("success");
       } catch (error) {
         if (error instanceof UnsupportedInterface) throw error;
-        outcome = "failure";
+        outcomes.push("failure");
       }
-      // Collapse repeated idempotent attempts and reorder independent operations
-      // within an uninterrupted same-method phase. Preserve add/delete ordering.
-      const phases = [];
-      for (const request of trace.filter((item) =>
-        ["PUT", "DELETE"].includes(item.method),
-      )) {
-        if (phases.at(-1)?.method !== request.method)
-          phases.push({ method: request.method, requests: [] });
-        const key = JSON.stringify(request);
-        if (!phases.at(-1).requests.includes(key))
-          phases.at(-1).requests.push(key);
-      }
-      for (const phase of phases) phase.requests.sort();
-      observations.push({
-        outcome,
-        grants: [...grants].sort(([a], [b]) => a.localeCompare(b)),
-        phases,
-        violations: [...violations],
-      });
     }
-    return { observations, traces };
+    return {
+      trace,
+      outcomes,
+      effects: [...effects],
+      acknowledged: [...acknowledged],
+    };
   } finally {
     await Promise.all(
-      [directory, access].map(
-        (server) =>
+      [server, crmServer, queueServer].map(
+        (item) =>
           new Promise((done) => {
-            server.close(done);
-            server.closeAllConnections();
+            item.close(done);
+            item.closeAllConnections();
           }),
       ),
     );
   }
 };
 
-export const verifyRegisteredMembership = async (component, adapter) => {
+export const verifyRegisteredQueue = async (component, adapter) => {
   if (
     !adapter?.flowStableKey ||
     !adapter.configVars ||
     typeof adapter.configVars !== "object"
   )
     throw new UnsupportedInterface(
-      "Supply reviewer-approved flowStableKey and configVars template ($directoryUrl, $directoryToken, $accessUrl, $accessToken, $group)",
+      "Supply reviewer-approved flowStableKey and configVars template ($queueUrl, $queueToken, $crmUrl, $crmToken)",
     );
   const definition = parse(component.codeNativeIntegrationYAML ?? "");
   const flow = definition?.flows?.find(
@@ -283,23 +271,19 @@ export const verifyRegisteredMembership = async (component, adapter) => {
       "Selected flow has no directly invocable registered action",
     );
   if (
-    !Object.keys({
-      directoryUrl: 1,
-      directoryToken: 1,
-      accessUrl: 1,
-      accessToken: 1,
-      group: 1,
-    }).every((key) => JSON.stringify(adapter.configVars).includes(`$${key}`))
+    !Object.keys({ queueUrl: 1, queueToken: 1, crmUrl: 1, crmToken: 1 }).every(
+      (key) => JSON.stringify(adapter.configVars).includes(`$${key}`),
+    )
   )
     throw new UnsupportedInterface(
-      "Adapter must map all endpoint, credential and group values",
+      "Adapter must map all four endpoint and credential values",
     );
   const timeoutMs = adapter.invocationTimeoutMs ?? 5000;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000)
     throw new UnsupportedInterface("invocationTimeoutMs must be 1–60000");
   const failures = [];
   for (const scenario of scenarios) {
-    const expected = await observeMembership(reconcile, scenario);
+    const expected = await observeQueue(drainOnce, scenario);
     let unavailable;
     const missingBridge = (service) => {
       unavailable = new UnsupportedInterface(
@@ -307,7 +291,7 @@ export const verifyRegisteredMembership = async (component, adapter) => {
       );
       throw unavailable;
     };
-    const observed = await observeMembership(
+    const observed = await observeQueue(
       async (config) => {
         let result;
         try {
@@ -353,9 +337,9 @@ export const verifyRegisteredMembership = async (component, adapter) => {
     );
     try {
       assert.deepEqual(
-        observed.observations,
-        expected.observations,
-        "Access policy, snapshot gating or partial effects differ from executable reconciliation",
+        observed,
+        expected,
+        "HTTP effects, acknowledgement order or failure outcome differ from the executable worker",
       );
     } catch (error) {
       failures.push({ scenario, message: error.message, expected, observed });
@@ -366,14 +350,14 @@ export const verifyRegisteredMembership = async (component, adapter) => {
     scenarios: scenarios.length,
     failures,
     scope:
-      "Registered action and local HTTP effects; excludes managed component/subflow bridges, trigger preprocessing, deployed scheduling, overlapping runs and real gateway consistency",
+      "Registered action and local HTTP effects; excludes managed component/subflow bridges, trigger preprocessing, deployed scheduling, overlapping runs and real lease expiration",
   };
 };
 
 const main = async () => {
   if (!process.argv[2] || !process.argv[3])
     throw new UnsupportedInterface(
-      "Usage: verify-membership-reconcile.mjs <CNI project> <reviewer adapter.json>",
+      "Usage: verify-queue-worker.mjs <CNI project> <reviewer adapter.json>",
     );
   const project = resolve(process.argv[2]);
   const adapter = JSON.parse(await readFile(resolve(process.argv[3]), "utf8"));
@@ -397,7 +381,7 @@ const main = async () => {
       i++
     )
       component = component.default;
-    const report = await verifyRegisteredMembership(component, adapter);
+    const report = await verifyRegisteredQueue(component, adapter);
     console.log(JSON.stringify(report, null, 2));
     if (!report.passed) process.exitCode = 1;
   });

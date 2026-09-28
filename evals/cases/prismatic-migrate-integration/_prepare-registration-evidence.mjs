@@ -5,10 +5,10 @@ import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const worker = fileURLToPath(
-  new URL("./registration-evidence-worker.mjs", import.meta.url),
+  new URL("./_registration-evidence-worker.mjs", import.meta.url),
 );
 const inspector = fileURLToPath(
-  new URL("./inspect-cni-registration.mjs", import.meta.url),
+  new URL("./_inspect-cni-registration.mjs", import.meta.url),
 );
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const factCatalog = {

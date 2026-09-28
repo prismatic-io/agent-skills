@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { test } from "vitest";
 
 const { prepareAttachment } = await import(
-  new URL("./scripts/prepare-registration-evidence.mjs", import.meta.url).href
+  new URL("./_prepare-registration-evidence.mjs", import.meta.url).href
 );
 const req = createRequire(import.meta.url),
   spectral = req.resolve("@prismatic-io/spectral"),

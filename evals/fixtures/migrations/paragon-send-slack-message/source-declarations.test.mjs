@@ -7,7 +7,7 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 // Evals pins the TypeScript compiler API for AST inspection; repository tsc stays on TS 7.
 // No Paragon runtime is mocked.
-const ts = require("typescript");
+const ts = require("typescript-compiler-api");
 const source = new URL(
   "./input/legacy/paragraph/src/integrations/slack/workflows/3AgenticActionTutorialSendSlackMessage.ts",
   import.meta.url,
