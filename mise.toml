@@ -9,12 +9,12 @@ run = "bun install --frozen-lockfile"
 [tasks.typecheck]
 description = "Check TypeScript types"
 depends = ["install"]
-run = "node node_modules/typescript/bin/tsc --noEmit"
+run = "npm run typecheck"
 
 [tasks.test]
 description = "Run unit tests with Vitest"
 depends = ["install"]
-run = "node node_modules/vitest/vitest.mjs run"
+run = "npm test"
 
 [tasks.validate]
 description = "Validate skill metadata and collection layout"
@@ -28,12 +28,12 @@ depends = ["lint", "typecheck", "test", "validate"]
 [tasks.lint]
 description = "Check formatting and lint rules with Biome"
 depends = ["install"]
-run = "node node_modules/@biomejs/biome/bin/biome check ."
+run = "npm run lint"
 
 [tasks.format]
 description = "Apply Biome formatting and safe fixes"
 depends = ["install"]
-run = "node node_modules/@biomejs/biome/bin/biome check --write ."
+run = "npm run format"
 
 [tasks."release:check"]
 description = "Run checks and require a nonempty skill catalog"
@@ -58,7 +58,7 @@ ln -sf "${PRISM_ROOT:-$PWD/../prism}/lib/run.js" "$prism_cache/prism"
 description = "Validate Lux cases and driver availability without model calls"
 depends = ["install", "eval:prepare"]
 dir = "evals"
-run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/vitest/vitest.mjs run", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor", "codex login status", "claude auth status"]
+run = "npm run doctor"
 
 [tasks."eval:run"]
 description = "Run component evaluations across Claude Code, Codex, and Grok Build"
