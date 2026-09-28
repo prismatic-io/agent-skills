@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "vitest";
-import { findCniProjects, verifyCni } from "./scripts/verify-generated-cni.mjs";
+import { findCniProjects, verifyCni } from "./_verify-generated-cni.mjs";
 
 const fixture = async (fn: (root: string) => Promise<void>) => {
   const root = await mkdtemp(join(tmpdir(), "cni-check-test-"));
@@ -168,7 +168,7 @@ test("entry loading does not invoke fetch against a service", async () =>
     );
     const result = spawnSync(
       process.execPath,
-      [join(import.meta.dirname, "scripts/load-cni-entry.mjs"), root],
+      [join(import.meta.dirname, "_load-cni-entry.mjs"), root],
       { encoding: "utf8", timeout: 2_000 },
     );
     assert.equal(result.status, 1);

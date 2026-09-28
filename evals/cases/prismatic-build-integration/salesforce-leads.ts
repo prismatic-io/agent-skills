@@ -1,4 +1,4 @@
-import { defineIntegrationCase } from "../../integration-case.ts";
+import { defineIntegrationCase } from "./_integration-case.ts";
 
 export default defineIntegrationCase({
   id: "salesforce-leads",

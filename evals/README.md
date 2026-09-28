@@ -80,7 +80,9 @@ Run `mise run eval:cni` from the repository root, or `node run-integrations.ts
 `integration-skill` cases and the same Claude Code, Codex, and Grok Build profile
 matrix as components, retaining per-profile artifacts and qualitative reports.
 The CNI suite contains **six net-new and six existing-project requests**; case
-source is in `cases/prismatic-build-integration/`. The component suite has the
+source, shared rubrics, verification helpers, and their tests live together in
+`cases/prismatic-build-integration/`. Business-specific criteria stay in each case;
+underscore-prefixed helpers are excluded from Lux case discovery. The component suite has the
 same 6/6 expansion plus its original Files.com case (13 total).
 The prior seven-case CNI baseline does not establish results for the five added
 requests; report expanded runtime results only after running and reviewing them.
@@ -92,7 +94,7 @@ it is not a security sandbox and cannot prevent arbitrary direct HTTP calls or
 a subject overriding its environment. Review execution traces for scope.
 Component runs retain their existing publication behavior.
 
-`verify-generated-cni.mjs` accepts a root or nested Spectral project, rejects
+`cases/prismatic-build-integration/_verify-generated-cni.mjs` accepts a root or nested Spectral project, rejects
 ambiguous projects, requires a build script, and runs every available
 typecheck/lint/test/build script. Each
 child check has a two-minute bound and POSIX timeout cleanup includes its process

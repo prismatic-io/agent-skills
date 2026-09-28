@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { defineIntegrationCase } from "../../integration-case.ts";
+import { defineIntegrationCase } from "./_integration-case.ts";
 
 export default defineIntegrationCase({
   id: "resolved-ticket-archive",

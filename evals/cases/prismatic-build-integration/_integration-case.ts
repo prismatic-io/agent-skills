@@ -5,7 +5,7 @@ import {
   type RubricEvidence,
   subjectPath,
 } from "@prismatic-io/lux";
-import { prismBin } from "./prism.ts";
+import { prismBin } from "../../prism.ts";
 
 export interface IntegrationCase {
   id: string;
@@ -84,7 +84,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       {
         id: "local-checks",
         type: "command-exits-zero",
-        command: `node ${quote(resolve(import.meta.dirname, "scripts/verify-generated-cni.mjs"))}`,
+        command: `node ${quote(resolve(import.meta.dirname, "_verify-generated-cni.mjs"))}`,
         inheritEnv: ["PATH"],
         timeout: "10 minutes",
       },

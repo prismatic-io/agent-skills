@@ -96,7 +96,7 @@ export const verifyCni = async (
   // Prism 11 selects root index.js, then dist/index.js, regardless of main.
   if (built)
     runCheck("entry-load", process.execPath, [
-      fileURLToPath(new URL("./load-cni-entry.mjs", import.meta.url)),
+      fileURLToPath(new URL("./_load-cni-entry.mjs", import.meta.url)),
       directory,
     ]);
   return {
