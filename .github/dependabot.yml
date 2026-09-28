@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    # Cover existing and future npm fixtures without updating repository tooling.
+    directories:
+      - /evals/fixtures/**
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 1
+    groups:
+      # Combine production and development bumps, including major versions.
+      fixture-dependencies:
+        patterns:
+          - "*"
