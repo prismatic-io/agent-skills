@@ -1,5 +1,8 @@
+import { resolve } from "node:path";
 import type { LuxConfig } from "@prismatic-io/lux";
 import { additionalComponentProfiles } from "./component-agents.ts";
+import { fixtureHashes } from "./migration-inputs.ts";
+import { createMigrationRubric } from "./migration-rubric.ts";
 import { prismBin } from "./prism.ts";
 
 const claudeDriver: LuxConfig["defaultDriver"] = {
@@ -47,5 +50,14 @@ config.profiles = {
   "claude-code": { driver: claudeDriver },
   ...additionalComponentProfiles,
 };
+
+config.assertions = [
+  createMigrationRubric(config.harness, (run) => {
+    const fixture = run.case.fixtures;
+    return typeof fixture === "object" && fixture.kind === "dir"
+      ? fixtureHashes.get(resolve(fixture.path))
+      : undefined;
+  }),
+];
 
 export default config;
