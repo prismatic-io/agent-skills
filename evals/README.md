@@ -9,9 +9,10 @@ development tooling.
 Prerequisites: repository mise tools; authenticated Claude Code (`claude`), Codex
 (`codex`), and Grok Build (`grok`) CLIs; and a built
 incur-based Prism checkout at `../../prism` (relative to this directory).
-`PRISM_ROOT` can select another Prism checkout. Lux is pinned to the published
-`0.0.2-preview.26` npm package in both development manifests and lockfiles;
-a local Lux checkout is no longer required. Installable skills have no Lux dependency.
+`PRISM_ROOT` can select another Prism checkout. Migration grading currently requires a built Lux checkout at
+`../../lux/packages/lux`, at commit `4cb8debc` or later. Run `mise run build` in
+that checkout before installing eval dependencies; these fixes are not yet in
+the published preview.26 release. Installable skills have no Lux dependency.
 
 The pinned Node.js 22.18.0 runs TypeScript directly; helpers need no build step.
 
@@ -262,3 +263,37 @@ For Files.com grading, consult the current [developer docs](https://developers.f
 [file webhooks](https://www.files.com/docs/automation-and-flow/notifications/webhooks),
 and [ad hoc GPG operations](https://www.files.com/docs/encryption/gpg-pgp/ad-hoc-gpg-encrypt-decrypt).
 These are grader research pointers, not answers supplied to the persona.
+
+## Migration evaluations
+
+Run the 21 vendor-export and bespoke-code cases with `mise run eval:migrations`.
+They authorize local ports and assessments, not deployment or live mutations.
+Python 3.11+ and system IANA timezone data are required for source checks.
+Until the next Lux release, the eval dependency resolves from
+`../../lux/packages/lux`. Build that checkout at `4cb8debc` or later with
+`mise run build` before installing eval dependencies; published preview.26
+does not include the required capture and grading fixes.
+Migration cases use the shared Lux configuration and its default agent. Select
+other configured agents with Lux profiles. No container runtime or special Prism build is required.
+Fresh artifact workspaces are not a security sandbox; subjects can access host
+tools and authentication, as in the other suites.
+
+After `mise run eval:prepare`, run one case from `evals/`:
+
+```sh
+node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-migrate-integration/bespoke-order-sync --verbose
+```
+
+`PRISM_MIGRATION_SKILL=migration` is the default; `build` selects the integration
+building skill and `none` omits explicit skill loading. These are development
+cases, not held-out tests or automatic activation checks.
+
+Buildable ports get independent build and registration checks. Source tests
+characterize supplied fixtures; rubric scores and generated tests do not prove
+full behavioral equivalence. Accept useful milestones with honest limits and
+normal human corrections. Optional `evals/scripts/verify-*.mjs` checkers require
+reviewer-approved interface adapters and isolated execution against local services;
+unsupported interfaces need review. Registration-evidence helpers produce manual
+review attachments, not automatic grading evidence. Inspect checker tests for
+supported adapters and scenarios. Assessment cases do not demand invented code
+when the source contract is incomplete.
