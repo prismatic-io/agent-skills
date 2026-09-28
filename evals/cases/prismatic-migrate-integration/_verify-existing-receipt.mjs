@@ -5,8 +5,8 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
-import { withComponentWorkspace } from "../cases/prismatic-components/_check-component.ts";
-import { resolveCniEntrypoint } from "./cni-entrypoint.mjs";
+import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
+import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
 
 const project = resolve(process.argv[2] ?? ".", "existing-integration");
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
-import { resolveCniEntrypoint } from "./cni-entrypoint.mjs";
+import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
 
 // Validate shapes only, not platform-supported enum values or runtime validity.
 const booleanFields = new Set([

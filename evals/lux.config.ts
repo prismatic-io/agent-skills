@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
 import type { LuxConfig } from "@prismatic-io/lux";
+import { fixtureHashes } from "./cases/prismatic-migrate-integration/_migration-inputs.ts";
+import { createMigrationRubric } from "./cases/prismatic-migrate-integration/_migration-rubric.ts";
 import { additionalComponentProfiles } from "./component-agents.ts";
-import { fixtureHashes } from "./migration-inputs.ts";
-import { createMigrationRubric } from "./migration-rubric.ts";
 import { prismBin } from "./prism.ts";
 
 const claudeDriver: LuxConfig["defaultDriver"] = {

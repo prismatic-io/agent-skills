@@ -178,3 +178,17 @@ describe("component quality report", () => {
     ]);
   });
 });
+
+it("keeps failed migration project checks visible alongside a passing build", () => {
+  const report = reportQuality({
+    assertions: [
+      { id: "local-build", type: "command-exits-zero", passed: true },
+      { id: "project-checks", type: "command-exits-zero", passed: false },
+      entry("meaningful-tests", 0.75),
+      entry("handoff", 1),
+    ],
+  });
+  expect(report.execution.componentChecks).toBe("fail");
+  expect(report.dimensions.validation.meanScore).toBe(0.75);
+  expect(report.dimensions.usability.meanScore).toBe(1);
+});

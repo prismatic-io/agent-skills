@@ -4,7 +4,7 @@ import { test } from "vitest";
 import {
   UnsupportedInterface,
   verifyRegisteredMembership,
-} from "./scripts/verify-membership-reconcile.mjs";
+} from "./_verify-membership-reconcile.mjs";
 
 const adapter = {
   flowStableKey: "sync",

@@ -3,7 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 
 // Capture source identity while configuration loads, before subjects run.
-const fixtureRoot = resolve(import.meta.dirname, "fixtures/migrations");
+const fixtureRoot = resolve(import.meta.dirname, "../../fixtures/migrations");
 export const fixtureHashes = new Map<string, Record<string, string>>();
 export const fixtureInventory = new Map(
   await Promise.all(

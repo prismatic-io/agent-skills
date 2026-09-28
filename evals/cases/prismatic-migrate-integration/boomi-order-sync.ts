@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { defineMigrationCase } from "../../migration-case.ts";
+import { defineMigrationCase } from "./_migration-case.ts";
 
 export default defineMigrationCase({
   id: "boomi-order-sync",

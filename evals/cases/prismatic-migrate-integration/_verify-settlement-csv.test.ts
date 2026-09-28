@@ -6,7 +6,7 @@ import {
   sourceResult,
   UnsupportedInterface,
   verifyRegisteredCsv,
-} from "./scripts/verify-settlement-csv.mjs";
+} from "./_verify-settlement-csv.mjs";
 
 const adapter = {
   flowStableKey: "finance-convert",

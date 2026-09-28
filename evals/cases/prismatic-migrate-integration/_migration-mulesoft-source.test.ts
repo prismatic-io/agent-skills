@@ -4,11 +4,11 @@ import { readdir } from "node:fs/promises";
 import { matchesGlob, resolve } from "node:path";
 import { RubricConfigSchema } from "@prismatic-io/lux";
 import { test } from "vitest";
-import authored from "./cases/prismatic-migrate-integration/mulesoft-order-processing.ts";
+import authored from "./mulesoft-order-processing.ts";
 
 const checker = resolve(
   import.meta.dirname,
-  "fixtures/migrations/mulesoft-order-processing/check.py",
+  "../../fixtures/migrations/mulesoft-order-processing/check.py",
 );
 const run = (command: string) => {
   const result = spawnSync("python3", [checker, command], {
@@ -88,9 +88,9 @@ test("Mule discovery separates source inputs, review evidence and project checks
     "project-checks",
     "order-transformation",
     "report-and-output-contract",
-    "behavioral-verification",
-    "honest-handoff",
-    "local-boundary",
+    "meaningful-tests",
+    "handoff",
+    "local-scope",
   ])
     assert.ok(ids?.includes(id), id);
   assert.ok(

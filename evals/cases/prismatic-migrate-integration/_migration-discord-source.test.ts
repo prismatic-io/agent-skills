@@ -19,7 +19,7 @@ for (const [name, expected] of Object.entries(blobs)) {
   test(`Discord source fixture retains upstream ${name}`, async () => {
     const bytes = await readFile(
       new URL(
-        `./fixtures/migrations/github-actions-discord/input/legacy/${name}`,
+        `../../fixtures/migrations/github-actions-discord/input/legacy/${name}`,
         import.meta.url,
       ),
     );

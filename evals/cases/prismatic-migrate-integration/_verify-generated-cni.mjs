@@ -6,8 +6,8 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
-import { withComponentWorkspace as withProjectWorkspace } from "../cases/prismatic-components/_check-component.ts";
-import { resolveCniEntrypoint } from "./cni-entrypoint.mjs";
+import { withComponentWorkspace as withProjectWorkspace } from "../prismatic-components/_check-component.ts";
+import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
 
 const artifacts = resolve(process.argv[2] ?? ".");
 const mode = process.argv[3] ?? "all";

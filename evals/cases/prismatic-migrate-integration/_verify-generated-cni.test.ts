@@ -18,7 +18,7 @@ import { test } from "vitest";
 const require = createRequire(import.meta.url);
 const spectral = require.resolve("@prismatic-io/spectral");
 const verifier = fileURLToPath(
-  new URL("./scripts/verify-generated-cni.mjs", import.meta.url),
+  new URL("./_verify-generated-cni.mjs", import.meta.url),
 );
 const checkProject = async (
   source?: string,
@@ -127,7 +127,7 @@ test("a lint failure is reported as project checks, not an unbuildable CNI", asy
   );
   assert.notEqual(checks.status, 0);
   assert.match(checks.output, /npm run lint failed/);
-});
+}, 30_000);
 
 test("successful package scripts without a compiled artifact cannot pass", async () => {
   const result = await checkProject();

@@ -6,7 +6,7 @@ test("binary copy takes contents and name from distinct source channels", async 
   const template = JSON.parse(
     await readFile(
       new URL(
-        "./fixtures/migrations/logic-apps-binary-copy/input/legacy/dropbox-onedrive.json",
+        "../../fixtures/migrations/logic-apps-binary-copy/input/legacy/dropbox-onedrive.json",
         import.meta.url,
       ),
       "utf8",
@@ -37,7 +37,7 @@ test("settlement branches are mutually exclusive and retain the received lock id
   const template = JSON.parse(
     await readFile(
       new URL(
-        "./fixtures/migrations/logic-apps-queue-settlement/input/legacy/service-bus-peek-lock-dead-letter.json",
+        "../../fixtures/migrations/logic-apps-queue-settlement/input/legacy/service-bus-peek-lock-dead-letter.json",
         import.meta.url,
       ),
       "utf8",
@@ -68,7 +68,7 @@ test("run-once dependencies distinguish delayed success and all authored error s
   const template = JSON.parse(
     await readFile(
       new URL(
-        "./fixtures/migrations/logic-apps-run-once/input/legacy/scheduler-run-once-http.json",
+        "../../fixtures/migrations/logic-apps-run-once/input/legacy/scheduler-run-once-http.json",
         import.meta.url,
       ),
       "utf8",

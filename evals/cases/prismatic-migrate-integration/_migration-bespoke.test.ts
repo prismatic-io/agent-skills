@@ -10,7 +10,7 @@ import { test } from "vitest";
 
 const script = fileURLToPath(
   new URL(
-    "./fixtures/migrations/bespoke-order-sync/input/legacy/order-sync.mjs",
+    "../../fixtures/migrations/bespoke-order-sync/input/legacy/order-sync.mjs",
     import.meta.url,
   ),
 );

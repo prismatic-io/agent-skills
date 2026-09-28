@@ -1,6 +1,6 @@
 // biome-ignore lint/style/noRestrictedImports: Write to an inherited IPC descriptor, not a filesystem path.
 import { writeSync } from "node:fs";
-import { inspectBuiltProject } from "./inspect-cni-registration.mjs";
+import { inspectBuiltProject } from "./_inspect-cni-registration.mjs";
 
 // Parent discards stdout/stderr at the OS boundary, including direct fd writes.
 // Only this dedicated channel is considered attachment data.

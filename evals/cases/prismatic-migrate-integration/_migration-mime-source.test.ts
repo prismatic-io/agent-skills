@@ -8,7 +8,7 @@ import { test } from "vitest";
 
 const legacy = fileURLToPath(
   new URL(
-    "./fixtures/migrations/bespoke-mime-extraction/input/legacy/",
+    "../../fixtures/migrations/bespoke-mime-extraction/input/legacy",
     import.meta.url,
   ),
 );

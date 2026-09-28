@@ -4,7 +4,7 @@ import { test } from "vitest";
 import {
   UnsupportedInterface,
   verifyRegisteredQueue,
-} from "./scripts/verify-queue-worker.mjs";
+} from "./_verify-queue-worker.mjs";
 
 const adapter = {
   flowStableKey: "drain",

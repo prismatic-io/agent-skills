@@ -3,7 +3,7 @@ import { test } from "vitest";
 
 const { reconcile } = await import(
   new URL(
-    "./fixtures/migrations/bespoke-membership-reconcile/input/legacy/reconcile.mjs",
+    "../../fixtures/migrations/bespoke-membership-reconcile/input/legacy/reconcile.mjs",
     import.meta.url,
   ).href
 );

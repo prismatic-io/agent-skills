@@ -11,12 +11,12 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse } from "yaml";
-import { withComponentWorkspace } from "../cases/prismatic-components/_check-component.ts";
-import { resolveCniEntrypoint } from "./cni-entrypoint.mjs";
+import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
+import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
 
 const legacy = fileURLToPath(
   new URL(
-    "../fixtures/migrations/bespoke-settlement-csv/input/legacy/import_settlements.py",
+    "../../fixtures/migrations/bespoke-settlement-csv/input/legacy/import_settlements.py",
     import.meta.url,
   ),
 );

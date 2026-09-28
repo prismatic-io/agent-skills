@@ -5,7 +5,7 @@ import { test } from "vitest";
 
 const sourceTests = fileURLToPath(
   new URL(
-    "./fixtures/migrations/bespoke-office-onboarding-reminders/source_test.py",
+    "../../fixtures/migrations/bespoke-office-onboarding-reminders/source_test.py",
     import.meta.url,
   ),
 );
