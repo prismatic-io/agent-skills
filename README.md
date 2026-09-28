@@ -16,6 +16,7 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 | --- | --- |
 | [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. Initial scaffold; evaluated with Lux. |
 | [prismatic-build-integration](skills/prismatic-build-integration/SKILL.md) | Turn integration requirements into a locally validated, buildable Prismatic Code Native Integration without deploying it. |
+| [prismatic-migrate-integration](skills/prismatic-migrate-integration/SKILL.md) | Port vendor workflows or bespoke integration code to Prismatic using source evidence and behavioral verification. |
 
 ## Installation
 

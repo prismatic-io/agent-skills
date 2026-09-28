@@ -1,6 +1,6 @@
 ---
 name: prismatic-build-integration
-description: Build or update a local Prismatic Code Native Integration (CNI), including its flows, configuration wizard, connections, mappings, tests, and production build. Use whenever a user asks to create an integration, connect systems with Prismatic, implement CNI flows, or turn integration requirements into local code.
+description: Build or update a local Prismatic Code Native Integration (CNI), including its flows, configuration wizard, connections, mappings, tests, and production build. Use for new integration requirements and ongoing CNI development. For assessing or replacing an existing non-Prismatic integration system, prefer prismatic-migrate-integration when available.
 compatibility: Requires Node.js 22+, npm, Prism 11 on PATH, and network access to documentation and packages.
 ---
 
