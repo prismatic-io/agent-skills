@@ -13,6 +13,8 @@ export default defineComponentCase({
   operations: [
     "one new Create Record action supporting Person and Company through a dynamic object input",
   ],
+  contract:
+    "Spectral dynamic object action inputs use { configuration, values } at the SDK invocation boundary. Tests should pass that wrapper to the registered action. The service HTTP request body must contain the selected fields without that wrapper. Do not confuse the SDK input representation with the outbound API body; accepting the documented wrapper at the action boundary is correct.",
   preserved: [
     "createPerson with its original connection/firstName/lastName/email inputs and output",
     "all other existing action and connection contracts",

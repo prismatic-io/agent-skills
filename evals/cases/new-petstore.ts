@@ -21,7 +21,7 @@ export default defineComponentCase({
   ],
   tags: ["openapi", "rest", "empty-response"],
   contract:
-    "Authoritative supplied Petstore contract: base http://petstore.swagger.io/v1, no authentication. GET /pets accepts optional integer query limit (max 100) and returns a Pet array. POST /pets accepts JSON {id: integer, name: string, tag?: string}; success is HTTP 201 with an empty body. GET /pets/{petId} accepts an opaque string path ID and returns one Pet. Errors are non-2xx with {code: integer, message: string}. Preserve these shapes; a user-configurable base URL connection without credentials is allowed.",
+    "Authoritative supplied Petstore contract: base http://petstore.swagger.io/v1, no authentication. GET /pets accepts optional integer query limit (max 100) and returns a Pet array. POST /pets accepts JSON {id: integer, name: string, tag?: string}; success is HTTP 201 with an empty body. Optional tag may be omitted or supplied as an empty string; the schema imposes no nonempty constraint. GET /pets/{petId} accepts an opaque string path ID and returns one Pet. Errors are non-2xx with {code: integer, message: string}. Preserve these shapes; a user-configurable base URL connection without credentials is allowed.",
   criteria: [
     {
       id: "spec-contract",

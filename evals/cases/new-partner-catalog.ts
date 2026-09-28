@@ -13,7 +13,7 @@ export default defineComponentCase({
   tests: [
     "resource calls use the configured access token as a Bearer token",
     "get safely encodes an opaque ID containing reserved characters",
-    "platform-managed authentication declares the documented token URL, scope, and client-credentials grant on the registered connection; alternatively, component-managed acquisition is executed against a mock to verify its form body, Basic authentication, and obtaining a new token after expiry",
+    "if the component implements token acquisition itself, test its form body, Basic authentication, and obtaining a new token after expiry. For platform-managed acquisition, the Bearer resource-call tests suffice here; connection declaration correctness is graded separately by client-credentials, so do not require unit tests of static metadata or platform internals",
   ],
   tags: ["oauth-client-credentials", "connection", "path-encoding"],
   contract:

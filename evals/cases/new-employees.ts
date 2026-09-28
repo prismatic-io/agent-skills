@@ -17,12 +17,12 @@ export default defineComponentCase({
   ],
   tags: ["openapi", "api-key", "nested-input"],
   contract:
-    "Authoritative supplied employee contract: base https://api.example.com/v1, global header API key named X-API-Key. POST /employees accepts required name:string and address:object containing street/city/country string fields, plus optional metadata:object. Metadata is arbitrary JSON object data, so nested booleans, numbers, and arrays must remain typed; blank metadata must be omitted. HTTP201 returns an Employee object. JSON code inputs with parsing are valid for address and metadata; structured inputs are not required.",
+    "JSON code inputs with parsing and structured inputs are equally valid; do not prefer or require either layout. Grade the actual request and response against the supplied employee API: base https://api.example.com/v1, header API key X-API-Key, POST /employees, HTTP201 Employee response. The request requires top-level name:string and address:object; address's street/city/country properties are optional strings. Optional metadata is an arbitrary JSON object: nested booleans, numbers, and arrays must remain typed, and blank metadata must be omitted. For structuredObject inputs, Spectral excludes the container required flag; do not demand that unsupported flag or require optional address children. These metadata distinctions do not change the required API request body.",
   criteria: [
     {
       id: "nested-contract",
       criteria:
-        "The registered action POSTs /employees with name and a nested address object. A configured connection supplies X-API-Key. Optional metadata accepts an object, preserves booleans/numbers/arrays, and is omitted when blank, rather than sent as an empty string or stringified object. A JSON input with clear instructions is acceptable; structured inputs are not required.",
+        "JSON code inputs with parsing and structured inputs are equally valid; judge behavior without an input-layout preference. The registered action POSTs /employees with name and a nested address object, using the configured connection's X-API-Key. Optional metadata preserves object, boolean, number, and array values and is omitted when blank, rather than sent as an empty string or stringified object. Clear JSON input instructions/examples are sufficient designer configuration; structured child fields are not required.",
     },
   ],
 });

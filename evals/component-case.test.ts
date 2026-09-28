@@ -23,6 +23,28 @@ const rubricText = (spec: ComponentCase, id: string) => {
   return "criteria" in assertion ? String(assertion.criteria) : "";
 };
 
+test("truncated permission context retains publication scope and restrictions together", () => {
+  for (const mode of ["create", "edit"] as const) {
+    const result = defineComponentCase({
+      ...base,
+      id: "edit-webhook-listening",
+      mode,
+      fixture: resolve(import.meta.dirname, "fixtures/contact-example"),
+    });
+    // Grok's native classifier retains 397 bytes plus an ellipsis per turn.
+    const prefix = Buffer.from(result.prompt).subarray(0, 397).toString();
+    assert.match(prefix, /mocked service calls/);
+    assert.match(prefix, /Publish only a fresh edit-webhook-listening-lux-\*/);
+    assert.match(prefix, /authenticated Prismatic sandbox/);
+    assert.match(prefix, /leave it for review/);
+    assert.match(
+      prefix,
+      /Do not change other components or live service accounts\./,
+    );
+    assert.ok(result.prompt.includes(base.request));
+  }
+});
+
 test("a spec fixture does not turn a creation case into an edit case", () => {
   const fixture = resolve(import.meta.dirname, "fixtures/spec-example");
   const result = defineComponentCase({ ...base, fixture, mode: "create" });

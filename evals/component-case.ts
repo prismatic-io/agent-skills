@@ -80,7 +80,7 @@ export const componentAssertions = (
   ) =>
     makeRubric(
       id,
-      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence.`,
+      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion on a continuous 0–1 scale: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficient for this task, not exhaustive. Give proportional credit for working parts and explain one observed strength and the highest-impact improvement; do not force a bell curve. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
       overrides,
     );
   return [
@@ -94,7 +94,7 @@ export const componentAssertions = (
         PRISM_AGENT: "1",
       },
       inheritEnv: prismEnv,
-      timeoutMs: 600_000,
+      timeout: "10 minutes",
     },
     ...(spec.operations.length
       ? [
@@ -108,7 +108,13 @@ export const componentAssertions = (
       ? [
           rubric(
             "trigger",
-            `A registered trigger satisfies this need using documented ${spec.service} behavior: ${spec.trigger}. Its configuration, event filtering, and lifecycle or persisted polling state make it usable across repeated executions. A generic trigger that forwards any incoming payload without establishing the requested event semantics does not satisfy this criterion.`,
+            `A registered trigger satisfies this need using documented ${spec.service} behavior: ${spec.trigger}. Its configuration, event filtering, and lifecycle or persisted polling state make it usable across repeated executions. Assess the requested business events, not a fixed event-name allowlist; documented external filtering can satisfy the requirement. Polling must handle documented pagination without advancing state past unprocessed changes. Any implemented webhook verification must match the documented protocol and enforce its configured checks. A generic trigger that forwards any incoming payload without establishing the requested event semantics does not satisfy this criterion.`,
+            {
+              artifactPatterns: [...evidence.artifactPatterns, "**/*.md"],
+              eventTypes: ["agent-message", "terminal"],
+              maxEvents: 30,
+              maxAgentChars: 10_000,
+            },
           ),
         ]
       : []),
@@ -116,7 +122,7 @@ export const componentAssertions = (
       ? [
           rubric(
             "documentation-accuracy",
-            `The agent's explanation of ${spec.service} capabilities and of its chosen mechanisms is factually accurate. Known facts: ${spec.facts} Choosing a simpler supported mechanism is acceptable; misstating what the service supports fails this criterion.`,
+            `The agent's explanation of ${spec.service} capabilities and of its chosen mechanisms is factually accurate. Known facts: ${spec.facts} Choosing a simpler supported mechanism is acceptable; misstating what the service supports fails this criterion. Assess factual claims actually made. Omitting unchosen supported alternatives does not imply they do not exist; no alternatives catalog is required. Identify the contradicted statement when assigning a factual-accuracy failure.`,
             {
               eventTypes: ["agent-message", "terminal"],
               maxEvents: 30,
@@ -129,7 +135,7 @@ export const componentAssertions = (
       ? [
           rubric(
             "meaningful-tests",
-            `Tests exercise the requested behavior, including: ${list(spec.tests)}.${spec.apiFailure === false ? " This change does not require a new API failure test." : " Include an API failure path. One genuine API failure test is sufficient; do not require failure tests for every action."} Merely retaining scaffold tests, asserting only constants detached from the registered implementation, or claiming tests passed is insufficient. Existing baseline tests establish compatibility, not completion of the requested change. For metadata-only changes, assertions on actual registered metadata against the expected contract, together with existing runtime coverage, are meaningful; a schema-validation library or duplicate runtime tests are not required.`,
+            `Score authored tests as continuous evidence of the requested behavior. Relevant scenarios include: ${list(spec.tests)}.${spec.apiFailure === false ? " This change does not require a new API failure test." : " A genuine API failure path strengthens confidence; one is enough, without repeating it for every action."} Give proportional credit for correctly exercised paths and discriminating assertions. A missing boundary reduces confidence rather than making all useful coverage worthless. Prefer tests that exercise registered behavior and service-shaped responses; equivalent approaches are valid. Scaffold tests, assertions detached from the implementation, or a claim that tests passed provide little evidence. Mocks that repeat an incorrect assumption weaken confidence. Existing baseline tests support compatibility but do not alone prove the requested change. For metadata-only changes, registered metadata assertions plus existing runtime coverage can suffice; do not require a schema library or duplicate runtime tests.`,
           ),
         ]
       : []),
@@ -144,7 +150,7 @@ export const componentAssertions = (
       : []),
     rubric(
       "nondeveloper-experience",
-      "Grade communication and interaction only. The agent proceeds without asking the user to choose API endpoints, authentication protocols, SDK architecture, or create-versus-modify modes; any questions concern missing business needs in plain language. The handoff names any connection credentials still needed and the requested operations or trigger setup, and states what verification was performed. Naming credentials and actions, then describing mocked tests and sandbox publication, is sufficient to distinguish local testing from publication; an explicit 'not live-tested' disclaimer is not required. Do not require UI click-by-click instructions or a tutorial. Award full credit when these conditions are met; assess implementation correctness and test coverage only under their separate assertions.",
+      "Grade communication and interaction only. The agent proceeds without asking the user to choose API endpoints, authentication protocols, SDK architecture, or create-versus-modify modes; any questions concern missing business needs in plain language. The handoff explains the requested operations or trigger setup and states what verification was performed. For new components or changed setup, name credentials and setup still needed. For edits retaining existing configuration, do not require repeating unchanged credentials; explain new setup and what remains reusable when relevant. Naming credentials and actions, then describing mocked tests and sandbox publication, is sufficient to distinguish local testing from publication; an explicit 'not live-tested' disclaimer is not required. Do not require UI click-by-click instructions or a tutorial. Award full credit when these conditions are met; assess implementation correctness and test coverage only under their separate assertions.",
       {
         artifactPatterns: ["**/*.md"],
         maxArtifactChars: 10_000,
@@ -171,9 +177,12 @@ export const defineComponentCase = (spec: ComponentCase) => {
     spec.mode === "edit"
       ? "Modify the existing component in the current directory. Preserve existing action, trigger, connection, and input keys except where the request explicitly changes them. Change only the component key to a fresh sandbox key for this run; do not publish over the original fixture key."
       : "Work in the current directory. Supplied specs or documentation are inputs for a new component.";
+  // Keep authorization and its limits together before the detailed procedure.
+  // Native permission reviewers may see only a short prefix of the user turn.
+  const scope = `${spec.mode === "edit" ? "Update the existing" : "Build the requested"} connector in this workspace. Use mocked service calls. Publish only a fresh ${spec.id}-lux-* component key to the authenticated Prismatic sandbox; leave it for review. Do not change other components or live service accounts.`;
   return defineEvalCase({
     id: `prismatic-components/${spec.id}`,
-    prompt: `Use the skill at ${subjectPath("prismatic-components/SKILL.md")}. ${workspace} Use mocked service calls for verification. Use Prism's existing authentication. Publish to the Prismatic sandbox using a fresh ${spec.id}-lux-* component key and verify it is available. Leave it for review. Do not change other components or live ${spec.service} accounts.\n\n${spec.request}`,
+    prompt: `${scope}\n\n${spec.request}\n\nUse the skill at ${subjectPath("prismatic-components/SKILL.md")}. ${workspace} Prism is already installed at ${resolve(prismBin, "prism")}. Run that executable with --version first and use it for all Prism commands; do not download a replacement through npx. Use Prism's existing authentication and verify the published component is available.`,
     ...(fixture
       ? { fixtures: { kind: "dir" as const, path: resolve(fixture) } }
       : {}),

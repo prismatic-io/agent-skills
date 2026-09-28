@@ -13,6 +13,8 @@ export default defineComponentCase({
   operations: [],
   trigger:
     "Contact Changed supports webhook registration and cleanup during both Listening Mode and deployment, preserving incoming payloads",
+  contract:
+    "Prismatic webhook lifecycle contract: context.webhookUrls is keyed by flow name, so context.webhookUrls[context.flow.name] is the documented endpoint lookup. Persisted crossFlowState ownership should instead use context.flow.stableId, which survives renames and version changes. These keys serve different purposes; do not require webhookUrls to be keyed by stableId. See https://prismatic.io/docs/custom-connectors/triggers/ . The independent component check exercises distinct name, stableId, and versioned id values.",
   preserved: [
     "contactChanged trigger key, connection input, apiKey connection, and incoming webhook payload and headers",
   ],
