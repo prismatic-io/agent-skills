@@ -1,0 +1,114 @@
+[
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/LICENSE",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/NOTICE",
+    "sha256": "1ca83dcb80991dee0cd10ea2aec7dd851e78112ea2d3da9af38d930b6e092ead"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/README.md",
+    "sha256": "5e2b6d3aada1511543b00fbf599337ebc981fc0fead473df665eff6cb234799d"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/3db3753d-f71e-45d5-93f4-d39c76560757__md_message_processor__.json",
+    "sha256": "677b15ed11b9366a7afa6deb60c7b8354c40ef29ffc86ab331eb1b7401d8aa44"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/48459530-f32c-4203-bd57-ebb1aa1da23c__md_message_processor__.json",
+    "sha256": "cd69cba27f4b91f64a178a53d6afca471fec4dacda9e05f199166ad9a02ee04f"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/HTTP_Request_Configuration__md__io__.xml",
+    "sha256": "5a698319170065740e06744306a9f4dbb07555b4aed112faaa6c86206c49cf50"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/a009b7a6-084d-4049-933e-7275d27ca96d__md_message_processor__.json",
+    "sha256": "2bd70909fe2d8979ae38ab607c261803a9619390e12f7ea64a1f1940d1006eb0"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/b655d2ff-ec13-4d22-ad14-63d66b61fbd6__md_message_processor__.json",
+    "sha256": "a8989b036c82fb46fb5ba638defda2da1834281720a76122a36da49b5eac7aeb"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/types/HTTP_Request_Configuration__md__type__.xml",
+    "sha256": "e002bab36f7f65c8efb46c2aa11b4c82a1534247cc6d94bed35f7cf1a7a72853"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/types/custom/Orders__md__custom_type__.xml",
+    "sha256": "e5e55a8221335a0c676004e2dbe9f9ccef154ea6733df888ee8617053183a82e"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/types/custom/ProcessedOrders__md__custom_type__.xml",
+    "sha256": "cd75e3db1d10bbf799b859acfd5ace367d0b1d8bc150f0cb2e3940414d0749ff"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/catalog/types/custom/report__md__custom_type__.xml",
+    "sha256": "a5dd647400cb3115ac4a17b3413fe27f6b4bf190339af23292b01b2ad09433da"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/mule-project.xml",
+    "sha256": "eb8032960d752e09414b2cca49f836eec26e48e11c83964d530dcec83e91732d"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/pom.xml",
+    "sha256": "abd4bb0f8d5b33b78af92cd664987c913e8161afa21d95dcea7aec050b6197ef"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/api/currency-schema.json",
+    "sha256": "befc7f12236d454b632289a74220260035989b9ebf669ad3c8a8b6a411464867"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/api/currency.raml",
+    "sha256": "3a0bdf5f3e21c1849d39451e1a320ecf87cf5e65efd9ad06d75f646ee22a1ba0"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/app/books.xml",
+    "sha256": "ca14b7be96304892df82fc4860312ee9bf8e888444229fad4d7af79653af6f0c"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/app/currency.xml",
+    "sha256": "2b71c7ef1525e67be4ce832d594efe8175e060415b5e1a78f723302b0df4daa2"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/app/mule-app.properties",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/app/mule-deploy.properties",
+    "sha256": "fe47cf7f8ce97c21fc5b1832127d8a17c3a4a0fe425d33af63c9c625bb375b7f"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/resources/currency.json",
+    "sha256": "e3e8706144f2b8caf08300a2a80354a2d74cbc6b892a09b86032fc088d7a71cd"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/resources/orders.json",
+    "sha256": "0784d83836248b1c080655606990288f794693889fb54d41b04e6af8a4990610"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/resources/orders.xml",
+    "sha256": "7d60bab9d3b52ebf5bd7d0550570386c8d6933757a751fc6acfdabcd345ec686"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/resources/orders.xsd",
+    "sha256": "28e16df44d8f1eb43c3acc2be3b971f21c16de13b8713fe11a2c08b451ff943a"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/main/resources/report.csv",
+    "sha256": "a714697949e651545156ed6df4731e73c2dd4f73bda6b9fcac6eed8c5c806fc7"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/test/java/org/mule/examples/ProcessingOrdersWithDataweaveAndApikitIT.java",
+    "sha256": "6bd177eb45fd578cdd13c47cd53d4315db6acc01c6e67854812b658edb1a4b9b"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/test/resources/log4j2-test.xml",
+    "sha256": "9367f946b9cd5f4012244957f83ad23af285b4786f227946dbcae965bb20c678"
+  },
+  {
+    "path": "processing-orders-with-dataweave-and-APIkit/src/test/resources/sample_data/orders.xml",
+    "sha256": "7d60bab9d3b52ebf5bd7d0550570386c8d6933757a751fc6acfdabcd345ec686"
+  }
+]

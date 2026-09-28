@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "HTTP_Request_Configuration",
+            "typeId": "GET:/currencies"
+        }
+    },
+    "id": "48459530-f32c-4203-bd57-ebb1aa1da23c",
+    "version": "5.2.0.0"
+}

@@ -1,0 +1,83 @@
+<custom__type__definition>
+  <version>5.2.0.0</version>
+  <typeName class="org.mule.common.metadata.DefaultMetaDataKey">
+    <id>report</id>
+    <displayName>report</displayName>
+    <category>DEFAULT</category>
+    <metaDataKeyPropertiesManager>
+      <properties>
+        <org.mule.common.metadata.key.property.dsql.DsqlFromMetaDataKeyProperty/>
+      </properties>
+    </metaDataKeyPropertiesManager>
+  </typeName>
+  <metadataModel class="org.mule.common.metadata.DefaultListMetaDataModel">
+    <dataType>LIST</dataType>
+    <metaDataModelPropertiesManager>
+      <properties/>
+    </metaDataModelPropertiesManager>
+    <model class="org.mule.common.metadata.DefaultStructuredMetadataModel">
+      <dataType>CSV</dataType>
+      <metaDataModelPropertiesManager>
+        <properties>
+          <org.mule.common.metadata.property.CSVHasHeadersMetaDataProperty>
+            <hasHeaders>true</hasHeaders>
+          </org.mule.common.metadata.property.CSVHasHeadersMetaDataProperty>
+        </properties>
+      </metaDataModelPropertiesManager>
+      <fields>
+        <org.mule.common.metadata.DefaultMetaDataField>
+          <name>totalNumberOfItems</name>
+          <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
+            <dataType>STRING</dataType>
+            <metaDataModelPropertiesManager>
+              <properties/>
+            </metaDataModelPropertiesManager>
+          </model>
+          <accessType>READ</accessType>
+          <metaDataFieldPropertyManager>
+            <properties>
+              <org.mule.common.metadata.property.LabelMetaDataProperty>
+                <label>totalNumberOfItems</label>
+              </org.mule.common.metadata.property.LabelMetaDataProperty>
+            </properties>
+          </metaDataFieldPropertyManager>
+        </org.mule.common.metadata.DefaultMetaDataField>
+        <org.mule.common.metadata.DefaultMetaDataField>
+          <name>totalAmount</name>
+          <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
+            <dataType>STRING</dataType>
+            <metaDataModelPropertiesManager>
+              <properties/>
+            </metaDataModelPropertiesManager>
+          </model>
+          <accessType>READ</accessType>
+          <metaDataFieldPropertyManager>
+            <properties>
+              <org.mule.common.metadata.property.LabelMetaDataProperty>
+                <label>totalAmount</label>
+              </org.mule.common.metadata.property.LabelMetaDataProperty>
+            </properties>
+          </metaDataFieldPropertyManager>
+        </org.mule.common.metadata.DefaultMetaDataField>
+        <org.mule.common.metadata.DefaultMetaDataField>
+          <name>averageSellingPrice</name>
+          <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
+            <dataType>STRING</dataType>
+            <metaDataModelPropertiesManager>
+              <properties/>
+            </metaDataModelPropertiesManager>
+          </model>
+          <accessType>READ</accessType>
+          <metaDataFieldPropertyManager>
+            <properties>
+              <org.mule.common.metadata.property.LabelMetaDataProperty>
+                <label>averageSellingPrice</label>
+              </org.mule.common.metadata.property.LabelMetaDataProperty>
+            </properties>
+          </metaDataFieldPropertyManager>
+        </org.mule.common.metadata.DefaultMetaDataField>
+      </fields>
+    </model>
+    <isArray>false</isArray>
+  </metadataModel>
+</custom__type__definition>

@@ -1,0 +1,22 @@
+# Prospective transfer packet
+
+## Independent declared source contract
+
+All statements below describe exported declarations, not observed runtime execution.
+
+- EndpointStep declares allowArbitraryPayload false, no parameter/header validations, and required STRING body keys first_name, last_name, email, title. Exact rejection envelopes and treatment of extra keys have not been established.
+- searchRecords targets Contact with StringExactlyMatches('Email', request.body.email), before branching on ArrayIsEmpty(result.records). A zero-result search leads to creation; any nonempty result leads to the duplicate response. The export does not select a particular matching record.
+- Creation targets Contact and maps first_name to field-FirstName, last_name to field-LastName, email to field-Email, and title to field-Title via string interpolation. field-accountId and field-Description are literal empty strings. Their actual SDK/API serialization is unresolved; neither silently omit nor reinterpret them without documenting evidence and any compatibility decision.
+- Successful creation is followed by HTTP 200 JSON {"status":"200"}. The duplicate path declares HTTP 200 JSON {"status":"400","error":"Duplicate Contact Found"}; the string body status is not an HTTP 400 declaration.
+- Both Salesforce actions declare autoRetry false and continueWorkflowOnError false. Preserve fail-stop intent: a failed search must not proceed to creation or duplicate success; failed creation must not return creation success. Exact source error status/body and framework retry semantics are unresolved.
+- Workflow settings declare optional field_mapping (id 77718f5e-4c38-43ec-98a6-01311372ec7d), useDynamicMapper false, labels 'first name' and 'last name'; define does not consume this input. Do not claim it drives creation fields. defaultEnabled false, hidden false, permissions undefined, workflow id 7f91bc6d-2322-4592-a26a-992035a8d2a1 and registration keys are declared source metadata. Explain their disposition where the destination has no equivalent; do not require an identical target metadata architecture.
+
+## Acceptance and verification
+
+Assess source-to-target preservation independently of generated target tests. Observe a representative valid request with no matches: one email search, one Contact creation with the declared mapped values/literals (or an evidence-supported documented compatibility difference), and the declared success response. With one and multiple matches, observe the same duplicate response and no creation. Test missing/wrong-type inputs against the declared required-string schema without inventing the source rejection envelope. Probe special-character email values to check the destination search safely represents the supplied email and the intended equality operation; do not assert Salesforce collation, case sensitivity, whitespace normalization, pagination, or operator serialization without authoritative evidence. Inject search and create failures to check fail-stop behavior and absence of false success. Verify the two HTTP/body status combinations separately. Verification may use controlled doubles; identify what it proves versus what needs live-account validation.
+
+A satisfactory migration is reviewable, limited to this workflow, uses supported destination mechanisms grounded in official contracts, preserves declared behavior where known, and records precise unresolved decisions. It must not invent source dependencies or claim live validation without executing it. Do not force a particular target architecture, field layout, component name, or helper implementation.
+
+## Missing evidence and limits
+
+The Salesforce integration module imported as @useparagon/integrations/salesforce is absent from supplied files and is not declared in package.json. The para CLI/build environment is also not established by the manifest. Salesforce config.ts imports numerous workflows absent from the supplied export; these imports remain untouched as context, not a request to supply or migrate them. Source cannot be assumed independently buildable. Search result shape is used as result.records, but SDK transport, equality translation, empty field handling, auth/tenant routing, retry execution, endpoint URL/authentication, validation failures and platform error envelopes are not evidenced here. Concurrent requests can race between search and create; the export supplies no atomic uniqueness guarantee. No runtime or API contract was invented to fill these gaps.

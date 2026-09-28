@@ -1,0 +1,1 @@
+The user maintains an existing integration and wants to move one Salesforce contact-creation endpoint to Prismatic while retaining its externally observable behavior. They supplied an incomplete Paragraph export, not a running source installation. They have not requested deployment, unrelated workflow migration, or product behavior changes.

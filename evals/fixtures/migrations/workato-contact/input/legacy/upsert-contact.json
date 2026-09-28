@@ -1,0 +1,299 @@
+{
+  "name": "Upsert Contact By Email",
+  "description": "Callable recipe: upsert Contact by email - creates new or updates existing",
+  "version": 2,
+  "private": true,
+  "concurrency": 1,
+  "code": {
+    "number": 0,
+    "provider": "workato_recipe_function",
+    "name": "execute",
+    "as": "trigger",
+    "keyword": "trigger",
+    "input": {
+      "parameters_schema_json": "[{\"name\":\"email\",\"label\":\"Email\",\"type\":\"string\",\"control_type\":\"text\",\"optional\":false,\"hint\":\"Contact email address\"},{\"name\":\"first_name\",\"label\":\"First name\",\"type\":\"string\",\"control_type\":\"text\",\"optional\":true,\"hint\":\"Contact first name\"},{\"name\":\"last_name\",\"label\":\"Last name\",\"type\":\"string\",\"control_type\":\"text\",\"optional\":false,\"hint\":\"Contact last name (Salesforce required)\"}]",
+      "result_schema_json": "[{\"name\":\"contact_id\",\"label\":\"Contact ID\",\"type\":\"string\",\"control_type\":\"text\"},{\"name\":\"status\",\"label\":\"Status\",\"type\":\"string\",\"control_type\":\"text\"}]"
+    },
+    "extended_output_schema": [
+      {
+        "label": "Parameters",
+        "name": "parameters",
+        "properties": [
+          {
+            "control_type": "text",
+            "label": "Email",
+            "name": "email",
+            "type": "string",
+            "optional": false,
+            "hint": "Contact email address"
+          },
+          {
+            "control_type": "text",
+            "label": "First name",
+            "name": "first_name",
+            "type": "string",
+            "optional": true,
+            "hint": "Contact first name"
+          },
+          {
+            "control_type": "text",
+            "label": "Last name",
+            "name": "last_name",
+            "type": "string",
+            "optional": false,
+            "hint": "Contact last name (Salesforce required)"
+          }
+        ],
+        "type": "object"
+      }
+    ],
+    "block": [
+      {
+        "number": 1,
+        "keyword": "try",
+        "input": {},
+        "block": [
+          {
+            "number": 2,
+            "provider": "salesforce",
+            "name": "upsert_sobject",
+            "as": "upsert_contact",
+            "keyword": "action",
+            "dynamicPickListSelection": {
+              "sobject_name": "Contact",
+              "query_field.primary_key": [
+                {
+                  "label": "Email",
+                  "value": "Email"
+                }
+              ]
+            },
+            "input": {
+              "sobject_name": "Contact",
+              "query_field": {
+                "primary_key": "Email"
+              },
+              "Email": "#{_dp('{\"pill_type\":\"output\",\"provider\":\"workato_recipe_function\",\"line\":\"trigger\",\"path\":[\"parameters\",\"email\"]}')}",
+              "FirstName": "=_dp('{\"pill_type\":\"output\",\"provider\":\"workato_recipe_function\",\"line\":\"trigger\",\"path\":[\"parameters\",\"first_name\"]}').present? ? _dp('{\"pill_type\":\"output\",\"provider\":\"workato_recipe_function\",\"line\":\"trigger\",\"path\":[\"parameters\",\"first_name\"]}') : skip",
+              "LastName": "#{_dp('{\"pill_type\":\"output\",\"provider\":\"workato_recipe_function\",\"line\":\"trigger\",\"path\":[\"parameters\",\"last_name\"]}')}"
+            },
+            "extended_input_schema": [
+              {
+                "control_type": "text",
+                "custom": false,
+                "label": "Last Name",
+                "name": "LastName",
+                "type": "string",
+                "sfdc_createable": true,
+                "sfdc_updateable": true
+              },
+              {
+                "control_type": "text",
+                "custom": false,
+                "hint": "Search for Contact where Email has this value. If a record already exists, it will be updated. Otherwise, a new record will be created",
+                "label": "Email",
+                "name": "Email",
+                "optional": true,
+                "sticky": true,
+                "type": "string",
+                "sfdc_createable": true,
+                "sfdc_updateable": true
+              },
+              {
+                "control_type": "text",
+                "custom": false,
+                "label": "First Name",
+                "name": "FirstName",
+                "optional": true,
+                "type": "string",
+                "sfdc_createable": true,
+                "sfdc_updateable": true
+              }
+            ],
+            "uuid": "upsert-contact-002"
+          },
+          {
+            "number": 3,
+            "provider": "workato_recipe_function",
+            "name": "return_result",
+            "as": "return_success",
+            "keyword": "action",
+            "input": {
+              "result": {
+                "contact_id": "#{_dp('{\"pill_type\":\"output\",\"provider\":\"salesforce\",\"line\":\"upsert_contact\",\"path\":[\"id\"]}')}",
+                "status": "success"
+              }
+            },
+            "extended_output_schema": [
+              {
+                "label": "Result",
+                "name": "result",
+                "properties": [
+                  {
+                    "control_type": "text",
+                    "label": "Contact ID",
+                    "name": "contact_id",
+                    "type": "string"
+                  },
+                  {
+                    "control_type": "text",
+                    "label": "Status",
+                    "name": "status",
+                    "type": "string"
+                  }
+                ],
+                "type": "object"
+              }
+            ],
+            "extended_input_schema": [
+              {
+                "label": "Result",
+                "name": "result",
+                "properties": [
+                  {
+                    "control_type": "text",
+                    "label": "Contact ID",
+                    "name": "contact_id",
+                    "type": "string"
+                  },
+                  {
+                    "control_type": "text",
+                    "label": "Status",
+                    "name": "status",
+                    "type": "string"
+                  }
+                ],
+                "type": "object"
+              }
+            ],
+            "uuid": "return-success-003"
+          },
+          {
+            "number": 4,
+            "as": "catch_error",
+            "keyword": "catch",
+            "provider": null,
+            "input": {
+              "max_retry_count": "0",
+              "retry_interval": "2"
+            },
+            "block": [
+              {
+                "number": 5,
+                "provider": "logger",
+                "name": "log_message",
+                "as": "log_error",
+                "keyword": "action",
+                "input": {
+                  "message": "Error upserting contact: #{_dp('{\"pill_type\":\"output\",\"provider\":\"catch\",\"line\":\"catch_error\",\"path\":[\"message\"]}')}",
+                  "user_logs_enabled": "false"
+                },
+                "extended_input_schema": [
+                  {
+                    "control_type": "switch",
+                    "default": false,
+                    "disable_formula": true,
+                    "extends_schema": true,
+                    "hint": "Send a copy of the message to Workato logs.",
+                    "label": "Send to Workato log service",
+                    "name": "user_logs_enabled",
+                    "optional": true,
+                    "type": "string"
+                  }
+                ],
+                "uuid": "log-error-005"
+              },
+              {
+                "number": 6,
+                "provider": "workato_recipe_function",
+                "name": "return_result",
+                "as": "return_error",
+                "keyword": "action",
+                "input": {
+                  "result": {
+                    "contact_id": "=null",
+                    "status": "=('error: ' + _dp('{\"pill_type\":\"output\",\"provider\":\"catch\",\"line\":\"catch_error\",\"path\":[\"message\"]}'))"
+                  }
+                },
+                "extended_output_schema": [
+                  {
+                    "label": "Result",
+                    "name": "result",
+                    "properties": [
+                      {
+                        "control_type": "text",
+                        "label": "Contact ID",
+                        "name": "contact_id",
+                        "type": "string"
+                      },
+                      {
+                        "control_type": "text",
+                        "label": "Status",
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "extended_input_schema": [
+                  {
+                    "label": "Result",
+                    "name": "result",
+                    "properties": [
+                      {
+                        "control_type": "text",
+                        "label": "Contact ID",
+                        "name": "contact_id",
+                        "type": "string"
+                      },
+                      {
+                        "control_type": "text",
+                        "label": "Status",
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "uuid": "return-error-006"
+              }
+            ],
+            "uuid": "catch-error-004"
+          }
+        ],
+        "uuid": "try-upsert-001"
+      }
+    ],
+    "uuid": "trigger-upsert-contact-001",
+    "format_version": 2
+  },
+  "config": [
+    {
+      "keyword": "application",
+      "name": "workato_recipe_function",
+      "provider": "workato_recipe_function",
+      "skip_validation": false,
+      "account_id": null
+    },
+    {
+      "keyword": "application",
+      "name": "salesforce",
+      "provider": "salesforce",
+      "skip_validation": false,
+      "account_id": {
+        "zip_name": "Salesforce/de_org.connection.json",
+        "name": "DE Org",
+        "folder": "Salesforce"
+      }
+    },
+    {
+      "keyword": "application",
+      "name": "logger",
+      "provider": "logger",
+      "skip_validation": false,
+      "account_id": null
+    }
+  ]
+}
