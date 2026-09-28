@@ -1,0 +1,17 @@
+From: sender@example.com
+To: intake@example.com
+Subject: Import packet
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=packet
+
+--packet
+Content-Type: text/plain; charset=utf-8
+
+Please process the attached packet.
+--packet
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="packet.bin"
+Content-Transfer-Encoding: base64
+
+AAFBQgo=
+--packet--

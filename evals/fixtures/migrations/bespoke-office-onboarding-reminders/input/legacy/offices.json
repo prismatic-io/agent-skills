@@ -1,0 +1,5 @@
+[
+  {"id":"office/east", "name":"Boston", "timezone":"America/New_York", "coordinatorEmail":"boston-people@example.test"},
+  {"id":"office/uk", "name":"London", "timezone":"Europe/London", "coordinatorEmail":"london-people@example.test"},
+  {"id":"office/nepal", "name":"Kathmandu", "timezone":"Asia/Kathmandu", "coordinatorEmail":"kathmandu-people@example.test"}
+]

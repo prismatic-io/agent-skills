@@ -1,0 +1,42 @@
+{
+  "reviewedAt": "2026-10-06T09:00:00Z",
+  "publishedIntegrationVersion": 7,
+  "observations": [
+    {
+      "instanceLabel": "cedar-pilot",
+      "customerRef": "cedar",
+      "integrationVersion": 7,
+      "enabled": false,
+      "oauthApplicationLabel": "crm-production",
+      "configuration": {
+        "CRM Connection": {
+          "scope": "instance",
+          "targetAccountVerified": false
+        },
+        "Region": "EU",
+        "Include archived contacts": true,
+        "Field mapping": { "customer_reference": "External_Account__c" }
+      }
+    },
+    {
+      "instanceLabel": "juniper-pilot",
+      "customerRef": "juniper",
+      "integrationVersion": 6,
+      "enabled": false,
+      "oauthApplicationLabel": "crm-staging",
+      "configuration": {
+        "CRM Connection": {
+          "scope": "instance",
+          "targetAccountVerified": false
+        },
+        "Region": "US",
+        "Include archived contacts": false
+      }
+    }
+  ],
+  "integrationDefaults": {
+    "Region": "US",
+    "Include archived contacts": false,
+    "Field mapping": {}
+  }
+}
