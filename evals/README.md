@@ -10,7 +10,7 @@ Prerequisites: repository mise tools; authenticated Claude Code (`claude`), Code
 (`codex`), and Grok Build (`grok`) CLIs; and a built
 incur-based Prism checkout at `../../prism` (relative to this directory).
 `PRISM_ROOT` can select another Prism checkout. Lux is pinned to the published
-`0.0.2-preview.27` package in both development manifests and lockfiles.
+`0.0.2-preview.28` package in both development manifests and lockfiles.
 No local Lux checkout is required. Installable skills have no Lux dependency.
 
 The pinned Node.js 22.18.0 runs TypeScript directly; helpers need no build step.
@@ -173,7 +173,7 @@ compute or capability. Persona answering and all rubric judging use Claude Code
 are shared. Integration cases also default to Codex and can be run
 with `PRISM_READ_ONLY=true lux run --tag integration-skill` using the CLI path above.
 
-Lux preview.27 supplies native Claude Code, Codex, Antigravity, and Grok Build
+Lux preview.28 supplies native Claude Code, Codex, Antigravity, and Grok Build
 drivers. `component-agents.ts` configures the additional profiles;
 `run-components.ts` runs the component-tagged cases once per profile. Direct
 `lux run` defaults to Codex; use `--profile` to select another subject.
@@ -207,7 +207,7 @@ limitation, not silently retried with broader permissions.
 
 On Antigravity 1.2.10–1.2.11, this host uses `enableTerminalSandbox: true`
 and `toolPermission: "proceed-in-sandbox"`; the profile sets `sandbox: true`
-and `mode: "accept-edits"` (also the Lux preview.27 driver default).
+and `mode: "accept-edits"` (also the Lux preview.28 driver default).
 Explicit editing mode fixes the observed sandbox workspace-write failures.
 There are no `command(...)` allow rules: these versions use them to authorize
 outside-sandbox execution too. They ignore `unsandboxed(...)` rules, so those

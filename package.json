@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@prismatic-io/lux": "0.0.2-preview.27",
+    "@prismatic-io/lux": "0.0.2-preview.28",
     "@biomejs/biome": "2.5.13",
     "@types/node": "22",
     "typescript": "7.0.2",

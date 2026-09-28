@@ -6,7 +6,7 @@
       "name": "@prismatic-io/agent-skills",
       "devDependencies": {
         "@biomejs/biome": "2.5.13",
-        "@prismatic-io/lux": "0.0.2-preview.27",
+        "@prismatic-io/lux": "0.0.2-preview.28",
         "@types/node": "22",
         "typescript": "7.0.2",
         "vitest": "4.1.9",
@@ -93,7 +93,7 @@
 
     "@oxc-project/types": ["@oxc-project/types@0.142.0", "", {}, "sha512-7W+2q5AKQVU36fkaryontrHn3YDt1RyUYXatw9i5H8ocYe2sPKSFB6eS8WNPeRKiN1qAWWZUPm7gwFzJGrccqQ=="],
 
-    "@prismatic-io/lux": ["@prismatic-io/lux@0.0.2-preview.27", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "@vscode/windows-process-tree": "0.8.0", "incur": "^0.5.1", "oxc-parser": "^0.142.0", "tempy": "^3.2.0", "tinyexec": "1.2.4", "tinyglobby": "^0.2.17", "xstate": "5.32.0", "zod": "^4.4.3" }, "bin": { "lux": "lib/cli/bin.js" } }, "sha512-rYJ5anXt5z6rsVjIVrcMdmfWgj1ywy4qyn1PA3/9Cq30GcuDuZ6nB7PRm4iegW/PrzPklx0bO/FCkAStnt8DKQ=="],
+    "@prismatic-io/lux": ["@prismatic-io/lux@0.0.2-preview.28", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "@vscode/windows-process-tree": "0.8.0", "incur": "^0.5.1", "oxc-parser": "^0.142.0", "tempy": "^3.2.0", "tinyexec": "1.2.4", "tinyglobby": "^0.2.17", "xstate": "5.32.0", "zod": "^4.4.3" }, "bin": { "lux": "lib/cli/bin.js" } }, "sha512-2kO73ATQzLfiuZr/tTpjOPqdmFQ/Hmug/nhhXmathGJ2+4BsjO3gwlHeFc6dVJtfpvabO4TCSW7XgS5oAR8LTg=="],
 
     "@rolldown/binding-android-arm-eabi": ["@rolldown/binding-android-arm-eabi@1.2.11", "", { "os": "android", "cpu": "arm" }, "sha512-A5kXfGKvKWWZE0TtPrfsvT+q4Y5d1QG8gGUzpYjGydM+fARM9MuX90PrXYXe0XbsDVgyxxNzHo6giCj90bsFNw=="],
 
