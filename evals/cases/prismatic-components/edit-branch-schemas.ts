@@ -1,0 +1,87 @@
+import assert from "node:assert/strict";
+import { resolve } from "node:path";
+import type { EditCheck } from "./_check-edit.ts";
+import { object, schemaAccepts, schemaPropertyNames } from "./_check-edit.ts";
+import { defineComponentCase } from "./_component-case.ts";
+
+export default defineComponentCase({
+  id: "edit-branch-schemas",
+  service: "Partner Records",
+  mode: "edit",
+  fixture: resolve(import.meta.dirname, "../../fixtures/components/records"),
+  request:
+    "The existing Partner Records connector has a Review Contact action that takes Approved or Rejected branches. Builders need to see the appropriate fields on each branch before running it: approval time for Approved, and reason plus whether it can be retried for Rejected. Add that capability without changing routing or the returned data. API.md describes the service.",
+  persona:
+    "You build low-code integrations with both review branches. You need fields available for mapping before execution and have no preference about code organization. No live partner account is available; publish a sandbox copy for review.",
+  operations: [
+    "Review Contact with distinct discoverable fields for Approved and Rejected",
+  ],
+  apiFailure: false,
+  preserved: [
+    "all existing action/connection/input keys, exact Approved and Rejected branch names, payload shapes, and routing",
+  ],
+  // component-checks verifies compiled branch schemas, routing, payloads, and
+  // published metadata. A source-text rubric can misread SDK serialization.
+  tests: [],
+  tags: ["edit", "output-schema", "branching"],
+});
+
+export const check: EditCheck = {
+  kind: "actions",
+  member: () => "reviewContact",
+  feature: async ({ component, harness, connection, controls }) => {
+    const action = component.actions.reviewContact;
+    assert.deepEqual([...(action.staticBranchNames ?? [])].sort(), [
+      "Approved",
+      "Rejected",
+    ]);
+    const schema = action.outputSchema;
+    assert.ok(
+      schema?.type === "branchingOutput",
+      "Missing branch output schemas",
+    );
+    assert.deepEqual(schema.branchSchemas.map(({ name }) => name).sort(), [
+      "Approved",
+      "Rejected",
+    ]);
+    const approved = { contactId: "c/1", approvedAt: "2026-01-02T03:04:05Z" };
+    const rejected = {
+      contactId: "c/1",
+      reason: "Missing consent",
+      retryable: false,
+    };
+    for (const [name, valid] of [
+      ["Approved", approved],
+      ["Rejected", rejected],
+    ] as const) {
+      const branch: { name: string; schema: string } | undefined =
+        schema.branchSchemas.find((entry) => entry.name === name);
+      assert.ok(branch);
+      assert.deepEqual(
+        schemaPropertyNames(object(JSON.parse(branch.schema))).sort(),
+        Object.keys(valid).sort(),
+        "Branch must expose its own data fields, without a result wrapper or the other branch's fields",
+      );
+      schemaAccepts(
+        branch.schema,
+        [valid],
+        [
+          { ...valid, contactId: 1 },
+          name === "Rejected"
+            ? { ...valid, retryable: "false" }
+            : { ...valid, approvedAt: 1 },
+          ...(name === "Rejected" ? [{ ...valid, reason: 1 }] : []),
+        ],
+      );
+      controls.rejectReview = name === "Rejected";
+      const result = object(
+        await harness.action("reviewContact", {
+          connection,
+          contactId: "c/1",
+        }),
+      );
+      assert.equal(result.branch, name);
+      assert.deepEqual(result.data, valid);
+    }
+  },
+};

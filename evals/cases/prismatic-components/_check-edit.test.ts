@@ -1,7 +1,27 @@
 import assert from "node:assert/strict";
 import type { testing } from "@prismatic-io/spectral";
 import { test } from "vitest";
-import { checkCompiledEdit, schemaAccepts } from "./check-edit.ts";
+import {
+  checkCompiledEdit,
+  type EditCheck,
+  loadEditCheck,
+  schemaAccepts,
+} from "./_check-edit.ts";
+import { check as edit_branch_schemas } from "./edit-branch-schemas.ts";
+import { check as edit_dynamic_input } from "./edit-dynamic-input.ts";
+import { check as edit_output_schema } from "./edit-output-schema.ts";
+import { check as edit_project_picklist } from "./edit-project-picklist.ts";
+import { check as edit_structured_input } from "./edit-structured-input.ts";
+import { check as edit_webhook_listening } from "./edit-webhook-listening.ts";
+
+const caseChecks: Record<string, EditCheck> = {
+  "edit-output-schema": edit_output_schema,
+  "edit-branch-schemas": edit_branch_schemas,
+  "edit-structured-input": edit_structured_input,
+  "edit-dynamic-input": edit_dynamic_input,
+  "edit-project-picklist": edit_project_picklist,
+  "edit-webhook-listening": edit_webhook_listening,
+};
 
 type Component = Parameters<typeof testing.createHarness>[0];
 type Json = Record<string, unknown>;
@@ -251,7 +271,7 @@ const goodComponent = (): Component =>
               undefined,
               "DELETE",
             );
-          return { crossFlowState: { [key]: undefined } };
+          return { crossFlowState: { [key]: null } };
         },
       },
     },
@@ -266,7 +286,7 @@ for (const id of [
   "webhook-listening",
 ]) {
   test(`trusted oracle accepts correct ${id} behavior`, async () => {
-    await checkCompiledEdit(goodComponent(), `edit-${id}`);
+    await checkCompiledEdit(goodComponent(), caseChecks[`edit-${id}`]);
   });
 }
 
@@ -328,7 +348,7 @@ test("draft-04 contact metadata is accepted without changing its dialect", async
       $schema: "http://json-schema.org/draft-04/schema#",
     }),
   };
-  await checkCompiledEdit(component, "edit-output-schema");
+  await checkCompiledEdit(component, caseChecks["edit-output-schema"]);
 });
 
 test("descriptive branch schemas do not need required arrays", async () => {
@@ -340,7 +360,7 @@ test("descriptive branch schemas do not need required arrays", async () => {
     delete schema.required;
     branch.schema = JSON.stringify(schema);
   }
-  await checkCompiledEdit(component, "edit-branch-schemas");
+  await checkCompiledEdit(component, caseChecks["edit-branch-schemas"]);
 });
 
 test("descriptive branch metadata still rejects union fields and result wrappers", async () => {
@@ -356,7 +376,7 @@ test("descriptive branch metadata still rejects union fields and result wrappers
       properties,
     });
     await assert.rejects(
-      () => checkCompiledEdit(component, "edit-branch-schemas"),
+      () => checkCompiledEdit(component, caseChecks["edit-branch-schemas"]),
       /own data fields/,
     );
   }
@@ -371,7 +391,7 @@ test("descriptive branch metadata must preserve field types", async () => {
     properties: { ...rejectedSchema.properties, retryable: {} },
   });
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-branch-schemas"),
+    () => checkCompiledEdit(component, caseChecks["edit-branch-schemas"]),
     /accepts invalid/,
   );
 });
@@ -394,7 +414,7 @@ test("structured fields may be grouped under an employee input", async () => {
       connection: params.connection,
       ...(params.employee as Json),
     });
-  await checkCompiledEdit(component, "edit-structured-input");
+  await checkCompiledEdit(component, caseChecks["edit-structured-input"]);
 });
 
 test("structured employee fields may use descriptive names", async () => {
@@ -407,7 +427,90 @@ test("structured employee fields may use descriptive names", async () => {
   name.label = "Employee Name";
   action.perform = (context, params) =>
     original(context, { ...params, name: params.employeeName });
-  await checkCompiledEdit(component, "edit-structured-input");
+  await checkCompiledEdit(component, caseChecks["edit-structured-input"]);
+});
+
+test("structured metadata is bound by behavior rather than a new input key", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  const externalId = action.inputs.find(({ key }) => key === "externalId");
+  assert.ok(externalId);
+  externalId.key = "partnerReference";
+  externalId.label = "Metadata External ID";
+  action.inputs.unshift(input("unrelatedOptionalNote"));
+  action.perform = (context, params) =>
+    original(context, { ...params, externalId: params.partnerReference });
+  await checkCompiledEdit(component, caseChecks["edit-structured-input"]);
+});
+
+test("a correctly named but ignored metadata input is rejected", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, { ...params, externalId: undefined });
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-structured-input"]),
+    /No optional designer input/,
+  );
+});
+
+test("metadata must preserve the supplied identifier rather than a fixed value", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, {
+      ...params,
+      externalId: params.externalId ? "external-1" : undefined,
+    });
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-structured-input"]),
+    /No optional designer input/,
+  );
+});
+
+test("metadata must remain absent when its input is omitted", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = (context, params) =>
+    original(context, {
+      ...params,
+      externalId: params.externalId || "unrequested-default",
+    });
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-structured-input"]),
+    /No optional designer input/,
+  );
+});
+
+test("metadata external ID must not be a required designer input", async () => {
+  const component = goodComponent();
+  const externalId = component.actions.employeeFields.inputs.find(
+    ({ key }) => key === "externalId",
+  );
+  assert.ok(externalId);
+  externalId.required = true;
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-structured-input"]),
+    /No optional designer input/,
+  );
+});
+
+test("a correct final employee request does not hide duplicate creation", async () => {
+  const component = goodComponent();
+  const action = component.actions.employeeFields;
+  const original = action.perform;
+  action.perform = async (context, params) => {
+    await original(context, params);
+    return original(context, params);
+  };
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-structured-input"]),
+    /Expected exactly one creation write/,
+  );
 });
 
 test("dynamic configuration fields may use supported structured groups", async () => {
@@ -440,7 +543,7 @@ test("dynamic configuration fields may use supported structured groups", async (
       },
     });
   };
-  await checkCompiledEdit(component, "edit-dynamic-input");
+  await checkCompiledEdit(component, caseChecks["edit-dynamic-input"]);
 });
 
 test("dynamic requests cannot forward the configuration wrapper", async () => {
@@ -456,7 +559,7 @@ test("dynamic requests cannot forward the configuration wrapper", async () => {
     };
   };
   await assert.rejects(() =>
-    checkCompiledEdit(component, "edit-dynamic-input"),
+    checkCompiledEdit(component, caseChecks["edit-dynamic-input"]),
   );
 });
 
@@ -472,7 +575,7 @@ test("dynamic actions may forward valid selected configuration values", async ()
       ),
     };
   };
-  await checkCompiledEdit(component, "edit-dynamic-input");
+  await checkCompiledEdit(component, caseChecks["edit-dynamic-input"]);
 });
 
 test("webhook registration must select its own flow URL", async () => {
@@ -491,7 +594,7 @@ test("webhook registration must select its own flow URL", async () => {
       params,
     );
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-webhook-listening"),
+    () => checkCompiledEdit(component, caseChecks["edit-webhook-listening"]),
     /another flow/,
   );
 });
@@ -509,7 +612,7 @@ test("webhook state survives changing version-specific flow IDs", async () => {
       );
   }
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-webhook-listening"),
+    () => checkCompiledEdit(component, caseChecks["edit-webhook-listening"]),
     /duplicates subscriptions/,
   );
 });
@@ -518,7 +621,7 @@ test("passing code without requested metadata is rejected", async () => {
   const component = goodComponent();
   delete component.actions.getContact.outputSchema;
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-output-schema"),
+    () => checkCompiledEdit(component, caseChecks["edit-output-schema"]),
     /output schema/,
   );
 });
@@ -531,7 +634,7 @@ test("an unrelated data source cannot substitute for input linkage", async () =>
   assert.ok(project);
   delete project.dataSource;
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-project-picklist"),
+    () => checkCompiledEdit(component, caseChecks["edit-project-picklist"]),
     /data source reference/,
   );
 });
@@ -540,7 +643,7 @@ test("correct metadata with a stub dynamic implementation is rejected", async ()
   const component = goodComponent();
   component.actions.record.perform = async () => ({ data: {} });
   await assert.rejects(() =>
-    checkCompiledEdit(component, "edit-dynamic-input"),
+    checkCompiledEdit(component, caseChecks["edit-dynamic-input"]),
   );
 });
 
@@ -558,7 +661,7 @@ test("silent wrong token use is rejected independently of subject tests", async 
     });
   };
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-output-schema"),
+    () => checkCompiledEdit(component, caseChecks["edit-output-schema"]),
     /configured connection/,
   );
 });
@@ -569,7 +672,67 @@ test("instance-only lifecycle handlers cannot pass Listening Mode", async () => 
     component.triggers.contactChanged.webhookCreate;
   delete component.triggers.contactChanged.webhookCreate;
   await assert.rejects(
-    () => checkCompiledEdit(component, "edit-webhook-listening"),
+    () => checkCompiledEdit(component, caseChecks["edit-webhook-listening"]),
     /Listening Mode/,
+  );
+});
+
+test("webhook cleanup must survive serialized returned state", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  const remove = trigger.webhookDelete;
+  assert.ok(remove);
+  trigger.webhookDelete = async (context, params) => {
+    await remove(context, params);
+    return { crossFlowState: { [context.flow.stableId]: undefined } };
+  };
+  await assert.rejects(
+    () => checkCompiledEdit(component, caseChecks["edit-webhook-listening"]),
+    /stale persisted state/,
+  );
+});
+
+test("webhook state supports context mutation and direct deletion", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  for (const key of ["webhookCreate", "webhookDelete"] as const) {
+    const handler = trigger[key];
+    assert.ok(handler);
+    trigger[key] = async (context, params) => {
+      const result = await handler(context, params);
+      for (const [stateKey, value] of Object.entries(
+        result?.crossFlowState ?? {},
+      )) {
+        if (value === null) delete context.crossFlowState[stateKey];
+        else context.crossFlowState[stateKey] = value;
+      }
+    };
+  }
+  await checkCompiledEdit(component, caseChecks["edit-webhook-listening"]);
+});
+
+test("failed webhook cleanup does not commit context mutations", async () => {
+  const component = goodComponent();
+  const trigger = component.triggers.contactChanged;
+  const remove = trigger.webhookDelete;
+  assert.ok(remove);
+  trigger.webhookDelete = async (context, params) => {
+    const snapshot = structuredClone(context.crossFlowState);
+    delete context.crossFlowState[context.flow.stableId];
+    return remove({ ...context, crossFlowState: snapshot }, params);
+  };
+  await checkCompiledEdit(component, caseChecks["edit-webhook-listening"]);
+});
+
+test("edit checks load from authored case paths", async () => {
+  for (const id of Object.keys(caseChecks)) {
+    const loaded = await loadEditCheck(
+      new URL(`./${id}.ts`, import.meta.url).pathname,
+    );
+    assert.equal(loaded, caseChecks[id]);
+  }
+  await assert.rejects(
+    loadEditCheck(new URL("./new-employees.ts", import.meta.url).pathname),
+    /does not export an edit check/,
   );
 });

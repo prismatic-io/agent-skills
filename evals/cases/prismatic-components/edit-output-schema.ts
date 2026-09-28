@@ -1,11 +1,14 @@
+import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import type { EditCheck } from "./_check-edit.ts";
+import { contact, object, schemaAccepts } from "./_check-edit.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "edit-output-schema",
   service: "Partner Records",
   mode: "edit",
-  fixture: resolve(import.meta.dirname, "../fixtures/components/records"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/components/records"),
   request:
     "Our existing Partner Records connector is in this directory, with its API contract in API.md. Get Contact works, but builders cannot see its output fields until they execute it. Make the fields available beforehand in the low-code designer, including its address, tags, and optional email. Keep the output and existing integrations working as they do now.",
   persona:
@@ -25,3 +28,38 @@ export default defineComponentCase({
   tests: [],
   tags: ["edit", "output-schema", "metadata"],
 });
+
+export const check: EditCheck = {
+  kind: "actions",
+  member: () => "getContact",
+  feature: async ({ component, harness, connection, calls }) => {
+    const schema = component.actions.getContact.outputSchema;
+    assert.equal(
+      schema?.type,
+      "actionOutput",
+      "Missing registered action output schema",
+    );
+    assert.ok(schema?.type === "actionOutput");
+    schemaAccepts(
+      schema.schema,
+      [contact, { ...contact, email: "ada@example.test" }],
+      [
+        { data: contact },
+        { ...contact, active: "false" },
+        { ...contact, tags: [1] },
+        { ...contact, email: 2 },
+        { ...contact, id: 2 },
+        { ...contact, name: false },
+        { ...contact, address: { city: 2, country: "GB" } },
+        { ...contact, address: { city: "London", country: false } },
+      ],
+    );
+    assert.deepEqual(
+      object(
+        await harness.action("getContact", { connection, contactId: "c/1" }),
+      ).data,
+      contact,
+    );
+    assert.equal(calls[0].path, "/contacts/c%2F1");
+  },
+};

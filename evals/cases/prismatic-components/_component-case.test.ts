@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
+import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
 import {
   type ComponentCase,
   componentAssertions,
   defineComponentCase,
-} from "./component-case.ts";
+} from "./_component-case.ts";
 
 const base: ComponentCase = {
   id: "harness-test",
@@ -23,8 +24,30 @@ const rubricText = (spec: ComponentCase, id: string) => {
   return "criteria" in assertion ? String(assertion.criteria) : "";
 };
 
+test("truncated permission context retains publication scope and restrictions together", () => {
+  for (const mode of ["create", "edit"] as const) {
+    const result = defineComponentCase({
+      ...base,
+      id: "edit-webhook-listening",
+      mode,
+      fixture: resolve(import.meta.dirname, "../../fixtures/contact-example"),
+    });
+    // Grok's native classifier retains 397 bytes plus an ellipsis per turn.
+    const prefix = Buffer.from(result.prompt).subarray(0, 397).toString();
+    assert.match(prefix, /mocked service calls/);
+    assert.match(prefix, /Publish only a fresh edit-webhook-listening-lux-\*/);
+    assert.match(prefix, /authenticated Prismatic sandbox/);
+    assert.match(prefix, /leave it for review/);
+    assert.match(
+      prefix,
+      /Do not change other components or live service accounts\./,
+    );
+    assert.ok(result.prompt.includes(base.request));
+  }
+});
+
 test("a spec fixture does not turn a creation case into an edit case", () => {
-  const fixture = resolve(import.meta.dirname, "fixtures/spec-example");
+  const fixture = resolve(import.meta.dirname, "../../fixtures/spec-example");
   const result = defineComponentCase({ ...base, fixture, mode: "create" });
   assert.deepEqual(result.fixtures, { kind: "dir", path: fixture });
   assert.ok(Array.isArray(result.meta?.tags));
@@ -36,7 +59,10 @@ test("a spec fixture does not turn a creation case into an edit case", () => {
 });
 
 test("edit cases use their own fixture and preserve member keys while publishing a fresh component", () => {
-  const fixture = resolve(import.meta.dirname, "fixtures/contact-example");
+  const fixture = resolve(
+    import.meta.dirname,
+    "../../fixtures/contact-example",
+  );
   const result = defineComponentCase({
     ...base,
     fixture,
@@ -71,7 +97,10 @@ test("the legacy continuation override cannot silently replace an authored fixtu
       () =>
         defineComponentCase({
           ...base,
-          fixture: resolve(import.meta.dirname, "fixtures/contact-example"),
+          fixture: resolve(
+            import.meta.dirname,
+            "../../fixtures/contact-example",
+          ),
           mode: "edit",
         }),
       /fixture|override|continuation/i,
@@ -162,5 +191,41 @@ test("metadata-only cases retain independent verification without mandating mirr
   );
   assert.ok(
     componentAssertions(base).some(({ id }) => id === "meaningful-tests"),
+  );
+});
+
+test("edit command passes the authored case path to the generic checker", () => {
+  const fixture = resolve(
+    import.meta.dirname,
+    "../../fixtures/contact-example",
+  );
+  const assertions = componentAssertions({
+    ...base,
+    id: "edit-output-schema",
+    fixture,
+    mode: "edit",
+  });
+  const command = assertions.find((entry) => entry.id === "component-checks");
+  assert.ok(command && command.type === "command-exits-zero");
+  assert.match(command.command, /_check-component\.ts/);
+  assert.match(command.command, /--case .*edit-output-schema\.ts/);
+  assert.doesNotMatch(command.command, /--case-id/);
+});
+
+test("Lux discovers component cases without underscore-prefixed helpers", async () => {
+  const root = resolve(import.meta.dirname, "..");
+  const discovery = await discoverCases(root);
+  assert.deepEqual(discovery.problems, []);
+  const components = discovery.cases.filter((entry) =>
+    entry.id.startsWith("prismatic-components/"),
+  );
+  assert.equal(components.length, 13);
+  assert.ok(
+    components.every((entry) =>
+      entry.relPath.startsWith("prismatic-components/"),
+    ),
+  );
+  assert.ok(
+    components.every((entry) => !entry.path.split("/").at(-1)?.startsWith("_")),
   );
 });

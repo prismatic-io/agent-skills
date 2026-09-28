@@ -51,7 +51,7 @@ deployment and live verification are outside this request.`,
       type: "command-exits-zero",
       command: `node ${resolve(import.meta.dirname, "../../scripts/verify-generated-cni.mjs")}`,
       inheritEnv: ["PATH"],
-      timeoutMs: 240_000,
+      timeout: "4 minutes",
     },
     {
       type: "rubric",

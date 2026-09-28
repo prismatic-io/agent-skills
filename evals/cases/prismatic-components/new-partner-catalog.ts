@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { defineComponentCase } from "../component-case.ts";
+import { defineComponentCase } from "./_component-case.ts";
 
 export default defineComponentCase({
   id: "new-partner-catalog",
   service: "the fictional Partner Catalog API",
-  fixture: resolve(import.meta.dirname, "../fixtures/specs/partner-catalog"),
+  fixture: resolve(import.meta.dirname, "../../fixtures/specs/partner-catalog"),
   request:
     "Build a connector using service.md so I can list products and get one product by ID. Each customer gives us application credentials, and nobody signs into a browser. I want to configure those credentials once on the connection and keep using the actions after access tokens expire. We do not have real credentials for this exercise.",
   persona:
@@ -13,7 +13,7 @@ export default defineComponentCase({
   tests: [
     "resource calls use the configured access token as a Bearer token",
     "get safely encodes an opaque ID containing reserved characters",
-    "platform-managed authentication declares the documented token URL, scope, and client-credentials grant on the registered connection; alternatively, component-managed acquisition is executed against a mock to verify its form body, Basic authentication, and obtaining a new token after expiry",
+    "if the component implements token acquisition itself, test its form body, Basic authentication, and obtaining a new token after expiry. For platform-managed acquisition, the Bearer resource-call tests suffice here; connection declaration correctness is graded separately by client-credentials, so do not require unit tests of static metadata or platform internals",
   ],
   tags: ["oauth-client-credentials", "connection", "path-encoding"],
   contract:
