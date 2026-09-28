@@ -45,7 +45,7 @@ description = "Check local discovery with the skills CLI"
 run = "bunx skills add . --list"
 
 [tasks."eval:prepare"]
-description = "Link local Lux and incur Prism builds for evaluation"
+description = "Install pinned Lux and link the incur Prism build for evaluation"
 run = '''
 bun install --cwd evals --frozen-lockfile
 prism_cache="$PWD/evals/.lux-cache/$(basename "${PRISM_ROOT:-$PWD/../prism}")/bin"
@@ -58,10 +58,10 @@ ln -sf "${PRISM_ROOT:-$PWD/../prism}/lib/run.js" "$prism_cache/prism"
 description = "Validate Lux cases and driver availability without model calls"
 depends = ["install", "eval:prepare"]
 dir = "evals"
-run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/vitest/vitest.mjs run", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor", "claude auth status"]
+run = ["node ../node_modules/typescript/bin/tsc --noEmit", "node node_modules/vitest/vitest.mjs run", "node node_modules/@prismatic-io/lux/lib/cli/bin.js doctor", "codex login status", "claude auth status"]
 
 [tasks."eval:run"]
-description = "Run all skill evaluations with Claude Code"
+description = "Run component evaluations across Claude Code, Codex, and Grok Build"
 depends = ["eval:doctor"]
 dir = "evals"
-run = "node node_modules/@prismatic-io/lux/lib/cli/bin.js run --verbose"
+run = "node run-components.ts --verbose"
