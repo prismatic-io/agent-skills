@@ -1,16 +1,17 @@
 # Component evaluations
 
 Lux owns execution, persona answers, grading, traces, and comparisons. The
-installable skill contains only `SKILL.md`; eval code is development tooling.
+installable skill contains instructions and bundled references; eval code is
+development tooling.
 
 ## Setup and run
 
-Prerequisites: repository mise tools, an authenticated Claude Code CLI, a built
-Lux checkout at `../../lux/packages/lux`, and a built incur-based Prism
-checkout at `../../prism` (paths relative to this directory). Follow each checkout's build
-instructions. `PRISM_ROOT` can select another Prism checkout. Lux is a local file
-dependency while its distribution is being finalized; installable skills have no
-Lux dependency.
+Prerequisites: repository mise tools; authenticated Claude Code (`claude`), Codex
+(`codex`), and Grok Build (`grok`) CLIs; and a built
+incur-based Prism checkout at `../../prism` (relative to this directory).
+`PRISM_ROOT` can select another Prism checkout. Lux is pinned to the published
+`0.0.2-preview.26` npm package in both development manifests and lockfiles;
+a local Lux checkout is no longer required. Installable skills have no Lux dependency.
 
 The pinned Node.js 22.18.0 runs TypeScript directly; helpers need no build step.
 
@@ -21,18 +22,23 @@ From the repository root:
 
 ```sh
 mise run eval:doctor  # install dependencies, check Prism schema, typecheck cases
-mise run eval:run     # run all evaluations
+mise run eval:run     # run all 13 cases against Claude Code, Codex, and Grok Build
 ```
 
 `eval:prepare` places a symlink to the chosen Prism build on the subject's PATH.
-This avoids accidentally evaluating the old globally installed CLI. Dependency
-versions are locked, but local Lux and Prism source revisions must also be held
-constant when comparing results. Keep their revision IDs with review notes.
+Verify the effective `prism --version` inside each agent: its shell environment
+can still select the old globally installed CLI despite this PATH prefix. Dependency
+versions are locked; keep the Prism revision and installed agent CLI versions
+constant when comparing results. Record them with review notes.
+The case preamble names the cached Prism executable and requires its version
+check before other commands; subjects must not replace it with an `npx` download.
 
 For other Lux operations, run from `evals/`:
 
 ```sh
-node node_modules/@prismatic-io/lux/lib/cli/bin.js run --list
+node run-components.ts --list
+node run-components.ts new-petstore --verbose
+node node_modules/@prismatic-io/lux/lib/cli/bin.js run --tag components --profile codex
 node node_modules/@prismatic-io/lux/lib/cli/bin.js run files-com --loop 3
 node node_modules/@prismatic-io/lux/lib/cli/bin.js view
 node node_modules/@prismatic-io/lux/lib/cli/bin.js compare <before-suite> <after-suite>
@@ -41,6 +47,30 @@ node node_modules/@prismatic-io/lux/lib/cli/bin.js compare <before-suite> <after
 Runs are retained in ignored `.lux-runs/`. Inspect the run, trace, grading, and
 component artifacts before changing instructions. Run packages and test scripts
 are agent-generated code; use a disposable development environment.
+
+Track behavior, validation,
+and usability separately. Missing a specific test is an improvement opportunity,
+not a binary rejection of working behavior. From `evals/`, inspect saved scores:
+
+```sh
+node quality-report.ts <run-directory-or-grading.json>
+node quality-report.ts <before-run> <after-run> --json
+```
+
+This report summarizes saved rubric scores; it does not rerun or independently
+regrade a solution. Older pass/fail-oriented judge scores need evidence review
+before comparison with the new qualitative scale. Preserve raw grades, record
+reassessments separately, and compare matched cases. Execution and build outcomes
+remain visible separately from quality; no weighted overall pass/fail is implied.
+
+`run-components.ts` prints per-case ratings, feedback, and dimension distributions
+from each invocation's own suite manifest. Runs are isolated under
+`.lux-runs/quality-runs/eval-run-*/<profile>/`; use `--runs-root <directory>` to
+choose another parent directory. Missing or unfinished cases remain visible.
+The wrapper treats legacy rubric thresholds as diagnostic: a completed suite with
+only rubric threshold failures can exit successfully while reporting its quality
+scores. Execution failures, failed non-rubric checks, and grading errors still
+produce a nonzero exit. Direct Lux commands retain Lux's original exit behavior.
 
 ## First case: Files.com
 
@@ -82,19 +112,79 @@ from fresh-workspace runs.
 
 ## Harness limits
 
-Claude Code is the only configured subject. Models and effort are explicit in
-`lux.config.ts`; persona answering uses a smaller model than implementation and
-judging. Future Codex, Cursor, Antigravity, GitHub Copilot, and frontend copilot
-profiles should reuse the business prompt and outcome assertions. Add adapter
-configuration only once the relevant Lux driver supports the required interaction
-and artifact capture; configuration placeholders would not establish compatibility.
+The component runner executes Claude Code, Codex, and Grok Build sequentially.
+Antigravity remains available through explicit profile selection:
 
-Claude's `defer-resume` mode handles simulated answers. Current Lux rejects using
-it with `isolation`. These runs use fresh artifact workspaces, disable user setting
-sources and auto-memory, and inherit Prism's existing authentication.
-That is not a filesystem or network sandbox. It also does not establish freedom
-from all host-state contamination. Use a disposable host/container for stronger
-isolation; do not switch to the legacy interaction protocol to hide the limitation.
+| Profile | Model | Effort | Interaction |
+| --- | --- | --- | --- |
+| `claude-code` | `claude-sonnet-5` | medium | Existing defer/resume persona answers |
+| `codex` | `gpt-6-sol` | low | App-server persona answers |
+| `antigravity` | `gemini-3.1-pro` | low | Headless, no persona follow-up |
+| `grok-build` | `grok-4.6` | low | ACP with per-operation permission answers |
+
+Gemini Pro at low effort is the chosen comparison setting, not a claim of equal
+compute or capability. Persona answering and all rubric judging use Claude Code
+`claude-opus-5-5` at medium effort for every subject. Prompts, fixtures, and assertions
+are shared. Integration cases also default to Codex and can be run
+with `lux run --tag integration-skill` using the CLI path above.
+
+Lux preview.26 supplies native Claude Code, Codex, Antigravity, and Grok Build
+drivers. `component-agents.ts` configures the additional profiles;
+`run-components.ts` runs the component-tagged cases once per profile. Direct
+`lux run` defaults to Codex; use `--profile` to select another subject.
+All profiles use `idleTimeout: "20 minutes"` for inactivity. Claude deferred
+invocations also use `turnTimeout: "45 minutes"` to cap elapsed time; progress
+events stream live.
+Grok uses native ACP instead of the former local headless adapter. Auto-mode
+permission requests reach Lux's answerer, and approvals apply to one operation
+only. The driver retains tool/message evidence and rejects incomplete turns or
+pending permission requests at completion. Grok usage/cost reporting remains
+unavailable; do not interpret it as zero cost.
+Protocol references: [Antigravity headless mode](https://antigravity.google/docs/cli/headless/)
+and [Grok headless mode](https://docs.x.ai/build/cli/headless-scripting).
+
+Run `agy` interactively to sign in, and `grok login` for Grok. `agy models` and
+`grok models` check available models. `eval:doctor` checks config, tests, executable
+availability, and Claude/Codex authentication; it cannot prove every provider's account
+has model access. A real smoke run is still needed on the authenticated host.
+
+These runs use fresh artifact workspaces and inherit Prism's sandbox authentication.
+Claude uses `permissionMode: "auto"` with no extra coding-tool grants, while
+keeping disabled user setting sources and auto-memory. Codex uses app-server
+`approvalPolicy: "on-request"` with `approvalsReviewer: "auto_review"`,
+workspace-write sandboxing, and network access. Grok uses `permissionMode: "auto"`, `sandbox: "workspace"`, and
+`trustProject: false`.
+Antigravity has no native auto reviewer in this release and uses normal permissions
+with `skipPermissions: false`. No profile uses a CLI permission-bypass flag. Native allow rules still control
+automatic tool approval. A headless
+permission wait or denial can prevent completion and must be recorded as a harness
+limitation, not silently retried with broader permissions.
+
+On Antigravity 1.2.10–1.2.11, this host uses `enableTerminalSandbox: true`
+and `toolPermission: "proceed-in-sandbox"`; the profile sets `sandbox: true`
+and `mode: "accept-edits"` (also the Lux preview.26 driver default).
+Explicit editing mode fixes the observed sandbox workspace-write failures.
+There are no `command(...)` allow rules: these versions use them to authorize
+outside-sandbox execution too. They ignore `unsandboxed(...)` rules, so those
+rules cannot enforce a sandbox boundary. `skipPermissions` remains false.
+Scoped file/web grants supply workspace, skill, runtime, and documentation access.
+A shell canary test verified that reads and writes outside the granted workspace
+were denied, while workspace builds and tests succeeded.
+
+The full sandbox-only component case remains blocked by the local HTTP fixture:
+direct loopback connections fail with EPERM; the sandbox proxy rejects literal IP
+addresses and nonstandard HTTP ports, even with localhost explicitly allowed.
+Node 24.21.0 with `NODE_USE_ENV_PROXY=1` reaches the proxy but does not remove
+that restriction. The repository Node pin remains 22.18.0. Do not restore host
+command grants or weaken assertions to hide this failure. Another host needs
+its own permission setup and verification.
+
+The cases request publication of a fresh sandbox component. These workspaces are
+not full host isolation: agent CLIs may read user settings and history, and
+Antigravity cannot handle persona follow-up questions. Grok ACP supports permission
+answers; this does not establish support for every conversational question tool. Report those limits
+when comparing agents. Keep detailed baseline traces and notes under the ignored
+`.lux-runs/` tree, and separate original outcomes from any infrastructure reruns.
 
 ## Curation loop
 
