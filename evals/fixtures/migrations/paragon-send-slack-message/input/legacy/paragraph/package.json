@@ -41,7 +41,7 @@
     "@types/uuid": "^9.0.1",
     "aws-sdk": "^2.630.0",
     "cheerio": "^1.0.0-rc.3",
-    "csv": "^5.3.2",
+    "csv": "^6.6.4",
     "date-fns": "^2.14.0",
     "fast-xml-parser": "^3.20.3",
     "firebase": "^9.0.2",
