@@ -13,7 +13,7 @@
     "tslib": "2.3.1"
   },
   "devDependencies": {
-    "@sendgrid/mail": "^7.6.0",
+    "@sendgrid/mail": "^8.1.6",
     "@types/analytics-node": "^3.1.14",
     "@types/archiver": "^5.3.2",
     "@types/bluebird": "^3.5.42",
@@ -56,7 +56,7 @@
     "redis": "^4.6.7",
     "sendpulse-api": "^1.1.4",
     "slack": "^11.0.2",
-    "twilio": "^3.42.1",
+    "twilio": "^6.1.2",
     "typescript": "^5.3.2",
     "unzipper": "^0.10.11",
     "url": "^0.11.0"
