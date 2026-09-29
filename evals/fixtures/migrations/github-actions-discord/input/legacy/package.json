@@ -4,7 +4,8 @@
   "description": "GitHub Action that sends a Discord notification.",
   "private": true,
   "scripts": {
-    "test": "npm test"
+    "lint": "node --check entrypoint.js",
+    "test": "node --test test/*.test.cjs"
   },
   "repository": {
     "type": "git",
@@ -22,11 +23,14 @@
   },
   "homepage": "https://github.com/Ilshidur/actions#readme",
   "dependencies": {
-    "axios": "0.21.1",
-    "lodash": "4.17.21",
-    "yargs": "16.2.0"
+    "axios": "1.20.0",
+    "lodash": "4.18.1",
+    "yargs": "18.2.0"
   },
   "devDependencies": {
-    "dotenv": "8.2.0"
+    "dotenv": "18.0.4"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   }
 }

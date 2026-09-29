@@ -12,13 +12,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@prismatic-io/spectral": "10.30.3"
+    "@prismatic-io/spectral": "10.32.0"
   },
   "devDependencies": {
-    "@types/node": "22.18.0",
-    "tsdown": "0.22.3",
-    "typescript": "6.0.3",
-    "vitest": "4.1.11",
+    "@types/node": "26.6.3",
+    "tsdown": "0.23.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2",
     "vite": "8.3.1"
   }
 }

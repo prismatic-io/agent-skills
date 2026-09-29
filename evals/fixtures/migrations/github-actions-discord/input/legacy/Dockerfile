@@ -1,7 +1,7 @@
-FROM mhart/alpine-node:12.19.1
+FROM node:24-alpine
 
 ADD package.json package-lock.json /
-RUN npm ci --production
+RUN npm ci --omit=dev
 ADD entrypoint.js /
 RUN chmod +x /entrypoint.js
 
