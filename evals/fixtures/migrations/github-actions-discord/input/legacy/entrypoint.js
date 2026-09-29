@@ -1,7 +1,8 @@
 const axios = require('axios');
 const fs = require('fs');
 const _ = require('lodash');
-const { argv } = require('yargs');
+const { hideBin } = require('yargs/helpers');
+const argv = require('yargs')(hideBin(process.argv)).parse();
 
 const REQUIRED_ENV_VARS = [
   'GITHUB_EVENT_PATH',

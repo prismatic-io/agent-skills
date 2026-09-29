@@ -113,7 +113,7 @@ test("packet does not pretend to provide generated Slack runtime", async () => {
       "utf8",
     ),
   );
-  assert.equal(pkg.dependencies["@useparagon/core"], "1.0.9");
+  assert.equal(pkg.dependencies["@useparagon/core"], "1.1.16");
   assert.equal(pkg.dependencies["@useparagon/integrations"], undefined);
   assert.equal(
     existsSync(

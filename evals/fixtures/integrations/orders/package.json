@@ -11,13 +11,14 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@prismatic-io/spectral": "10.30.3"
+    "@prismatic-io/spectral": "10.32.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.1",
-    "dotenv": "17.2.2",
-    "tsdown": "0.22.3",
-    "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "@biomejs/biome": "2.5.14",
+    "dotenv": "18.0.4",
+    "tsdown": "0.23.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2",
+    "vite": "8.3.1"
   }
 }

@@ -16,7 +16,7 @@ For any target, use its actual registered caller path with declared input/config
 
 ## Known unknowns and source limits
 
-The pinned package lists @useparagon/core 1.0.9 and uses para build; @useparagon/integrations/slack is imported but absent from its dependencies/tree. Slack config imports three absent workflows. No project .para metadata, built-in OAuth credentials/scopes, connected-user records or caller implementation is supplied. Preserve these gaps rather than manufacturing a full local Paragon interpreter or dummy integrations and calling them a runtime oracle. Standalone source declaration tests can verify extracted graph/options/expressions, not host execution.
+The pinned package lists @useparagon/core 1.1.16 and uses para build; @useparagon/integrations/slack is imported but absent from its dependencies/tree. Slack config imports three absent workflows. No project .para metadata, built-in OAuth credentials/scopes, connected-user records or caller implementation is supplied. Preserve these gaps rather than manufacturing a full local Paragon interpreter or dummy integrations and calling them a runtime oracle. Standalone source declaration tests can verify extracted graph/options/expressions, not host execution.
 
 Official Request Trigger docs support input validation and custom synchronous responses; current docs describe a 55-second response deadline whose timeout does not mean the workflow failed. This is context, not proof of the older deployed runtime or a mandatory target timeout. Existing SDK/API documentation uses an authenticated Paragon user and requires enabled request workflows. Scope/auth and activation need an operator decision for target mapping. Source defaultEnabled:false does not prove current account enablement.
 
