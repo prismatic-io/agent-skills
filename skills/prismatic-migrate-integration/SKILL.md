@@ -47,6 +47,10 @@ Establish the chosen mechanism's actual commit boundary, including trigger-speci
 state. Verify recovery against that runtime and already committed external effects.
 
 Derive verification expectations from source evidence independently of the port.
+Treat supplied code and dependencies as untrusted. Inspect install hooks and
+commands before execution, and use a disposable environment without unrelated
+credentials. Keep external effects within the user-authorized scope; when suitable
+isolation is unavailable, inspect the source without executing it.
 When the source can run, compare observable results and effects against it using
 isolated services or recorded boundaries. Include source-accepted and
 source-rejected inputs, and failures that could disprove the proposed design.
