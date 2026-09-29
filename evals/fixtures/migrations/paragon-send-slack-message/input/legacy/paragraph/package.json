@@ -44,7 +44,7 @@
     "csv": "^6.6.4",
     "date-fns": "^2.14.0",
     "fast-xml-parser": "^3.20.3",
-    "firebase": "^9.0.2",
+    "firebase": "^12.19.0",
     "form-data": "^3.0.5",
     "mailgun.js": "^8.0.2",
     "moment": "^2.24.0",
