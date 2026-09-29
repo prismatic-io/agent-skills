@@ -1,7 +1,7 @@
 ---
 name: prismatic-build-integration
-description: Build or update a local Prismatic Code Native Integration (CNI), including its flows, configuration wizard, connections, mappings, tests, and production build. Use for new integration requirements and ongoing CNI development. For assessing or replacing an existing non-Prismatic integration system, prefer prismatic-migrate-integration when available.
-compatibility: Requires Node.js 22+, npm, Prism 11 on PATH, and network access to documentation and packages.
+description: Build, update, and verify a Prismatic Code Native Integration (CNI), including local checks and iterative platform testing. Use for new integration requirements, ongoing CNI development, and debugging flow executions. For assessing or replacing an existing non-Prismatic integration system, prefer prismatic-migrate-integration when available.
+compatibility: Requires Node.js 22+, npm, Prism 11 on PATH, and network access to documentation and packages. Platform verification also requires Prismatic authentication and connections for the intended test environment.
 ---
 
 # Build a Prismatic integration
@@ -52,14 +52,23 @@ failure. If an abstraction omits information the request needs, use a supported
 boundary that exposes it; when constructing queries, follow the provider's literal
 rules.
 
-This skill covers local implementation and verification only. Do not import,
-deploy, publish, run platform or live-service tests, or mutate Prismatic or
-connected services.
-
 Install dependencies and run the generated project's typecheck, lint, tests, and
 production build when those scripts exist. After building, load the compiled
 integration locally with the installed SDK to catch registration errors that
 typechecking and bundling can miss. For lifecycle hooks or polling triggers,
 consult [SDK registration boundaries](references/registration.md).
-Fix failures and report the project path,
-architecture, deployer configuration, assumptions, and validation results.
+
+Carry implementation through platform verification when it is within the user's
+request. Use the selected development or test environment and existing authorization
+to import, publish versions, configure or deploy test instances, execute flows,
+and run smoke tests as needed. Continue ordinary repair and verification cycles
+without asking for permission again. Preserve explicit local-only requests; if the
+target, credentials, or allowed external effects are unclear, resolve that gap
+while continuing independent work. Authentication alone does not identify the
+intended target or authorize production changes.
+
+For platform work, follow [platform verification](references/platform-verification.md).
+Fix observed failures, rebuild and update the target, then repeat relevant checks
+until the requested behavior is demonstrated or a concrete blocker prevents further
+progress. Report the project path, architecture, deployer configuration, assumptions,
+validation evidence, and any remaining operational work.

@@ -60,9 +60,19 @@ boundaries as well as helpers. Ground doubles in observed or documented contract
 Resolve demonstrated discrepancies in implemented behavior or obtain an agreed
 change. Distinguish partial work from preserved behavior; passing self-authored
 tests does not establish equivalence. For implemented ports, run project checks
-and the production build. For managed components, use authorized
-[Prismatic runner tests](https://prismatic.io/docs/integrations/code-native/testing/)
-or identify their actual behavior as unverified.
+and the production build.
+
+When the request includes platform verification, use the selected development or
+test environment and existing authorization to import, publish versions, configure
+or deploy test instances, execute flows, and run smoke tests as needed. Continue
+repair and verification cycles without asking for permission again. Follow
+[platform verification](references/platform-verification.md), comparing observed
+behavior with the source contract. Preserve explicit local-only requests and
+resolve missing target, credentials, or allowed external effects while continuing
+independent work. Authentication alone does not authorize production changes.
+For managed components, exercise their actual behavior in the Prismatic runner
+or identify it as unverified. A verified test instance does not establish customer
+cutover; keep live traffic changes within the requested scope.
 
 When moving customers, account for instance/version, configuration, connection
 scope, and authentication handoff. Prismatic supports

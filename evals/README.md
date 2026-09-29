@@ -88,11 +88,15 @@ The prior seven-case CNI baseline does not establish results for the five added
 requests; report expanded runtime results only after running and reviewing them.
 
 These requests authorize local implementation only: no import, deployment,
-publication, platform tests, or service mutations. The CNI runner sets
+publication, platform tests, or service mutations. Both the CNI and migration runners set
 `PRISM_READ_ONLY=true` on Lux and its inherited environment as defense in depth;
 it is not a security sandbox and cannot prevent arbitrary direct HTTP calls or
 a subject overriding its environment. Review execution traces for scope.
-Component runs retain their existing publication behavior.
+Component runs retain their existing publication behavior. These are restrictions
+of the local eval cases, not of the installed skills, which support authorized
+platform verification. Direct Lux invocations bypass the suite wrappers: set
+`PRISM_READ_ONLY=true` explicitly when running local CNI or migration cases.
+These suites do not establish quality of the autonomous platform verification loop.
 
 `cases/prismatic-build-integration/_verify-generated-cni.mjs` accepts a root or nested Spectral project, rejects
 ambiguous projects, requires a build script, and runs every available
@@ -167,7 +171,7 @@ Gemini Pro at low effort is the chosen comparison setting, not a claim of equal
 compute or capability. Persona answering and all rubric judging use Claude Code
 `claude-opus-5-5` at medium effort for every subject. Prompts, fixtures, and assertions
 are shared. Integration cases also default to Codex and can be run
-with `lux run --tag integration-skill` using the CLI path above.
+with `PRISM_READ_ONLY=true lux run --tag integration-skill` using the CLI path above.
 
 Lux preview.27 supplies native Claude Code, Codex, Antigravity, and Grok Build
 drivers. `component-agents.ts` configures the additional profiles;
@@ -279,7 +283,7 @@ tools and authentication, as in the other suites.
 After `mise run eval:prepare`, run one case from `evals/`:
 
 ```sh
-node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-migrate-integration/bespoke-order-sync --verbose
+PRISM_READ_ONLY=true node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-migrate-integration/bespoke-order-sync --verbose
 ```
 
 `PRISM_MIGRATION_SKILL=migration` is the default; `build` selects the integration
