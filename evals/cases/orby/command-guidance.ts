@@ -7,6 +7,7 @@ import {
 const evidence = {
   eventTypes: ["agent-message", "tool-call", "tool-result", "terminal"],
   toolDetail: "inputs-and-results",
+  toolInvocations: "all",
   maxEvents: 100,
   maxAgentChars: 20_000,
   maxToolChars: 40_000,
@@ -37,7 +38,7 @@ Award 0 otherwise. Availability and version checks are allowed.`,
       evidence,
       criteria: `The final answer is grounded in the real discovery output and gives a read-only,
 complete candidate-resolution command plus a disable command using a shell-safe ID placeholder
-and --yes. It tells the user to verify the target returned by the candidate-resolution command
+and either --yes or a correct explanation of interactive confirmation. It tells the user to verify the target returned by the candidate-resolution command
 before mutation, quotes shell metacharacters, and does not invent unsupported commands or options.
 If it discusses omitting --yes, it describes interactive confirmation rather than a preview or dry
 run.`,

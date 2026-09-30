@@ -1,11 +1,7 @@
 import { resolve } from "node:path";
-import {
-  type BuiltinAssertion,
-  defineEvalCase,
-  type RubricEvidence,
-  subjectPath,
-} from "@prismatic-io/lux";
+import { defineEvalCase, subjectPath } from "@prismatic-io/lux";
 import { prismBin } from "../../prism.ts";
+import { sourceRubrics } from "../_rubric.ts";
 
 export interface EmbeddedCase {
   id: string;
@@ -27,7 +23,8 @@ export const fixtures = {
   ),
 };
 
-const evidence = {
+const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+const rubric = sourceRubrics({
   artifactPatterns: [
     "**/*.ts",
     "**/*.tsx",
@@ -39,47 +36,11 @@ const evidence = {
     "**/*.css",
     "**/.env.example",
   ],
-  eventTypes: ["terminal"],
-  toolDetail: "names",
-  includeArtifactContents: true,
-  maxEvents: 10,
-  maxAgentChars: 2_000,
-  maxToolChars: 2_000,
-  maxArtifactChars: 80_000,
-} satisfies Partial<RubricEvidence>;
-
-const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-const rubric = (
-  id: string,
-  criteria: string,
-  interaction = false,
-): BuiltinAssertion => ({
-  id,
-  type: "rubric",
-  // A rubric measures quality; it is not an acceptance gate. Lux otherwise
-  // applies an implicit 0.8 pass bar even though the judge returns a score.
-  threshold: 0,
-  // Judges read large source excerpts; Lux's two-minute default timed out.
+  sourceGuidance:
+    "\n\nThese criteria receive source-focused evidence. Application scripts, token signing, claims, session derivation, and project/browser secret scans are independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage.",
+  qualityGuidance:
+    "Do not require one file layout, JWT library, token lifetime, React pattern, or test framework when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks are valid evidence; no live Prismatic sign-in is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime behavior.",
   timeout: "5 minutes",
-  evidence: interaction
-    ? {
-        ...evidence,
-        eventTypes: [
-          "agent-message",
-          "tool-call",
-          "tool-result",
-          "interrupt",
-          "responded",
-          "terminal",
-        ],
-        toolDetail: "inputs-and-results",
-        maxEvents: 200,
-        maxAgentChars: 30_000,
-        maxToolChars: 60_000,
-      }
-    : evidence,
-  maxArtifactExcerpt: 20_000,
-  criteria: `${criteria}${interaction ? "" : "\n\nThese criteria receive source-focused evidence. Application scripts, token signing, claims, session derivation, and project/browser secret scans are independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage."}\n\nReturn a continuous quality score, not a binary verdict: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficiently successful for the request, not perfect; further improvements can remain at any score. Credit working parts proportionally and describe a strength plus a useful improvement when supported. Do not invent a shortcoming just to suggest an improvement. Extra polish and coverage have diminishing returns. Do not require one file layout, JWT library, token lifetime, React pattern, or test framework when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks are valid evidence; no live Prismatic sign-in is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime behavior.`,
 });
 
 export const defineEmbeddedCase = (spec: EmbeddedCase) =>
@@ -93,6 +54,7 @@ export const defineEmbeddedCase = (spec: EmbeddedCase) =>
       {
         id: "local-checks",
         type: "command-exits-zero",
+        requiresExecutionWorkspace: true,
         command: `node ${quote(resolve(import.meta.dirname, "_verify-embedded-app.mjs"))} --token-path ${quote(spec.tokenPath)}`,
         inheritEnv: ["PATH"],
         timeout: "15 minutes",

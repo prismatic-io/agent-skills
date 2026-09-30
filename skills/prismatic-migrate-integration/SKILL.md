@@ -21,7 +21,8 @@ guide covers n8n, Node-RED, MuleSoft, Make, Tray, and Zapier. These are starting
 points for interpreting evidence; unfamiliar and bespoke systems remain in scope.
 
 Establish what needs to survive: relevant transformations, external effects,
-customer configuration, and failure recovery. Distinguish observed behavior,
+customer configuration, failure recovery, and execution-level contracts such as
+batch completion, cadence, and acknowledgment boundaries. Distinguish observed behavior,
 documented guarantees, assumptions, and agreed changes. When changing execution
 boundaries, preserve meaningful ordering and recovery guarantees; idempotent
 writes can still be unsafe to reorder. Ask about missing evidence or business
@@ -52,11 +53,13 @@ commands before execution, and use a disposable environment without unrelated
 credentials. Keep external effects within the user-authorized scope; when suitable
 isolation is unavailable, inspect the source without executing it.
 When the source can run, compare observable results and effects against it using
-isolated services or recorded boundaries. Include source-accepted and
+isolated services or recorded boundaries. Compare equivalent public invocations;
+calling the target repeatedly to match one source run can hide changed batching,
+cadence, or recovery policy. Include source-accepted and
 source-rejected inputs, and failures that could disprove the proposed design.
 For stateful work, test subsequent invocations from durable state, not a mutated
 object left over from a failed execution. Exercise registered flows and their input/output
-boundaries as well as helpers. Ground doubles in observed or documented contracts.
+boundaries, including source batch cardinality and relevant carried metadata, as well as helpers. Ground doubles in observed or documented contracts.
 Resolve demonstrated discrepancies in implemented behavior or obtain an agreed
 change. Distinguish partial work from preserved behavior; passing self-authored
 tests does not establish equivalence. For implemented ports, run project checks

@@ -207,6 +207,7 @@ test("edit command passes the authored case path to the generic checker", () => 
   });
   const command = assertions.find((entry) => entry.id === "component-checks");
   assert.ok(command && command.type === "command-exits-zero");
+  assert.equal(command.requiresExecutionWorkspace, true);
   assert.match(command.command, /_check-component\.ts/);
   assert.match(command.command, /--case .*edit-output-schema\.ts/);
   assert.doesNotMatch(command.command, /--case-id/);

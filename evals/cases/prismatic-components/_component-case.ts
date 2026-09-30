@@ -77,6 +77,7 @@ export const componentAssertions = (
     {
       id: "component-checks",
       type: "command-exits-zero",
+      requiresExecutionWorkspace: true,
       command: `node ${shellQuote(resolve(import.meta.dirname, "_check-component.ts"))}${spec.mode === "edit" && spec.fixture ? ` --baseline ${shellQuote(spec.fixture)} --case ${shellQuote(resolve(import.meta.dirname, `${spec.id}.ts`))}` : ""}`,
       env: {
         PATH: `${prismBin}:${process.env.PATH}`,

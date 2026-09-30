@@ -16,8 +16,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { parse } from "yaml";
 import { drainOnce } from "../../fixtures/migrations/bespoke-queue-worker/input/legacy/worker.mjs";
-import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
-import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
+import { resolveCniEntrypoint } from "../_cni-entrypoint.mjs";
 
 export class UnsupportedInterface extends Error {}
 const canonicalPath = (path) =>
@@ -361,30 +360,30 @@ const main = async () => {
     );
   const project = resolve(process.argv[2]);
   const adapter = JSON.parse(await readFile(resolve(process.argv[3]), "utf8"));
-  await withComponentWorkspace(project, async (directory) => {
-    const build = spawnSync("npm", ["run", "build"], {
-      cwd: directory,
-      stdio: "inherit",
-      timeout: 180000,
-    });
-    assert.ifError(build.error);
-    assert.equal(
-      build.status,
-      0,
-      "Generated project must build before behavioral checking",
-    );
-    const entrypoint = await resolveCniEntrypoint(directory);
-    let component = await import(pathToFileURL(entrypoint).href);
-    for (
-      let i = 0;
-      i < 3 && !component.codeNativeIntegrationYAML && component.default;
-      i++
-    )
-      component = component.default;
-    const report = await verifyRegisteredQueue(component, adapter);
-    console.log(JSON.stringify(report, null, 2));
-    if (!report.passed) process.exitCode = 1;
+  // Run inside the disposable verification workspace supplied by Lux.
+  const directory = project;
+  const build = spawnSync("npm", ["run", "build"], {
+    cwd: directory,
+    stdio: "inherit",
+    timeout: 180000,
   });
+  assert.ifError(build.error);
+  assert.equal(
+    build.status,
+    0,
+    "Generated project must build before behavioral checking",
+  );
+  const entrypoint = await resolveCniEntrypoint(directory);
+  let component = await import(pathToFileURL(entrypoint).href);
+  for (
+    let i = 0;
+    i < 3 && !component.codeNativeIntegrationYAML && component.default;
+    i++
+  )
+    component = component.default;
+  const report = await verifyRegisteredQueue(component, adapter);
+  console.log(JSON.stringify(report, null, 2));
+  if (!report.passed) process.exitCode = 1;
 };
 if (
   process.argv[1] &&

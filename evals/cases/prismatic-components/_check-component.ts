@@ -1,26 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import {
-  access,
-  constants,
-  cp,
-  mkdtemp,
-  readdir,
-  readFile,
-  realpath,
-  rm,
-  writeFile,
-} from "node:fs/promises";
-import { tmpdir } from "node:os";
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 interface ComponentPackage {
@@ -74,109 +55,6 @@ const run = (
   return result.stdout;
 };
 
-const exists = async (path: string) =>
-  access(path).then(
-    () => true,
-    () => false,
-  );
-
-export const dependencyInstall = async (directory: string) => {
-  if (
-    (await exists(join(directory, "bun.lock"))) ||
-    (await exists(join(directory, "bun.lockb")))
-  )
-    return { command: "bun", args: ["install", "--frozen-lockfile"] };
-  if (await exists(join(directory, "package-lock.json")))
-    return { command: "npm", args: ["ci", "--no-audit", "--no-fund"] };
-  console.log("No dependency lockfile supplied; restoring from package.json.");
-  return { command: "npm", args: ["install", "--no-audit", "--no-fund"] };
-};
-
-// Regrading provides immutable source evidence without build or dependency trees.
-// All tools operate in a disposable copy so live and frozen runs obey that contract.
-export const withComponentWorkspace = async <T>(
-  source: string,
-  check: (directory: string) => Promise<T>,
-  options: {
-    dependencyMode?: "reuse" | "install";
-    artifactRoot?: string;
-  } = {},
-): Promise<T> => {
-  const workspace = await mkdtemp(join(tmpdir(), "component-check-"));
-  try {
-    const copyRoot = options.artifactRoot
-      ? await realpath(options.artifactRoot)
-      : source;
-    const inside = (path: string) => {
-      const offset = relative(copyRoot, path);
-      return (
-        offset !== ".." && !offset.startsWith(`..${sep}`) && !isAbsolute(offset)
-      );
-    };
-    const projectSource = options.artifactRoot
-      ? await realpath(source)
-      : source;
-    if (options.artifactRoot)
-      assert.ok(
-        inside(projectSource),
-        "Project must remain inside the project artifact workspace",
-      );
-    const copyTarget = join(workspace, basename(copyRoot));
-    const directory = options.artifactRoot
-      ? join(copyTarget, relative(copyRoot, projectSource))
-      : copyTarget;
-    const excluded = new Set(["node_modules", "dist", "build", ".git", ".jj"]);
-    await cp(copyRoot, copyTarget, {
-      recursive: true,
-      // Materialize internal links in the copy so checks cannot mutate original
-      // evidence through them. Never follow links outside the artifact root.
-      dereference: Boolean(options.artifactRoot),
-      filter: async (path) => {
-        const name = basename(path);
-        if (path !== copyRoot && excluded.has(name)) {
-          // Sibling source exports can legitimately contain build/dist folders.
-          // Only the generated project's output is disposable in full-root mode.
-          const siblingOutput =
-            options.artifactRoot &&
-            ["dist", "build"].includes(name) &&
-            dirname(path) !== projectSource;
-          if (!siblingOutput) return false;
-        }
-        if (options.artifactRoot) {
-          if ([".npm-cache", ".cache"].includes(basename(path))) return false;
-          const target = await realpath(path).catch(() => null);
-          assert.ok(
-            target && inside(target),
-            "Copied paths must remain inside the project artifact workspace",
-          );
-        }
-        return true;
-      },
-    });
-    const dependencies = join(source, "node_modules");
-    // Clean installs avoid incomplete dependencies and foreign-platform binaries.
-    if (options.dependencyMode === "reuse" && (await exists(dependencies))) {
-      // Keep module paths local: external symlinks change bundler output and signatures.
-      await cp(await realpath(dependencies), join(directory, "node_modules"), {
-        recursive: true,
-        verbatimSymlinks: true,
-        mode: constants.COPYFILE_FICLONE,
-        filter: (path) =>
-          ![".cache", ".vite", ".vite-temp"].includes(basename(path)),
-      });
-    } else {
-      const install = await dependencyInstall(directory);
-      run(directory, install.command, install.args, "inherit");
-    }
-    console.log(
-      `Checking source ${source} in disposable workspace ${directory}`,
-    );
-    return await check(directory);
-  } finally {
-    await rm(workspace, { recursive: true, force: true });
-  }
-};
-
 // Invoke the grader's runner with a grader-authored config. A package's `test`
 // script is useful evidence, but cannot establish that baseline tests still run.
 export const checkBaseline = async (directory: string, fixture: string) => {
@@ -227,37 +105,37 @@ if (import.meta.main) {
     `Expected one generated Spectral component, found ${components.map((c) => c.directory).join(", ") || "none"}`,
   );
   const [{ directory: source, pkg }] = components;
-  await withComponentWorkspace(source, async (directory) => {
-    for (const script of ["typecheck", "build", "test"]) {
-      assert.ok(pkg.scripts?.[script], `Missing ${script} script`);
-      run(directory, "npm", ["run", script], "inherit");
-    }
-    const baselineFlag = process.argv.indexOf("--baseline");
-    if (baselineFlag !== -1) {
-      const fixture = process.argv[baselineFlag + 1];
-      assert.ok(fixture, "Missing baseline fixture path");
-      await checkBaseline(directory, fixture);
-    }
-    const { signature } = JSON.parse(
-      run(
-        directory,
-        "prism",
-        ["components", "signature", "--format", "json"],
-        "pipe",
-      ),
-    );
-    assert.ok(
-      typeof signature === "string" && signature.length > 0,
-      "No matching published component version found: publication is missing or differs from the local build",
-    );
-    console.log(`Published signature ${signature} matches ${directory}`);
-    const caseFlag = process.argv.indexOf("--case");
-    if (caseFlag !== -1) {
-      const casePath = process.argv[caseFlag + 1];
-      assert.ok(casePath, "Missing case path");
-      const { checkEdit } = await import("./_check-edit.ts");
-      await checkEdit(directory, casePath);
-      console.log(`Independent feature checks passed for ${casePath}`);
-    }
-  });
+  // Lux supplies this disposable verification workspace with its live dependencies.
+  const directory = source;
+  for (const script of ["typecheck", "build", "test"]) {
+    assert.ok(pkg.scripts?.[script], `Missing ${script} script`);
+    run(directory, "npm", ["run", script], "inherit");
+  }
+  const baselineFlag = process.argv.indexOf("--baseline");
+  if (baselineFlag !== -1) {
+    const fixture = process.argv[baselineFlag + 1];
+    assert.ok(fixture, "Missing baseline fixture path");
+    await checkBaseline(directory, fixture);
+  }
+  const { signature } = JSON.parse(
+    run(
+      directory,
+      "prism",
+      ["components", "signature", "--format", "json"],
+      "pipe",
+    ),
+  );
+  assert.ok(
+    typeof signature === "string" && signature.length > 0,
+    "No matching published component version found: publication is missing or differs from the local build",
+  );
+  console.log(`Published signature ${signature} matches ${directory}`);
+  const caseFlag = process.argv.indexOf("--case");
+  if (caseFlag !== -1) {
+    const casePath = process.argv[caseFlag + 1];
+    assert.ok(casePath, "Missing case path");
+    const { checkEdit } = await import("./_check-edit.ts");
+    await checkEdit(directory, casePath);
+    console.log(`Independent feature checks passed for ${casePath}`);
+  }
 }

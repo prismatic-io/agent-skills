@@ -94,7 +94,12 @@ before publication or handoff.
 Distinguish local verification from live testing:
 `prism components dev` commands can execute actions and create remote resources.
 Publish or test against the platform when that is within the user's requested
-scope. Publish the final verified build, rebuilding after any source changes.
+scope. When publishing a separate component, a new key can still conflict with an
+existing display label. Resolve naming conflicts on the authorized new artifact
+and retry, preserving required user-facing names and integration contracts. Do not
+rename or delete other components; ask if resolving the conflict would change the
+intended target or scope.
+Publish the final verified build, rebuilding after any source changes.
 
 Explain what the user can now do in the low-code designer, any setup still needed,
 and what was actually tested. Name credentials still needed and the relevant

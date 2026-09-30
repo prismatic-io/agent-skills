@@ -9,6 +9,12 @@ export const prismEnv = [
   "PRISMATIC_TENANT_ID",
 ];
 
+export const prismRoot = resolve(
+  import.meta.dirname,
+  "..",
+  process.env.PRISM_ROOT ?? "../prism",
+);
+
 export const prismBin = resolve(
   import.meta.dirname,
   ".lux-cache",
