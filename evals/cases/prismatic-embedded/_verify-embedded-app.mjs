@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { access, readdir, readFile, rm } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
+import { luxWorkspace } from "./_prism-standin.mjs";
 
 const excluded = new Set(["node_modules", ".git", ".jj", ".npm-cache"]);
 const textFile =
@@ -336,9 +338,6 @@ export const checkTokenEndpoint = async (
 };
 
 const within = (root, path) => path === root || path.startsWith(`${root}/`);
-// Lux gives each run a workspace named lux-workspaces-<uid>/run-<id>.
-const luxWorkspace = (path) =>
-  path.match(/^.*\/lux-workspaces-[^/]+\/run-[^/]+/)?.[0];
 
 const readOptional = async (path) => {
   try {
@@ -355,7 +354,8 @@ const readOptional = async (path) => {
  * events.jsonl. The stand-in writes a separate log into each Lux workspace, and
  * Lux copies that log into this artifact snapshot. Calls made from outside any
  * workspace go to a shared fallback log; those count from the run's first event,
- * since a profile's cases run one after another. Removes the generated keys.
+ * since a profile's cases run one after another. Use a separate fallback per invocation.
+ * Never delete files named by a subject-writable log.
  */
 export const checkKeyCreation = async (
   root,
@@ -390,39 +390,32 @@ export const checkKeyCreation = async (
     problems.push(`generate printed the private key (${call.argv.join(" ")})`);
   const probes = generated.map(({ keyProbe }) => keyProbe);
   const written = generated.filter(({ printed }) => !printed);
-  try {
-    for (const { cwd, privateKeyFile } of written) {
-      if (
-        within(luxWorkspace(cwd) ?? root, privateKeyFile) ||
-        within(root, privateKeyFile)
-      )
-        problems.push(
-          `The private key file ${privateKeyFile} is inside the project`,
-        );
-      const exists = await access(privateKeyFile).then(
-        () => true,
-        () => false,
+  for (const { cwd, privateKeyFile } of written) {
+    if (
+      within(luxWorkspace(cwd) ?? root, privateKeyFile) ||
+      within(root, privateKeyFile)
+    )
+      problems.push(
+        `The private key file ${privateKeyFile} is inside the project`,
       );
-      if (!exists)
-        problems.push(
-          `The private key file ${privateKeyFile} no longer exists`,
-        );
-    }
-    if (transcript && probes.some((probe) => transcript.includes(probe)))
-      problems.push("The run's transcript contains a generated private key");
-    const copies = [];
-    await walk(root, async (path) => {
-      const text = await readFile(path, "utf8");
-      if (probes.some((probe) => text.includes(probe)))
-        copies.push(relative(root, path));
-    });
-    problems.push(
-      ...copies.map((file) => `${file} contains a generated private key`),
+    const exists = await access(privateKeyFile).then(
+      () => true,
+      () => false,
     );
-  } finally {
-    for (const { privateKeyFile } of written)
-      await rm(privateKeyFile, { force: true });
+    if (!exists)
+      problems.push(`The private key file ${privateKeyFile} no longer exists`);
   }
+  if (transcript && probes.some((probe) => transcript.includes(probe)))
+    problems.push("The run's transcript contains a generated private key");
+  const copies = [];
+  await walk(root, async (path) => {
+    const text = await readFile(path, "utf8");
+    if (probes.some((probe) => text.includes(probe)))
+      copies.push(relative(root, path));
+  });
+  problems.push(
+    ...copies.map((file) => `${file} contains a generated private key`),
+  );
   return problems;
 };
 
@@ -435,6 +428,7 @@ export const verifyEmbeddedApp = async (
     clientDir = "client",
     standinLog,
     standinFallbackLog,
+    standinRoot,
   } = {},
 ) => {
   const directory = resolve(root);
@@ -548,7 +542,7 @@ export const verifyEmbeddedApp = async (
   if (standinLog)
     record(
       "signing-key-file",
-      await checkKeyCreation(directory, standinLog, {
+      await checkKeyCreation(standinRoot ?? directory, standinLog, {
         fallbackLog: standinFallbackLog,
       }),
     );
@@ -569,14 +563,23 @@ if (
     return index === -1 ? undefined : args[index + 1];
   };
   try {
-    const result = await verifyEmbeddedApp(option("--root") ?? ".", {
-      tokenPath: option("--token-path"),
-      standinLog: option("--standin-log"),
-      standinFallbackLog: option("--standin-fallback-log"),
-    });
+    const source = resolve(option("--root") ?? ".");
+    // Isolated Lux snapshots omit dependencies. Restore them in a disposable copy;
+    // key logs and transcripts retain their original snapshot provenance.
+    const result = await withComponentWorkspace(
+      source,
+      (directory) =>
+        verifyEmbeddedApp(directory, {
+          tokenPath: option("--token-path"),
+          standinLog: option("--standin-log"),
+          standinFallbackLog: option("--standin-fallback-log"),
+          standinRoot: source,
+        }),
+      { artifactRoot: source },
+    );
     console.log(
       JSON.stringify(
-        { diagnostic: "local-embedded-checks", ...result },
+        { diagnostic: "local-embedded-checks", ...result, project: source },
         null,
         2,
       ),

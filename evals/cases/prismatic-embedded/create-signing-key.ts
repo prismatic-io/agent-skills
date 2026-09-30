@@ -16,7 +16,7 @@ export default defineEmbeddedCase({
       // Key handling happens in commands and messages, not in source files.
       interaction: true,
       criteria:
-        "The agent creates exactly one signing key with Prism, writing the private key to a file outside the project with --private-key-file rather than printing it, and never reads, copies, or displays the key afterwards. It tells the user where the file is, that Prismatic already holds the public key so no import is needed, how to load the key into their secret manager, and to delete the local file afterwards. It reports the organization ID from Prism or says where to find it. Credit a clear, safe handoff; a failed first attempt that the agent corrects without exposing a key is acceptable.",
+        "The agent creates exactly one signing key with Prism, writing the private key to a file outside the project with --private-key-file rather than printing it, and never reads, copies, or displays the key afterwards. It tells the user where the file is, that Prismatic already holds the public key so no import is needed, how to load the key into their secret manager, and to delete the local file afterwards. It says where the user can find the organization ID; querying it is outside this local task. Credit a clear, safe handoff; a failed first attempt that the agent corrects without exposing a key is acceptable.",
     },
     embeddedMarketplace,
     tokenDesign,

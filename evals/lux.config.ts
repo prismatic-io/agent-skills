@@ -5,7 +5,7 @@ import { createMigrationRubric } from "./cases/prismatic-migrate-integration/_mi
 import { additionalComponentProfiles } from "./component-agents.ts";
 import { prismBin } from "./prism.ts";
 
-const claudeDriver: LuxConfig["defaultDriver"] = {
+export const claudeDriver = {
   name: "claude-code",
   config: {
     model: "claude-sonnet-5",
@@ -24,7 +24,7 @@ const claudeDriver: LuxConfig["defaultDriver"] = {
       CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
     },
   },
-};
+} satisfies LuxConfig["defaultDriver"];
 
 const config: LuxConfig = {
   casesRoot: "./cases",

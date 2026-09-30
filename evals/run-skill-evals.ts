@@ -13,6 +13,7 @@ export const runSkillEvals = async (
   args: string[] = process.argv.slice(2),
   env: NodeJS.ProcessEnv = {},
   profiles: readonly string[] = componentAgentNames,
+  cwd = import.meta.dirname,
 ) => {
   const listOnly = args.some((arg) =>
     ["--list", "--list-tags", "--help", "-h"].includes(arg),
@@ -60,6 +61,7 @@ export const runSkillEvals = async (
         ...(profileRoot ? ["--runs-root", profileRoot] : []),
       ],
       { ...process.env, ...env },
+      cwd,
     );
     if (result.error) console.error(result.error.message);
     if (result.error || result.signal) failed = true;
