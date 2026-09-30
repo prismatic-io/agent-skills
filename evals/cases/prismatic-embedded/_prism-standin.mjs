@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Simulates Prism 11's signing-key commands against a writable sandbox so evals
 // can exercise key creation without registering real keys. Every other command,
-// including `me`, runs on the linked Prism build. The prepared shim sets
+// including `me`, runs on the linked Prism build unless local-only mode is set.
+// Local-only mode delegates CLI metadata only. The prepared shim sets
 // EVAL_LINKED_PRISM, EVAL_STANDIN_LOG_NAME, and EVAL_STANDIN_FALLBACK_LOG. Each
 // simulated call is appended to a log inside the current Lux workspace, or to
 // the fallback log when run from outside one, for `_verify-embedded-app.mjs`.
@@ -171,12 +172,39 @@ const format = (output, argv) =>
         )
         .join("\n");
 
+/** Live workspace roots used by Lux's ordinary and isolated Claude drivers. */
+export const luxWorkspace = (cwd) =>
+  cwd.match(
+    /^.*[/\\](?:lux-workspaces-[^/\\]+[/\\]run-[^/\\]+|lux-claude-workspace-[^/\\]+)/,
+  )?.[0];
+
 /** Where a call's log entry goes: the run's own log, or the shared fallback. */
 export const logPath = (cwd, { name, fallback }) => {
-  const workspace = cwd.match(
-    /^.*[/\\]lux-workspaces-[^/\\]+[/\\]run-[^/\\]+/,
-  )?.[0];
+  const workspace = luxWorkspace(cwd);
   return workspace ? join(workspace, name) : fallback;
+};
+
+/** Narrow metadata forms that cannot delegate an account operation. */
+export const isMetadataCommand = (argv) => {
+  if (
+    argv.length === 1 &&
+    ["--version", "-v", "--llms", "--llms-full"].includes(argv[0])
+  )
+    return true;
+  if (!["--help", "-h", "--schema"].includes(argv.at(-1))) return false;
+  const command = argv
+    .slice(0, -1)
+    .flatMap((word) => word.split(":"))
+    .join(" ");
+  return [
+    "",
+    "me",
+    "organization",
+    "organization signing-keys",
+    ...["generate", "import", "list", "delete"].map(
+      (action) => `organization signing-keys ${action}`,
+    ),
+  ].includes(command);
 };
 
 const log = async (entry) => {
@@ -195,6 +223,15 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   const command = simulatedCommand(argv);
   if (!command) {
+    if (
+      process.env.EVAL_STANDIN_LOCAL_ONLY === "1" &&
+      !isMetadataCommand(argv)
+    ) {
+      console.error(
+        "Embedded evals allow CLI metadata and simulated signing-key commands only.",
+      );
+      process.exit(2);
+    }
     const result = spawnSync(process.env.EVAL_LINKED_PRISM ?? "prism", argv, {
       stdio: "inherit",
     });

@@ -293,7 +293,7 @@ const probeOf = (key: string) => key.split("\n")[3];
 const writeLog = async (path: string, calls: object[]) =>
   writeFile(path, calls.map((call) => JSON.stringify(call)).join("\n"));
 
-test("passes a key written outside the project and then removes it", async () =>
+test("passes an external key without deleting a path from the untrusted log", async () =>
   workspace(async (root) => {
     const project = join(root, "project");
     await mkdir(project);
@@ -312,7 +312,7 @@ test("passes a key written outside the project and then removes it", async () =>
       },
     ]);
     assert.deepEqual(await checkKeyCreation(project, log), []);
-    await assert.rejects(readFile(keyFile), { code: "ENOENT" });
+    assert.equal(await readFile(keyFile, "utf8"), keys.privateKey);
   }));
 
 test("fails a missing, printed, in-project, or copied key", async () =>
@@ -419,5 +419,63 @@ test("reads the run-local log, recent fallback calls, and the transcript", async
     });
     assert.ok(
       problems.some((problem) => problem.includes("transcript contains")),
+    );
+  }));
+
+test("isolated workspace temporary keys remain inside the project after snapshotting", async () =>
+  workspace(async (root) => {
+    const live = join(root, "lux-claude-workspace-abc");
+    const secret = join(live, ".lux-claude", "tmp", "key.pem");
+    const snapshot = join(root, "run", "artifacts");
+    await mkdir(join(live, ".lux-claude", "tmp"), { recursive: true });
+    await mkdir(snapshot, { recursive: true });
+    await writeFile(secret, keys.privateKey);
+    await writeLog(join(snapshot, "calls.jsonl"), [
+      {
+        cwd: join(live, "server"),
+        command: "generate",
+        status: "ok",
+        printed: false,
+        privateKeyFile: secret,
+        keyProbe: probeOf(keys.privateKey),
+      },
+    ]);
+    const problems = await checkKeyCreation(snapshot, "calls.jsonl");
+    assert.ok(
+      problems.some((problem) => problem.includes("is inside the project")),
+    );
+    assert.equal(await readFile(secret, "utf8"), keys.privateKey);
+  }));
+
+test("disposable app checks retain the original snapshot key evidence", async () =>
+  workspace(async (root) => {
+    const snapshot = join(root, "run", "artifacts");
+    const copy = join(root, "copy");
+    const keyFile = join(root, "key.pem");
+    await mkdir(join(snapshot, ".npm-cache", "_prism"), { recursive: true });
+    await writeFakeApp(copy, sessionToken);
+    await writeFile(
+      join(copy, "package.json"),
+      JSON.stringify({ type: "module" }),
+    );
+    await writeFile(keyFile, keys.privateKey);
+    await writeLog(join(snapshot, ".npm-cache", "_prism", "calls.jsonl"), [
+      {
+        cwd: join(root, "lux-claude-workspace-abc"),
+        command: "generate",
+        status: "ok",
+        printed: false,
+        privateKeyFile: keyFile,
+        keyProbe: probeOf(keys.privateKey),
+      },
+    ]);
+    const result = await verifyEmbeddedApp(copy, {
+      standinLog: ".npm-cache/_prism/calls.jsonl",
+      standinRoot: snapshot,
+    });
+    assert.equal(
+      result.checks.find((check) => check.script === "signing-key-file")
+        ?.status,
+      "passed",
     );
   }));

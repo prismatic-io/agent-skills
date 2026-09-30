@@ -15,3 +15,6 @@ export const runSimulated: (
   output: Record<string, unknown>;
   record: Record<string, unknown>;
 }>;
+
+export const luxWorkspace: (cwd: string) => string | undefined;
+export const isMetadataCommand: (argv: string[]) => boolean;

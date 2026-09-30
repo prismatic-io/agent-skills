@@ -7,8 +7,8 @@ development tooling.
 ## Setup and run
 
 Prerequisites: repository mise tools; authenticated Claude Code (`claude`), Codex
-(`codex`), and Grok Build (`grok`) CLIs; and a built
-incur-based Prism checkout at `../../prism` (relative to this directory).
+(`codex`), Grok Build (`grok`), and Antigravity (`agy`) for suites that select it;
+and a built incur-based Prism checkout at `../../prism` (relative to this directory).
 `PRISM_ROOT` can select another Prism checkout. Lux is pinned to the published
 `0.0.2-preview.28` package in both development manifests and lockfiles.
 No local Lux checkout is required. Installable skills have no Lux dependency.
@@ -25,7 +25,7 @@ From the repository root:
 mise run eval:doctor    # install dependencies, check Prism schema, typecheck cases
 mise run eval:run       # run 13 component cases across Claude Code, Codex, and Grok Build
 mise run eval:cni       # run 12 CNI cases across the same profiles
-mise run eval:embedded  # run 4 embedded-app cases across the same profiles
+mise run eval:embedded  # run 4 embedded-app cases, including Antigravity
 ```
 
 `eval:prepare` places a launcher for the chosen Prism build on the subject's PATH.
@@ -319,17 +319,29 @@ when the source contract is incomplete.
 
 ## Embedded app evaluations
 
-Run `mise run eval:embedded` from the repository root, or `node run-embedded.ts
---list` from `evals/`. The runner selects the `embedded-skill` cases and the same
-profile matrix. All cases edit `fixtures/embedded/acme-portal`, an Express 5 and
+Run `mise run eval:embedded -- --concurrency 1` from the repository root, or `node run-embedded.ts
+--list` from `evals/`. The runner selects the `embedded-skill` cases and these
+profiles: Claude Code, Codex, Antigravity, and Grok Build. All cases edit `fixtures/embedded/acme-portal`, an Express 5 and
 React app with cookie sessions and two tenants. `marketplace-settings` asks for
 the marketplace in Settings; `browser-signing-request` asks to sign tokens in the
 browser, which the skill should decline in favor of a small backend endpoint;
 `create-signing-key` also asks the agent to create the organization's signing
 key with Prism; `match-app-theme` asks for embedded screens that match the
 app's colors, font, and dark mode.
-Only Claude Code results are established so far; other harnesses are tracked
-separately.
+The 2026-09-30 pass also exercised backend-only, key-rotation, and native
+skill-discovery requests. Codex and Grok passed the app checks; Antigravity app
+runs stopped on native permission denials. Claude continued under isolated
+controls after an out-of-workspace cleanup attempt. Separate dependency-restored
+checks passed for its app implementations, while key handling failed. Preserve
+original grades and scope findings; this does not establish uniform portability.
+Native selection was confirmed for Codex, Antigravity, and Grok; isolated Claude
+completed its discovery request without loading the staged skill.
+
+The embedded runner uses `embedded/lux.config.ts`: Claude runs with native
+isolation and stream-json interaction, with edits confined to sandboxed Bash.
+Native Edit/Write tools are excluded because they bypass that filesystem sandbox.
+Direct root Lux commands use the shared profiles; use the embedded runner for
+these controls.
 
 The requests forbid Prismatic API calls, sign-in, and signing-key changes,
 except the one key `create-signing-key` asks for. `eval:prepare` puts a stand-in
@@ -337,18 +349,20 @@ except the one key `create-signing-key` asks for. `eval:prepare` puts a stand-in
 simulates only the signing-key commands, against a writable sandbox with
 Prism 11's rules: agent mode needs `--yes`, `generate` refuses to print the key
 in agent mode and writes it only through `--private-key-file` to a new
-owner-only file. Every other command, including `me`, runs on the linked Prism
-build, so other suites see real Prism behavior. The embedded runner
-additionally sets `PRISM_READ_ONLY=true`. The stand-in logs each simulated
-call, without key material, to `.npm-cache/_prism/calls.jsonl` in the Lux
+owner-only file. Other suites delegate remaining commands to the linked Prism
+build. The embedded runner creates a separate stand-in per invocation, delegates
+only CLI metadata, and sets `PRISM_READ_ONLY=true`; it needs no live Prism profile.
+The stand-in logs each simulated
+call to `.npm-cache/_prism/calls.jsonl` in the Lux
 workspace, which Lux snapshots and the checker's file scans skip. Calls made
-from outside any workspace go to `.lux-cache/prism-standin/outside-workspace-calls.jsonl`
-and count toward a run from its first transcript event, so run embedded cases
-one profile at a time. Direct Lux runs after `eval:prepare` keep the same
-signing-key containment.
+from outside any workspace go to `outside-workspace-calls.jsonl` under that
+invocation's stand-in root and count from the run's first transcript event.
+Keep the default concurrency of one: overlapping cases can make fallback evidence
+ambiguous. `EVAL_PRISM_BIN` selects a separately prepared stand-in for direct runs.
 
-`cases/prismatic-embedded/_verify-embedded-app.mjs` runs the app's available
-typecheck/lint/test/build scripts and does not install packages. It then checks
+`cases/prismatic-embedded/_verify-embedded-app.mjs` restores dependencies
+and runs the app's available typecheck/lint/test/build scripts in a disposable
+copy; key logs and transcripts retain their original snapshot provenance. It checks
 that `@prismatic-io/embedded` is a dependency and ships in the built client, that
 no private key is committed outside tests, and that browser code neither signs
 tokens nor reads a `VITE_` signing key. Finally it generates an RSA key pair,
@@ -360,8 +374,9 @@ headers must not change the claims, and unauthenticated requests must get no
 token. For `create-signing-key` the checker also reads the stand-in log for
 calls made inside the workspace: a key must have been created, never printed,
 written outside the project, and not copied into any project file, including
-ignored ones. It then deletes the generated key files. These checks establish
-the security contract, not the quality of the frontend; rubrics grade that.
+ignored ones. It does not delete files named by the subject-writable log. These
+checks cover the local token and key-file contracts; rubrics and trace review
+cover frontend quality and execution scope.
 
 Claude Code results on 2026-09-29 (`claude-sonnet-5`, medium effort, Lux
 preview.27, linked Prism 11 from `next` behind the stand-in, one run per case

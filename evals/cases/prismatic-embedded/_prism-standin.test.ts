@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, test } from "vitest";
 import {
   isAgentMode,
+  isMetadataCommand,
   keyProbe,
   logPath,
   runSimulated,
@@ -76,6 +77,11 @@ test("logs calls inside a Lux workspace to its own log and others to the fallbac
   assert.equal(
     logPath(join(workspace, "server"), logs),
     join(workspace, ".npm-cache/_prism/calls.jsonl"),
+  );
+  const isolated = "/var/folders/x/T/lux-claude-workspace-abc";
+  assert.equal(
+    logPath(join(isolated, "server"), logs),
+    join(isolated, logs.name),
   );
   assert.equal(logPath("/Users/someone/secrets", logs), "/tmp/fallback.jsonl");
 });
@@ -195,4 +201,61 @@ test("the installed shim logs simulated calls and runs others on the linked buil
     !JSON.stringify([...calls, ...fallbackCalls]).includes("PRIVATE KEY"),
     "the log holds no key",
   );
+});
+
+test("local-only shims delegate metadata, never account operations", async () => {
+  const linked = join(directory, "linked-prism");
+  await writeFile(linked, '#!/bin/sh\necho "linked $*"\n');
+  await chmod(linked, 0o755);
+  const bin = await installPrismStandin({
+    root: join(directory, "local"),
+    linkedPrism: linked,
+    localOnly: true,
+  });
+  for (const argv of [
+    ["--version"],
+    ["--llms"],
+    ["organization", "signing-keys", "generate", "--help"],
+  ]) {
+    const result = spawnSync(join(bin, "prism"), argv, { encoding: "utf8" });
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /^linked /);
+  }
+  for (const argv of [
+    ["me"],
+    ["me", "token"],
+    ["components", "list"],
+    ["--help", "me"],
+    ["me", "--help", "--format=json"],
+  ]) {
+    const result = spawnSync(join(bin, "prism"), argv, { encoding: "utf8" });
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /CLI metadata/);
+  }
+  const workspace = join(directory, "lux-claude-workspace-canary");
+  await mkdir(workspace);
+  const result = spawnSync(
+    join(bin, "prism"),
+    [
+      "organization",
+      "signing-keys",
+      "generate",
+      "--yes",
+      "-o",
+      join(directory, "synthetic.pem"),
+    ],
+    {
+      cwd: workspace,
+      env: { ...process.env, CLAUDECODE: "1" },
+      encoding: "utf8",
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const call = JSON.parse(
+    (await readFile(join(workspace, standinLog), "utf8")).trim(),
+  );
+  assert.equal(call.command, "generate");
+  assert.equal(call.printed, false);
+  assert.equal(isMetadataCommand(["me", "--output", "--help"]), false);
 });

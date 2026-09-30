@@ -80,7 +80,7 @@ dir = "evals"
 run = "node run-migrations.ts --verbose"
 
 [tasks."eval:embedded"]
-description = "Run local embedded-app evaluations across Claude Code, Codex, and Grok Build"
+description = "Run local embedded-app evaluations across Claude Code, Codex, Antigravity, and Grok Build"
 depends = ["eval:doctor"]
 dir = "evals"
 run = "node run-embedded.ts --verbose"

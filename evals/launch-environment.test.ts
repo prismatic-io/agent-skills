@@ -34,6 +34,7 @@ const host = {
   PRISM_REUSE_PROFILE: "1",
   PRISM_MIGRATION_SKILL: "none",
   PRISM_EVAL_FIXTURE: "/fake/continuation-fixture",
+  EVAL_PRISM_BIN: "/fake/standin/bin",
   ANTIGRAVITY_AUTH_TOKEN_FILE: "/fake/oauth.json",
   ANTIGRAVITY_REUSE_KEYCHAIN: "1",
 };

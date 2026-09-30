@@ -8,8 +8,9 @@ read it for anything not covered here. Checked 2026-09-28.
 ## Token
 
 Sign an RS256 JWT with the required `sub`, `organization`, `customer`, `iat`,
-and `exp` claims. They are not standard claims, so set each one explicitly, and
-check the library's timestamp options: `jsonwebtoken`'s `noTimestamp: true`
+and `exp` claims. `organization` and `customer` are Prismatic-specific;
+`sub`, `iat`, and `exp` are registered JWT claims. Set or verify each required
+claim, and check the library's timestamp options: `jsonwebtoken`'s `noTimestamp: true`
 removes `iat` even when the payload sets it.
 
 The customer comes from the token, so a wrong `customer` shows one tenant's

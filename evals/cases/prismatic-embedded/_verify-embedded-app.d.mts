@@ -58,5 +58,6 @@ export const verifyEmbeddedApp: (
     clientDir?: string;
     standinLog?: string;
     standinFallbackLog?: string;
+    standinRoot?: string;
   },
 ) => Promise<{ ok: boolean; project: string; checks: CheckResult[] }>;
