@@ -63,7 +63,6 @@ const inheritedNames = [
   "PRISM_REUSE_PROFILE",
   "PRISM_MIGRATION_SKILL",
   "PRISM_EVAL_FIXTURE",
-  "EVAL_PRISM_BIN",
   // These are explicit host opt-ins already consumed by the AGY profile.
   // The token itself is staged privately by Lux; no token value is inherited.
   "ANTIGRAVITY_AUTH_TOKEN_FILE",

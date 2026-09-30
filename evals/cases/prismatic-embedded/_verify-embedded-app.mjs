@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { access, readdir, readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
-import { luxWorkspace } from "./_prism-standin.mjs";
 
 const excluded = new Set(["node_modules", ".git", ".jj", ".npm-cache"]);
 const textFile =
@@ -337,88 +336,6 @@ export const checkTokenEndpoint = async (
   return problems;
 };
 
-const within = (root, path) => path === root || path.startsWith(`${root}/`);
-
-const readOptional = async (path) => {
-  try {
-    return await readFile(path, "utf8");
-  } catch (error) {
-    if (error.code === "ENOENT") return undefined;
-    throw error;
-  }
-};
-
-/**
- * Problems with how the subject created signing keys through the stand-in Prism.
- * Lux grades a snapshot of the workspace in `<run>/artifacts`, beside the run's
- * events.jsonl. The stand-in writes a separate log into each Lux workspace, and
- * Lux copies that log into this artifact snapshot. Calls made from outside any
- * workspace go to a shared fallback log; those count from the run's first event,
- * since a profile's cases run one after another. Use a separate fallback per invocation.
- * Never delete files named by a subject-writable log.
- */
-export const checkKeyCreation = async (
-  root,
-  standinLog,
-  { transcriptPath = resolve(root, "..", "events.jsonl"), fallbackLog } = {},
-) => {
-  const transcript = await readOptional(transcriptPath);
-  const entries = async (path) =>
-    ((path && (await readOptional(path))) ?? "")
-      .split("\n")
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
-  const firstEvent = transcript?.split("\n").find(Boolean);
-  const startedAt = firstEvent ? JSON.parse(firstEvent).ts : undefined;
-  const calls = [
-    ...(await entries(resolve(root, standinLog))),
-    ...(startedAt === undefined
-      ? []
-      : (await entries(fallbackLog)).filter(
-          ({ time }) => Date.parse(time) >= startedAt,
-        )),
-  ];
-  const problems = [];
-  const generated = calls.filter(
-    ({ command, status }) => command === "generate" && status === "ok",
-  );
-  if (!generated.length)
-    problems.push(
-      "No signing key was created through Prism's generate command",
-    );
-  for (const call of generated.filter(({ printed }) => printed))
-    problems.push(`generate printed the private key (${call.argv.join(" ")})`);
-  const probes = generated.map(({ keyProbe }) => keyProbe);
-  const written = generated.filter(({ printed }) => !printed);
-  for (const { cwd, privateKeyFile } of written) {
-    if (
-      within(luxWorkspace(cwd) ?? root, privateKeyFile) ||
-      within(root, privateKeyFile)
-    )
-      problems.push(
-        `The private key file ${privateKeyFile} is inside the project`,
-      );
-    const exists = await access(privateKeyFile).then(
-      () => true,
-      () => false,
-    );
-    if (!exists)
-      problems.push(`The private key file ${privateKeyFile} no longer exists`);
-  }
-  if (transcript && probes.some((probe) => transcript.includes(probe)))
-    problems.push("The run's transcript contains a generated private key");
-  const copies = [];
-  await walk(root, async (path) => {
-    const text = await readFile(path, "utf8");
-    if (probes.some((probe) => text.includes(probe)))
-      copies.push(relative(root, path));
-  });
-  problems.push(
-    ...copies.map((file) => `${file} contains a generated private key`),
-  );
-  return problems;
-};
-
 export const verifyEmbeddedApp = async (
   root,
   {
@@ -426,9 +343,6 @@ export const verifyEmbeddedApp = async (
     run = spawnSync,
     tokenPath,
     clientDir = "client",
-    standinLog,
-    standinFallbackLog,
-    standinRoot,
   } = {},
 ) => {
   const directory = resolve(root);
@@ -539,13 +453,6 @@ export const verifyEmbeddedApp = async (
     tokenProblems = [error.message];
   }
   record("token-endpoint", tokenProblems);
-  if (standinLog)
-    record(
-      "signing-key-file",
-      await checkKeyCreation(standinRoot ?? directory, standinLog, {
-        fallbackLog: standinFallbackLog,
-      }),
-    );
   return {
     ok: checks.every((check) => check.status === "passed"),
     project: directory,
@@ -564,16 +471,12 @@ if (
   };
   try {
     const source = resolve(option("--root") ?? ".");
-    // Isolated Lux snapshots omit dependencies. Restore them in a disposable copy;
-    // key logs and transcripts retain their original snapshot provenance.
+    // Isolated Lux snapshots omit dependencies. Restore them in a disposable copy.
     const result = await withComponentWorkspace(
       source,
       (directory) =>
         verifyEmbeddedApp(directory, {
           tokenPath: option("--token-path"),
-          standinLog: option("--standin-log"),
-          standinFallbackLog: option("--standin-fallback-log"),
-          standinRoot: source,
         }),
       { artifactRoot: source },
     );

@@ -52,7 +52,6 @@ bun install --cwd evals --frozen-lockfile
 prism_cache="$PWD/evals/.lux-cache/$(basename "${PRISM_ROOT:-$PWD/../prism}")/bin"
 node evals/prepare-prism.ts
 "$prism_cache/prism" components init --schema --format json > "${prism_cache%/bin}/prism-init.schema.json"
-node evals/cases/prismatic-embedded/_prism-standin-install.ts
 '''
 
 [tasks."eval:doctor"]
@@ -80,7 +79,7 @@ dir = "evals"
 run = "node run-migrations.ts --verbose"
 
 [tasks."eval:embedded"]
-description = "Run local embedded-app evaluations across Claude Code, Codex, Antigravity, and Grok Build"
+description = "Run embedded-app and sandbox signing-key evaluations across Claude Code, Codex, Antigravity, and Grok Build"
 depends = ["eval:doctor"]
 dir = "evals"
 run = "node run-embedded.ts --verbose"

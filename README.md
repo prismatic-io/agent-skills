@@ -62,7 +62,8 @@ See [evals/README.md](evals/README.md) for the Lux workflow and current coverage
 profiles without authorizing deployment or live-service mutations; local checks
 and qualitative workflow assessments are reported separately.
 `mise run eval:embedded` evaluates embedding Prismatic in an existing web app
-without calling Prismatic or registering signing keys.
+with real Prism; the signing-key case registers a key in the configured sandbox
+organization. See the eval guide for setup and cleanup.
 
 ## Releases
 
