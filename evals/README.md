@@ -315,3 +315,10 @@ unsupported interfaces need review. Registration-evidence helpers produce manual
 review attachments, not automatic grading evidence. Inspect checker tests for
 supported adapters and scenarios. Assessment cases do not demand invented code
 when the source contract is incomplete.
+
+## Orby evaluations
+
+Run `mise run eval:orby -- --concurrency 1` across the shared profiles.
+Cases cover local multi-specialist setup, an existing CNI edit, and command
+advice without account access. They do not authorize remote mutations or live
+service tests. Rubric scores describe quality; execution and build checks remain separate.

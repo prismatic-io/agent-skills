@@ -77,3 +77,9 @@ description = "Run migration evaluations across Claude Code, Codex, Antigravity,
 depends = ["eval:doctor"]
 dir = "evals"
 run = "node run-migrations.ts --verbose"
+
+[tasks."eval:orby"]
+description = "Run Orby evaluations across Claude Code, Codex, Antigravity, and Grok Build"
+depends = ["eval:doctor"]
+dir = "evals"
+run = "node run-orby.ts --verbose"
