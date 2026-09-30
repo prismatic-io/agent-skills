@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "vitest";
-import { resolveCniEntrypoint } from "./_cni-entrypoint.mjs";
+import { resolveCniEntrypoint } from "../_cni-entrypoint.mjs";
 
 const workspace = async (
   check: (root: string, outside: string) => Promise<void>,

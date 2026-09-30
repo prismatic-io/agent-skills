@@ -84,8 +84,7 @@ test("Mule discovery separates source inputs, review evidence and project checks
   assert.doesNotMatch(String(authored.persona), /37\.4825|149\.93/);
   const ids = authored.assertions?.map(({ id }) => id);
   for (const id of [
-    "local-build",
-    "project-checks",
+    "local-checks",
     "order-transformation",
     "report-and-output-contract",
     "meaningful-tests",

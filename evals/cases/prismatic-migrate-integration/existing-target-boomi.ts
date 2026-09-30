@@ -38,6 +38,7 @@ export default {
     {
       id: "existing-receipt-contract",
       type: "command-exits-zero" as const,
+      requiresExecutionWorkspace: true,
       command: `node '${resolve(import.meta.dirname, "./_verify-existing-receipt.mjs").replaceAll("'", "'\\''")}'`,
       inheritEnv: ["PATH"],
       timeout: "4 minutes",

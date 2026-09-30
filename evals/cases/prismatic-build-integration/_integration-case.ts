@@ -1,11 +1,7 @@
 import { resolve } from "node:path";
-import {
-  type BuiltinAssertion,
-  defineEvalCase,
-  type RubricEvidence,
-  subjectPath,
-} from "@prismatic-io/lux";
+import { defineEvalCase, subjectPath } from "@prismatic-io/lux";
 import { prismBin } from "../../prism.ts";
+import { sourceRubrics } from "../_rubric.ts";
 
 export interface IntegrationCase {
   id: string;
@@ -19,7 +15,8 @@ export interface IntegrationCase {
   tags?: string[];
 }
 
-const evidence = {
+const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+const rubric = sourceRubrics({
   artifactPatterns: [
     "**/*.ts",
     "**/*.mts",
@@ -28,45 +25,10 @@ const evidence = {
     "**/package.json",
     "**/*.md",
   ],
-  eventTypes: ["terminal"],
-  toolDetail: "names",
-  includeArtifactContents: true,
-  maxEvents: 10,
-  maxAgentChars: 2_000,
-  maxToolChars: 2_000,
-  maxArtifactChars: 80_000,
-} satisfies Partial<RubricEvidence>;
-
-const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-const rubric = (
-  id: string,
-  criteria: string,
-  interaction = false,
-): BuiltinAssertion => ({
-  id,
-  type: "rubric",
-  // A rubric measures quality; it is not an acceptance gate. Lux otherwise
-  // applies an implicit 0.8 pass bar even though the judge returns a score.
-  threshold: 0,
-  evidence: interaction
-    ? {
-        ...evidence,
-        eventTypes: [
-          "agent-message",
-          "tool-call",
-          "tool-result",
-          "interrupt",
-          "responded",
-          "terminal",
-        ],
-        toolDetail: "inputs-and-results",
-        maxEvents: 200,
-        maxAgentChars: 30_000,
-        maxToolChars: 60_000,
-      }
-    : evidence,
-  maxArtifactExcerpt: 20_000,
-  criteria: `${criteria}${interaction ? "" : "\n\nThese criteria receive source-focused evidence. Command execution is independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage."}\n\nReturn a continuous quality score, not a binary verdict: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficiently successful for the request, not perfect; further improvements can remain at any score. Credit working parts proportionally and describe a strength plus a useful improvement when supported. Do not invent a shortcoming just to suggest an improvement. Extra polish and coverage have diminishing returns. Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not force a bell curve or require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks and documented platform guarantees are valid evidence; no deployment or live-service verification is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime guarantees.`,
+  sourceGuidance:
+    "\n\nThese criteria receive source-focused evidence. Command execution is independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage.",
+  qualityGuidance:
+    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not force a bell curve or require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks and documented platform guarantees are valid evidence; no deployment or live-service verification is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime guarantees.",
 });
 
 export const defineIntegrationCase = (spec: IntegrationCase) => {
@@ -84,6 +46,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       {
         id: "local-checks",
         type: "command-exits-zero",
+        requiresExecutionWorkspace: true,
         command: `node ${quote(resolve(import.meta.dirname, "_verify-generated-cni.mjs"))}`,
         inheritEnv: ["PATH"],
         timeout: "10 minutes",

@@ -3,6 +3,7 @@ import {
   type RubricEvidence,
   subjectPath,
 } from "@prismatic-io/lux";
+import { claudeDriver } from "../../lux.config.ts";
 
 const evidence = {
   artifactPatterns: ["*/package.json", "*/src/**/*", "*/README.md"],
@@ -15,6 +16,7 @@ const evidence = {
     "terminal",
   ],
   toolDetail: "inputs-and-results",
+  toolInvocations: "all",
   includeArtifactContents: true,
   maxEvents: 200,
   maxAgentChars: 35_000,
@@ -25,19 +27,11 @@ const evidence = {
 export default defineEvalCase({
   id: "orby/bootstrap-new-org",
   driver: {
-    name: "claude-code",
+    ...claudeDriver,
     config: {
-      model: "claude-sonnet-5",
-      reasoningEffort: "medium",
-      interactionMode: "defer-resume",
-      idleTimeout: "20 minutes",
+      ...claudeDriver.config,
       maxInterrupts: 8,
       addDirs: [subjectPath("")],
-      extraArgs: ["--setting-sources", "", "--strict-mcp-config"],
-      env: {
-        CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1",
-        CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
-      },
     },
   },
   prompt: `Use the coordinating skill at ${subjectPath("orby/SKILL.md")}.

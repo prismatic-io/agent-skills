@@ -13,7 +13,7 @@
   "scripts": {
     "typecheck": "npm --prefix .. run typecheck -- --project evals/tsconfig.json",
     "test": "vitest run",
-    "lux": "node run-lux.ts",
-    "doctor": "npm run typecheck && npm test && lux doctor && codex login status && claude auth status"
+    "lux": "lux",
+    "doctor": "npm run typecheck && npm test && lux doctor && claude auth status"
   }
 }

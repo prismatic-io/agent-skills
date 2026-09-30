@@ -3,7 +3,6 @@ import { spawnSync } from "node:child_process";
 import {
   mkdir,
   mkdtemp,
-  readdir,
   readFile,
   rm,
   symlink,
@@ -25,7 +24,7 @@ const checkProject = async (
   main = "index.js",
   output = "dist/index.js",
   escapeKind?: "absolute" | "symlink",
-  restoreDependencies = false,
+  installedDependencies = false,
   mode = "all",
   extraScripts: Record<string, string> = {},
 ) => {
@@ -42,24 +41,18 @@ const checkProject = async (
       join(directory, "legacy/build/source.txt"),
       "exported source",
     );
-    if (restoreDependencies) {
-      const vendor = join(project, "vendor", "spectral");
-      await mkdir(vendor, { recursive: true });
+    await mkdir(join(project, "node_modules"));
+    if (installedDependencies) {
+      const dependency = join(project, "node_modules/@prismatic-io/spectral");
+      await mkdir(dependency, { recursive: true });
       await writeFile(
-        join(vendor, "package.json"),
-        JSON.stringify({
-          name: "@prismatic-io/spectral",
-          version: "0.0.0-test",
-          main: "index.cjs",
-        }),
+        join(dependency, "package.json"),
+        JSON.stringify({ name: "@prismatic-io/spectral", main: "index.cjs" }),
       );
       await writeFile(
-        join(vendor, "index.cjs"),
+        join(dependency, "index.cjs"),
         `module.exports = require(${JSON.stringify(spectral)});`,
       );
-    } else {
-      // Existing dependency tree exercises the live-run copy path without installs.
-      await mkdir(join(project, "node_modules"));
     }
     if (escapeKind === "symlink")
       await symlink(outputPath, join(project, main));
@@ -68,9 +61,7 @@ const checkProject = async (
       JSON.stringify({
         main: entryMain,
         dependencies: {
-          "@prismatic-io/spectral": restoreDependencies
-            ? "file:./vendor/spectral"
-            : "10.30.3",
+          "@prismatic-io/spectral": "10.30.3",
         },
         scripts: { build: "node build.cjs", ...extraScripts },
       }),
@@ -83,7 +74,6 @@ const checkProject = async (
     );
     if (source !== undefined)
       await writeFile(join(project, "source.cjs"), source);
-    const filesBefore = (await readdir(project, { recursive: true })).sort();
     const manifestBefore = await readFile(
       join(project, "package.json"),
       "utf8",
@@ -93,20 +83,10 @@ const checkProject = async (
       timeout: 15000,
     });
     assert.ifError(result.error);
-    assert.deepEqual(
-      (await readdir(project, { recursive: true })).sort(),
-      filesBefore,
-      "verification must not create builds or dependencies in source evidence",
-    );
     assert.equal(
       await readFile(join(project, "package.json"), "utf8"),
       manifestBefore,
       "verification must preserve the source manifest",
-    );
-    assert.equal(
-      await readFile(join(directory, "legacy/example.eml"), "utf8"),
-      "source message",
-      "verification must preserve sibling input evidence",
     );
     return { status: result.status, output: result.stdout + result.stderr };
   } finally {
@@ -116,7 +96,7 @@ const checkProject = async (
 
 const integrationSource = `const { integration, flow } = require(${JSON.stringify(spectral)}); module.exports = integration({name:'Order transfer',description:'Verifier fixture',flows:[flow({name:'Transfer orders',stableKey:'orders',onExecution:async()=>({data:null})})]});`;
 
-test("declared tests can read sibling legacy inputs without changing the evidence", async () => {
+test("declared tests can read sibling legacy inputs in the native verification workspace", async () => {
   const result = await checkProject(
     integrationSource,
     "index.js",
@@ -193,7 +173,7 @@ test("Prism scaffold main relative to dist is supported", async () => {
   assert.equal(result.status, 0, result.output);
 });
 
-test("frozen source without node_modules restores dependencies in a disposable workspace", async () => {
+test("registered loading uses live dependencies without an extra installation", async () => {
   const source = integrationSource.replace(
     JSON.stringify(spectral),
     JSON.stringify("@prismatic-io/spectral"),
@@ -206,8 +186,19 @@ test("frozen source without node_modules restores dependencies in a disposable w
     true,
   );
   assert.equal(result.status, 0, result.output);
-  assert.match(result.output, /restoring from package.json/);
+  assert.doesNotMatch(result.output, /restoring|npm install|npm ci/);
   assert.match(result.output, /Validated 1 registered CNI flow/);
+});
+
+test("a missing runtime dependency fails without a support-code installation", async () => {
+  const source = integrationSource.replace(
+    JSON.stringify(spectral),
+    JSON.stringify("@prismatic-io/spectral"),
+  );
+  const result = await checkProject(source);
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Cannot find module/);
+  assert.doesNotMatch(result.output, /restoring|npm install|npm ci/);
 });
 
 test("package.main cannot substitute a non-Prism output for the importable CNI", async () => {

@@ -15,7 +15,7 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 | Skill | Purpose |
 | --- | --- |
 | [orby](skills/orby/SKILL.md) | Explore, operate, and troubleshoot Prismatic environments, and coordinate end-to-end platform outcomes. |
-| [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. Initial scaffold; evaluated with Lux. |
+| [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. |
 | [prismatic-build-integration](skills/prismatic-build-integration/SKILL.md) | Build and update Prismatic Code Native Integrations, then verify them through local checks and authorized platform execution. |
 | [prismatic-migrate-integration](skills/prismatic-migrate-integration/SKILL.md) | Port vendor workflows or bespoke integration code to Prismatic using source evidence and behavioral verification. |
 | [prismatic-embedded](skills/prismatic-embedded/SKILL.md) | Embed Prismatic's marketplace and other screens in a web app, with backend-signed embedded-user tokens and the embedded SDK. |
@@ -58,12 +58,8 @@ instructions and any supporting scripts, references, or assets.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, and
 [AGENTS.md](AGENTS.md) for authoring guidance.
 See [evals/README.md](evals/README.md) for the Lux workflow and current coverage.
-`mise run eval:cni` evaluates local CNI creation and edits across the three subject
-profiles without authorizing deployment or live-service mutations; local checks
-and qualitative workflow assessments are reported separately.
-`mise run eval:embedded` evaluates embedding Prismatic in an existing web app
-with real Prism; the signing-key case registers a key in the configured sandbox
-organization. See the eval guide for setup and cleanup.
+Run a specific skill with `mise run eval:run -- prismatic-build-integration`;
+use a canonical case ID for tighter iteration and native Lux profiles for comparisons.
 
 ## Releases
 

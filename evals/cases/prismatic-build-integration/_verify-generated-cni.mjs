@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { runCheck as commandCheck } from "../../run-check.mjs";
 
 const excluded = new Set([
   "node_modules",
@@ -39,10 +39,7 @@ export const findCniProjects = async (root) => {
   return projects;
 };
 
-export const verifyCni = async (
-  root,
-  { timeoutMs = 120_000, run = spawnSync } = {},
-) => {
+export const verifyCni = async (root, { timeoutMs = 120_000, run } = {}) => {
   const projects = await findCniProjects(root);
   if (projects.length !== 1)
     return {
@@ -52,34 +49,15 @@ export const verifyCni = async (
     };
   const { directory, manifest } = projects[0];
   const checks = [];
-  const runCheck = (script, command, args) => {
-    const result = run(command, args, {
-      cwd: directory,
-      env: process.env,
-      stdio: "inherit",
-      timeout: timeoutMs,
-      killSignal: "SIGKILL",
-      detached: process.platform !== "win32",
-    });
-    if (
-      result.error?.code === "ETIMEDOUT" &&
-      result.pid &&
-      process.platform !== "win32"
-    ) {
-      try {
-        process.kill(-result.pid, "SIGKILL");
-      } catch (error) {
-        if (error.code !== "ESRCH") throw error;
-      }
-    }
-    checks.push({
-      script,
-      status: result.status === 0 && !result.error ? "passed" : "failed",
-      exitCode: result.status,
-      signal: result.signal ?? null,
-      error: result.error?.message ?? null,
-    });
-  };
+  const runCheck = (script, command, args) =>
+    checks.push(
+      commandCheck(
+        script,
+        { cwd: directory, timeout: timeoutMs, run },
+        command,
+        args,
+      ),
+    );
   if (!manifest.scripts?.build)
     checks.push({
       script: "build",
@@ -88,7 +66,7 @@ export const verifyCni = async (
     });
   for (const script of ["typecheck", "lint", "test", "build"]) {
     if (!manifest.scripts?.[script]) continue;
-    runCheck(script, "npm", ["run", script]);
+    runCheck(script);
   }
   const built = checks.some(
     (check) => check.script === "build" && check.status === "passed",

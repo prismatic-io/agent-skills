@@ -75,15 +75,41 @@ test("source expectations are grader-only and local constraints survive all vari
 });
 
 test("assessment cases can disclose genuine blockers without fabricating a build", () => {
-  assert.ok(migrationAssertions(spec).some(({ id }) => id === "local-build"));
+  assert.ok(migrationAssertions(spec).some(({ id }) => id === "local-checks"));
   const assessment = defineMigrationCase({
     ...spec,
     deliverable: "assessment",
   });
-  assert.ok(!assessment.assertions?.some(({ id }) => id === "local-build"));
+  assert.ok(!assessment.assertions?.some(({ id }) => id === "local-checks"));
   assert.ok(assessment.assertions?.some(({ id }) => id === "meaningful-tests"));
   assert.ok(assessment.assertions?.some(({ id }) => id === "local-scope"));
   assert.match(assessment.prompt, /available evidence/);
+});
+
+test("one native dependency-backed check covers build, declared tests and registered execution", () => {
+  const commands = migrationAssertions(spec).filter(
+    (entry) => entry.type === "command-exits-zero",
+  );
+  assert.equal(commands.length, 1);
+  const check = commands[0];
+  assert.ok(check?.type === "command-exits-zero");
+  assert.equal(check.id, "local-checks");
+  assert.equal(check.requiresExecutionWorkspace, true);
+  assert.match(check.command, /_verify-generated-cni\.mjs' \. all$/);
+});
+
+test("case-specific handoff requirements remain grader-only", () => {
+  const authored = defineMigrationCase({
+    ...spec,
+    handoff: "PRIVATE_HANDOFF: preserve caller response delivery.",
+  });
+  const assertion = authored.assertions?.find(
+    (entry) => entry.id === "handoff",
+  );
+  assert.ok(assertion?.type === "rubric");
+  assert.match(String(assertion.criteria), /PRIVATE_HANDOFF/);
+  assert.doesNotMatch(authored.prompt, /PRIVATE_HANDOFF/);
+  assert.doesNotMatch(String(authored.persona), /PRIVATE_HANDOFF/);
 });
 
 test("authored cases copy only input directories, excluding grader answers", async () => {
@@ -187,7 +213,7 @@ test("existing integration cases extend the supplied project and retain build ve
   });
   assert.match(result.prompt, /Extend the supplied.*in place/);
   assert.doesNotMatch(result.prompt, /new top-level subdirectory/);
-  assert.ok(result.assertions?.some(({ id }) => id === "local-build"));
+  assert.ok(result.assertions?.some(({ id }) => id === "local-checks"));
 });
 
 test("large fixture summaries preserve source identity within the rubric budget", () => {

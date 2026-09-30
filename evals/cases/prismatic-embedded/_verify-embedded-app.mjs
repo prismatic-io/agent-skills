@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { generateKeyPairSync, verify } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { withComponentWorkspace } from "../prismatic-components/_check-component.ts";
+import { runCheck as commandCheck } from "../../run-check.mjs";
 
 const excluded = new Set(["node_modules", ".git", ".jj", ".npm-cache"]);
 const textFile =
@@ -338,12 +338,7 @@ export const checkTokenEndpoint = async (
 
 export const verifyEmbeddedApp = async (
   root,
-  {
-    timeoutMs = 180_000,
-    run = spawnSync,
-    tokenPath,
-    clientDir = "client",
-  } = {},
+  { timeoutMs = 180_000, run, tokenPath, clientDir = "client" } = {},
 ) => {
   const directory = resolve(root);
   const manifest = JSON.parse(
@@ -372,32 +367,9 @@ export const verifyEmbeddedApp = async (
             ),
           }
         : process.env;
-    const result = run("npm", ["run", script], {
-      cwd: directory,
-      env,
-      stdio: "inherit",
-      timeout: timeoutMs,
-      killSignal: "SIGKILL",
-      detached: process.platform !== "win32",
-    });
-    if (
-      result.error?.code === "ETIMEDOUT" &&
-      result.pid &&
-      process.platform !== "win32"
-    ) {
-      try {
-        process.kill(-result.pid, "SIGKILL");
-      } catch (error) {
-        if (error.code !== "ESRCH") throw error;
-      }
-    }
-    checks.push({
-      script,
-      status: result.status === 0 && !result.error ? "passed" : "failed",
-      exitCode: result.status,
-      signal: result.signal ?? null,
-      error: result.error?.message ?? null,
-    });
+    checks.push(
+      commandCheck(script, { cwd: directory, env, timeout: timeoutMs, run }),
+    );
   }
   const dependencies = {
     ...manifest.dependencies,
@@ -471,15 +443,10 @@ if (
   };
   try {
     const source = resolve(option("--root") ?? ".");
-    // Isolated Lux snapshots omit dependencies. Restore them in a disposable copy.
-    const result = await withComponentWorkspace(
-      source,
-      (directory) =>
-        verifyEmbeddedApp(directory, {
-          tokenPath: option("--token-path"),
-        }),
-      { artifactRoot: source },
-    );
+    // Lux supplies a disposable verification workspace with live dependencies.
+    const result = await verifyEmbeddedApp(source, {
+      tokenPath: option("--token-path"),
+    });
     console.log(
       JSON.stringify(
         { diagnostic: "local-embedded-checks", ...result, project: source },
