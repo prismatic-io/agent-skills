@@ -44,11 +44,6 @@ export const checkTokenEndpoint: (
   root: string,
   options?: { tokenPath?: string; timeoutMs?: number },
 ) => Promise<string[]>;
-export const checkKeyCreation: (
-  root: string,
-  standinLog: string,
-  options?: { transcriptPath?: string; fallbackLog?: string },
-) => Promise<string[]>;
 export const verifyEmbeddedApp: (
   root: string,
   options?: {
@@ -56,8 +51,5 @@ export const verifyEmbeddedApp: (
     run?: typeof spawnSync;
     tokenPath?: string;
     clientDir?: string;
-    standinLog?: string;
-    standinFallbackLog?: string;
-    standinRoot?: string;
   },
 ) => Promise<{ ok: boolean; project: string; checks: CheckResult[] }>;

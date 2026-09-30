@@ -5,7 +5,6 @@ import { pathToFileURL } from "node:url";
 import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
 import { prismBin } from "../../prism.ts";
-import { standinFallbackLog, standinLog } from "./_prism-standin-install.ts";
 
 test("Lux discovers the embedded cases with colocated local verification", async () => {
   const discovery = await discoverCases(import.meta.dirname);
@@ -27,7 +26,7 @@ test("Lux discovers the embedded cases with colocated local verification", async
     const keyCreation = entry.id.endsWith("/create-signing-key");
     assert.equal(
       local.command,
-      `node '${checker}' --token-path '/api/prismatic/token'${keyCreation ? ` --standin-log '${standinLog}' --standin-fallback-log '${standinFallbackLog}'` : ""}`,
+      `node '${checker}' --token-path '/api/prismatic/token'`,
     );
     assert.ok(spec.meta.tags.includes("embedded-skill"));
     assert.equal(spec.fixtures.kind, "dir");

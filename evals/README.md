@@ -319,7 +319,7 @@ when the source contract is incomplete.
 
 ## Embedded app evaluations
 
-Run `mise run eval:embedded -- --concurrency 1` from the repository root, or `node run-embedded.ts
+Run `mise run eval:embedded` from the repository root, or `node run-embedded.ts
 --list` from `evals/`. The runner selects the `embedded-skill` cases and these
 profiles: Claude Code, Codex, Antigravity, and Grok Build. All cases edit `fixtures/embedded/acme-portal`, an Express 5 and
 React app with cookie sessions and two tenants. `marketplace-settings` asks for
@@ -343,27 +343,26 @@ Native Edit/Write tools are excluded because they bypass that filesystem sandbox
 Direct root Lux commands use the shared profiles; use the embedded runner for
 these controls.
 
-The requests forbid Prismatic API calls, sign-in, and signing-key changes,
-except the one key `create-signing-key` asks for. `eval:prepare` puts a stand-in
-`prism` on subjects' PATH (`cases/prismatic-embedded/_prism-standin.mjs`). It
-simulates only the signing-key commands, against a writable sandbox with
-Prism 11's rules: agent mode needs `--yes`, `generate` refuses to print the key
-in agent mode and writes it only through `--private-key-file` to a new
-owner-only file. Other suites delegate remaining commands to the linked Prism
-build. The embedded runner creates a separate stand-in per invocation, delegates
-only CLI metadata, and sets `PRISM_READ_ONLY=true`; it needs no live Prism profile.
-The stand-in logs each simulated
-call to `.npm-cache/_prism/calls.jsonl` in the Lux
-workspace, which Lux snapshots and the checker's file scans skip. Calls made
-from outside any workspace go to `outside-workspace-calls.jsonl` under that
-invocation's stand-in root and count from the run's first transcript event.
-Keep the default concurrency of one: overlapping cases can make fallback evidence
-ambiguous. `EVAL_PRISM_BIN` selects a separately prepared stand-in for direct runs.
+All suites use the real Prism build selected by `PRISM_ROOT` through the shared
+credential-redacting launcher prepared by `eval:prepare`. No commands are
+simulated. Embedded requests forbid Prismatic API calls, sign-in, and
+signing-key changes except the one key and read-only organization identity
+lookup authorized by `create-signing-key`. Run that case against an authenticated,
+disposable sandbox organization: each run can register a real public key and
+leave a private-key file outside the project. The operator is responsible for
+removing the sandbox key and local private-key file after reviewing the handoff.
+The embedded runner does not force `PRISM_READ_ONLY`; a caller-supplied read-only
+policy is respected and will prevent key creation. CNI and migration runners
+retain their read-only policy. Antigravity authentication still uses the shared
+`PRISM_REUSE_PROFILE=1` opt-in to stage the selected real Prism profile. Claude's
+native write sandbox remains in effect: credential refresh needs a writable
+Prism config directory, and its default `TMPDIR` is inside the project, so it
+is unsuitable for the outside-project signing-key handoff. Permission failures
+are harness limitations to report, not reasons to substitute simulated success.
 
 `cases/prismatic-embedded/_verify-embedded-app.mjs` restores dependencies
 and runs the app's available typecheck/lint/test/build scripts in a disposable
-copy; key logs and transcripts retain their original snapshot provenance. It checks
-that `@prismatic-io/embedded` is a dependency and ships in the built client, that
+copy. It checks that `@prismatic-io/embedded` is a dependency and ships in the built client, that
 no private key is committed outside tests, and that browser code neither signs
 tokens nor reads a `VITE_` signing key. Finally it generates an RSA key pair,
 starts the fixture's `createApp()` with that key and a test organization ID,
@@ -371,12 +370,15 @@ signs in as each fixture user, and calls the case's token path. The token must
 verify as RS256 and carry the session's user and tenant, the configured
 organization, and a valid `iat`/`exp`. Spoofed identity in the query, body, or
 headers must not change the claims, and unauthenticated requests must get no
-token. For `create-signing-key` the checker also reads the stand-in log for
-calls made inside the workspace: a key must have been created, never printed,
-written outside the project, and not copied into any project file, including
-ignored ones. It does not delete files named by the subject-writable log. These
-checks cover the local token and key-file contracts; rubrics and trace review
-cover frontend quality and execution scope.
+token. For `create-signing-key`, the `key-handoff` and `local-scope` rubrics
+assess actual command results and messages for creation, file placement, secret
+handling, and handoff. There is no synthetic command log or automatic key-file
+cleanup. Local checks establish the application contract; transcript rubrics
+provide the key-workflow evidence and must abstain when truncation prevents a
+supported judgment. Key creation and handoff are quality scores, not a hard
+acceptance gate; passing local checks alone does not prove key creation. The
+historical results from both dates used simulated signing-key commands and do
+not validate the real signing-key workflow.
 
 Claude Code results on 2026-09-29 (`claude-sonnet-5`, medium effort, Lux
 preview.27, linked Prism 11 from `next` behind the stand-in, one run per case

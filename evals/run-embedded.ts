@@ -1,32 +1,13 @@
-import { mkdir, mkdtemp } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import { installPrismStandin } from "./cases/prismatic-embedded/_prism-standin-install.ts";
+import { resolve } from "node:path";
 import { allAgentNames } from "./component-agents.ts";
 import { runSkillEvals } from "./run-skill-evals.ts";
 
-const cache = resolve(import.meta.dirname, ".lux-cache");
-await mkdir(cache, { recursive: true });
-// Separate invocation logs prevent concurrent runners from sharing key evidence.
-const root = await mkdtemp(join(cache, "embedded-standin-"));
-const args = process.argv.slice(2);
-if (
-  !args.some(
-    (arg) =>
-      arg === "--concurrency" ||
-      arg === "-j" ||
-      arg.startsWith("--concurrency="),
-  )
-) {
-  args.push("--concurrency", "1");
-}
+// The signing-key case authorizes a real sandbox key. Respect caller-supplied
+// Prism policy and profile reuse while retaining the embedded isolation controls.
 process.exitCode = await runSkillEvals(
   "embedded-skill",
-  args,
-  {
-    PRISM_READ_ONLY: "true",
-    PRISM_REUSE_PROFILE: "0",
-    EVAL_PRISM_BIN: await installPrismStandin({ root, localOnly: true }),
-  },
+  process.argv.slice(2),
+  {},
   allAgentNames,
   resolve(import.meta.dirname, "embedded"),
 );
