@@ -127,5 +127,5 @@ await withProjectWorkspace(
       `Validated ${definition.flows.length} registered CNI flow(s) from ${entrypoint}`,
     );
   },
-  { dependencyMode: "install" },
+  { dependencyMode: "install", artifactRoot: artifacts },
 );

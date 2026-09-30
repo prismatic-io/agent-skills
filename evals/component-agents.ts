@@ -1,5 +1,13 @@
-import { disabledCodexSkills, grokIsolationEnv } from "./agent-isolation.ts";
+import { realpath } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import {
+  disabledCodexSkills,
+  grokIsolationEnv,
+  prismIsolationState,
+} from "./agent-isolation.ts";
 import { prismBin } from "./prism.ts";
+
+const nodeRoot = dirname(dirname(await realpath(process.execPath)));
 
 const env = {
   PATH: `${prismBin}:${process.env.PATH}`,
@@ -22,7 +30,7 @@ export const additionalComponentProfiles = {
         config: {
           sandbox_workspace_write: { network_access: true },
           project_doc_max_bytes: 0,
-          skills: { config: disabledCodexSkills() },
+          skills: { config: await disabledCodexSkills() },
         },
         ephemeral: true,
         idleTimeout: "20 minutes",
@@ -39,9 +47,38 @@ export const additionalComponentProfiles = {
         reasoningEffort: "low",
         skipPermissions: false,
         sandbox: true,
+        permissionMode: "proceed-in-sandbox",
+        get permissions() {
+          const prism = prismIsolationState();
+          return {
+            allow: [
+              ...(prism ? [`write_file(${prism.directory})`] : []),
+              ...[
+                resolve(import.meta.dirname, "../skills"),
+                resolve(
+                  process.env.PRISM_ROOT ??
+                    resolve(import.meta.dirname, "../../prism"),
+                ),
+                prismBin,
+                nodeRoot,
+              ].map((path) => `read_file(${path})`),
+              // Match the other profiles' documentation/package network access.
+              "read_url(*)",
+            ],
+          };
+        },
+        // Private Lux settings; credential reuse is an explicit host opt-in.
+        authTokenFile: process.env.ANTIGRAVITY_AUTH_TOKEN_FILE,
+        reuseKeychain: process.env.ANTIGRAVITY_REUSE_KEYCHAIN === "1",
         mode: "accept-edits",
         idleTimeout: "20 minutes",
-        env,
+        get env() {
+          const prism = prismIsolationState();
+          return {
+            ...env,
+            ...(prism ? { PRISM_CONFIG_FILE: prism.configFile } : {}),
+          };
+        },
       },
     },
   },
@@ -62,5 +99,12 @@ export const additionalComponentProfiles = {
     },
   },
 };
-// Antigravity remains available through explicit profile selection.
+// Components and CNI keep their existing default matrix.
 export const componentAgentNames = ["claude-code", "codex", "grok-build"];
+
+export const allAgentNames = [
+  "claude-code",
+  "codex",
+  "antigravity",
+  "grok-build",
+];

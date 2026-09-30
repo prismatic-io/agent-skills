@@ -1,7 +1,7 @@
-import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { componentAgentNames } from "./component-agents.ts";
+import { launchLux } from "./launch-environment.ts";
 import {
   classifySuiteOutcome,
   formatSuiteQuality,
@@ -12,6 +12,7 @@ export const runSkillEvals = async (
   tag: string,
   args: string[] = process.argv.slice(2),
   env: NodeJS.ProcessEnv = {},
+  profiles: readonly string[] = componentAgentNames,
 ) => {
   const listOnly = args.some((arg) =>
     ["--list", "--list-tags", "--help", "-h"].includes(arg),
@@ -22,7 +23,7 @@ export const runSkillEvals = async (
     const value = args[index];
     if (value === "--profile" || value.startsWith("--profile=")) {
       throw new Error(
-        "eval:run owns the profile matrix; invoke Lux directly to run one profile",
+        "eval:run owns the profile matrix; use node run-lux.ts run to select one profile",
       );
     }
     if (value === "--runs-root") {
@@ -45,16 +46,11 @@ export const runSkillEvals = async (
     : await mkdtemp(join(baseRoot, "eval-run-"));
   let failed = false;
   const summaries: string[] = [];
-  for (const profile of componentAgentNames) {
+  for (const profile of profiles) {
     const profileRoot = invocationRoot ? join(invocationRoot, profile) : null;
     if (profileRoot) await mkdir(profileRoot);
-    const result = spawnSync(
-      process.execPath,
+    const result = await launchLux(
       [
-        resolve(
-          import.meta.dirname,
-          "node_modules/@prismatic-io/lux/lib/cli/bin.js",
-        ),
         "run",
         "--tag",
         tag,
@@ -63,11 +59,7 @@ export const runSkillEvals = async (
         ...forwarded,
         ...(profileRoot ? ["--runs-root", profileRoot] : []),
       ],
-      {
-        cwd: import.meta.dirname,
-        stdio: "inherit",
-        env: { ...process.env, ...env },
-      },
+      { ...process.env, ...env },
     );
     if (result.error) console.error(result.error.message);
     if (result.error || result.signal) failed = true;
@@ -81,7 +73,12 @@ export const runSkillEvals = async (
           result.signal,
         );
         if (outcome === "execution-or-check-failure") failed = true;
-        else if (outcome === "rubric-only")
+        else if (outcome === "grading-incomplete") {
+          failed = true;
+          summaries.push(
+            `${profile}: execution and saved checks completed; grading has missing or invalid evidence. Unassessed criteria are not demonstrated skill failures`,
+          );
+        } else if (outcome === "rubric-only")
           summaries.push(
             `${profile}: Lux's legacy rubric pass gate failed; quality ratings above are the primary result`,
           );

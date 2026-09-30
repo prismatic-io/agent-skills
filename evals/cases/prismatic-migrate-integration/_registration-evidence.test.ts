@@ -37,7 +37,7 @@ test("generic connection is available without OAuth verdict and module output is
   withProject(
     source(
       "Generic:connectionConfigVar({stableKey:'generic',dataType:'connection',inputs:{token:{label:'SECRET_SENTINEL',type:'password',default:'SECRET_SENTINEL'}}})",
-      "console.log('SECRET_SENTINEL'); require('node:fs').writeSync(2,'SECRET_SENTINEL');",
+      "console.log('SECRET_SENTINEL'); process.stderr.write('SECRET_SENTINEL');",
     ),
     async (dir) => {
       const a = await prepareAttachment([dir]);

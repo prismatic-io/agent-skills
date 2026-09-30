@@ -35,6 +35,13 @@ const checkProject = async (
     const outputPath = escapeKind ? join(directory, "outside.cjs") : output;
     const entryMain = escapeKind === "absolute" ? outputPath : main;
     await mkdir(project);
+    await mkdir(join(directory, "legacy"));
+    await writeFile(join(directory, "legacy/example.eml"), "source message");
+    await mkdir(join(directory, "legacy/build"));
+    await writeFile(
+      join(directory, "legacy/build/source.txt"),
+      "exported source",
+    );
     if (restoreDependencies) {
       const vendor = join(project, "vendor", "spectral");
       await mkdir(vendor, { recursive: true });
@@ -72,7 +79,7 @@ const checkProject = async (
       join(project, "build.cjs"),
       source === undefined
         ? "// successful no-op build"
-        : `const fs = require('node:fs'); const path = require('node:path'); fs.mkdirSync(path.dirname(${JSON.stringify(outputPath)}), {recursive:true}); fs.copyFileSync('source.cjs', ${JSON.stringify(outputPath)});`,
+        : `const fs = require('node:fs/promises'); const path = require('node:path'); fs.mkdir(path.dirname(${JSON.stringify(outputPath)}), {recursive:true}).then(() => fs.copyFile('source.cjs', ${JSON.stringify(outputPath)}));`,
     );
     if (source !== undefined)
       await writeFile(join(project, "source.cjs"), source);
@@ -96,6 +103,11 @@ const checkProject = async (
       manifestBefore,
       "verification must preserve the source manifest",
     );
+    assert.equal(
+      await readFile(join(directory, "legacy/example.eml"), "utf8"),
+      "source message",
+      "verification must preserve sibling input evidence",
+    );
     return { status: result.status, output: result.stdout + result.stderr };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -103,6 +115,21 @@ const checkProject = async (
 };
 
 const integrationSource = `const { integration, flow } = require(${JSON.stringify(spectral)}); module.exports = integration({name:'Order transfer',description:'Verifier fixture',flows:[flow({name:'Transfer orders',stableKey:'orders',onExecution:async()=>({data:null})})]});`;
+
+test("declared tests can read sibling legacy inputs without changing the evidence", async () => {
+  const result = await checkProject(
+    integrationSource,
+    "index.js",
+    "dist/index.js",
+    undefined,
+    true,
+    "checks",
+    {
+      test: `node -e "(async () => { const fs=require('node:fs/promises'); const assert=require('node:assert/strict'); assert.equal(await fs.readFile('../legacy/example.eml','utf8'),'source message'); assert.equal(await fs.readFile('../legacy/build/source.txt','utf8'),'exported source'); await fs.writeFile('../legacy/example.eml','mutated copy'); })()"`,
+    },
+  );
+  assert.equal(result.status, 0, result.output);
+});
 
 test("a lint failure is reported as project checks, not an unbuildable CNI", async () => {
   const lintFailure = { lint: "node -e 'process.exit(1)'" };
