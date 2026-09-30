@@ -9,9 +9,19 @@ export const prismEnv = [
   "PRISMATIC_TENANT_ID",
 ];
 
-export const prismBin = resolve(
+export const linkedPrismBin = resolve(
   import.meta.dirname,
   ".lux-cache",
   basename(process.env.PRISM_ROOT ?? "prism"),
   "bin",
 );
+
+// `eval:prepare` installs a stand-in that safely simulates signing-key commands
+// and delegates every other command to the linked Prism build.
+export const prismStandinBin = resolve(
+  import.meta.dirname,
+  ".lux-cache",
+  "prism-standin",
+  "bin",
+);
+export const prismBin = process.env.EVAL_PRISM_BIN ?? prismStandinBin;

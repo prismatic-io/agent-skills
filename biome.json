@@ -18,7 +18,8 @@
       "!!evals/fixtures/migrations/cyclr-order-sync-incomplete/input/cycle.json",
       "!!evals/fixtures/migrations/workato-contact/input/legacy/upsert-contact.json",
       "!!evals/fixtures/migrations/bespoke-office-onboarding-reminders/input/legacy/offices.json",
-      "!!evals/fixtures/migrations/logic-apps-*/input/legacy/*.json"
+      "!!evals/fixtures/migrations/logic-apps-*/input/legacy/*.json",
+      "!!evals/fixtures/embedded/acme-portal"
     ]
   },
   "formatter": {

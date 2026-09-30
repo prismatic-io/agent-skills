@@ -1,0 +1,69 @@
+:root {
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-link: #4338ca;
+  --color-background: #ffffff;
+  --color-surface: #f4f4f5;
+  --color-text: #18181b;
+  --color-border: #e4e4e7;
+  --radius: 8px;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #818cf8;
+  --color-primary-hover: #a5b4fc;
+  --color-link: #a5b4fc;
+  --color-background: #18181b;
+  --color-surface: #27272a;
+  --color-text: #f4f4f5;
+  --color-border: #3f3f46;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-link);
+}
+
+button {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font: inherit;
+}
+
+button:hover {
+  background: var(--color-primary-hover);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: 100vh;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--color-surface);
+}
+
+.content {
+  padding: 24px;
+}
+
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+}

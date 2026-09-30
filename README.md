@@ -18,6 +18,7 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 | [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. Initial scaffold; evaluated with Lux. |
 | [prismatic-build-integration](skills/prismatic-build-integration/SKILL.md) | Build and update Prismatic Code Native Integrations, then verify them through local checks and authorized platform execution. |
 | [prismatic-migrate-integration](skills/prismatic-migrate-integration/SKILL.md) | Port vendor workflows or bespoke integration code to Prismatic using source evidence and behavioral verification. |
+| [prismatic-embedded](skills/prismatic-embedded/SKILL.md) | Embed Prismatic's marketplace and other screens in a web app, with backend-signed embedded-user tokens and the embedded SDK. |
 
 ## Installation
 
@@ -60,6 +61,8 @@ See [evals/README.md](evals/README.md) for the Lux workflow and current coverage
 `mise run eval:cni` evaluates local CNI creation and edits across the three subject
 profiles without authorizing deployment or live-service mutations; local checks
 and qualitative workflow assessments are reported separately.
+`mise run eval:embedded` evaluates embedding Prismatic in an existing web app
+without calling Prismatic or registering signing keys.
 
 ## Releases
 
