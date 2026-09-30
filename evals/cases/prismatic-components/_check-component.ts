@@ -12,7 +12,15 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 
 interface ComponentPackage {
@@ -89,15 +97,61 @@ export const dependencyInstall = async (directory: string) => {
 export const withComponentWorkspace = async <T>(
   source: string,
   check: (directory: string) => Promise<T>,
-  options: { dependencyMode?: "reuse" | "install" } = {},
+  options: {
+    dependencyMode?: "reuse" | "install";
+    artifactRoot?: string;
+  } = {},
 ): Promise<T> => {
   const workspace = await mkdtemp(join(tmpdir(), "component-check-"));
   try {
-    const directory = join(workspace, basename(source));
+    const copyRoot = options.artifactRoot
+      ? await realpath(options.artifactRoot)
+      : source;
+    const inside = (path: string) => {
+      const offset = relative(copyRoot, path);
+      return (
+        offset !== ".." && !offset.startsWith(`..${sep}`) && !isAbsolute(offset)
+      );
+    };
+    const projectSource = options.artifactRoot
+      ? await realpath(source)
+      : source;
+    if (options.artifactRoot)
+      assert.ok(
+        inside(projectSource),
+        "Project must remain inside the project artifact workspace",
+      );
+    const copyTarget = join(workspace, basename(copyRoot));
+    const directory = options.artifactRoot
+      ? join(copyTarget, relative(copyRoot, projectSource))
+      : copyTarget;
     const excluded = new Set(["node_modules", "dist", "build", ".git", ".jj"]);
-    await cp(source, directory, {
+    await cp(copyRoot, copyTarget, {
       recursive: true,
-      filter: (path) => path === source || !excluded.has(basename(path)),
+      // Materialize internal links in the copy so checks cannot mutate original
+      // evidence through them. Never follow links outside the artifact root.
+      dereference: Boolean(options.artifactRoot),
+      filter: async (path) => {
+        const name = basename(path);
+        if (path !== copyRoot && excluded.has(name)) {
+          // Sibling source exports can legitimately contain build/dist folders.
+          // Only the generated project's output is disposable in full-root mode.
+          const siblingOutput =
+            options.artifactRoot &&
+            ["dist", "build"].includes(name) &&
+            dirname(path) !== projectSource;
+          if (!siblingOutput) return false;
+        }
+        if (options.artifactRoot) {
+          if ([".npm-cache", ".cache"].includes(basename(path))) return false;
+          const target = await realpath(path).catch(() => null);
+          assert.ok(
+            target && inside(target),
+            "Copied paths must remain inside the project artifact workspace",
+          );
+        }
+        return true;
+      },
     });
     const dependencies = join(source, "node_modules");
     // Clean installs avoid incomplete dependencies and foreign-platform binaries.

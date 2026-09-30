@@ -1,76 +1,150 @@
-// biome-ignore-all lint/style/noRestrictedImports: Native profile getters and process exit cleanup require synchronous filesystem access.
 import { spawnSync } from "node:child_process";
 import {
-  appendFileSync,
-  chmodSync,
-  copyFileSync,
-  lstatSync,
-  mkdtempSync,
-  readdirSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+  appendFile,
+  chmod,
+  copyFile,
+  lstat,
+  mkdtemp,
+  readdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, parse } from "node:path";
+import { parse as parseYaml } from "yaml";
+
+/** Stage only the selected Prism profile; token refresh stays in private state. */
+export const createPrismIsolation = async (
+  sourceFile: string,
+  selectedProfile?: string,
+  legacyUrl = "https://app.prismatic.io",
+  parentDir = tmpdir(),
+) => {
+  let raw: Record<string, unknown>;
+  try {
+    raw = parseYaml(await readFile(sourceFile, "utf8"));
+  } catch {
+    // Parser errors can include source lines containing credentials.
+    throw new Error("Unable to read the selected Prism configuration");
+  }
+  if (!raw || typeof raw !== "object")
+    throw new Error("Invalid Prism configuration");
+  const legacy =
+    !("version" in raw) && !("profiles" in raw) && "accessToken" in raw;
+  const name = selectedProfile || (legacy ? "default" : raw.defaultProfile);
+  const profiles = legacy
+    ? { default: { ...raw, prismaticUrl: legacyUrl } }
+    : raw.profiles;
+  if (
+    (!legacy && raw.version !== 1) ||
+    typeof name !== "string" ||
+    !name ||
+    !profiles ||
+    typeof profiles !== "object" ||
+    !Object.hasOwn(profiles, name)
+  )
+    throw new Error("Selected Prism profile is unavailable");
+  const profile = (profiles as Record<string, unknown>)[name];
+  if (!profile || typeof profile !== "object")
+    throw new Error("Invalid selected Prism profile");
+  const directory = await mkdtemp(join(parentDir, "prismatic-eval-prism-"));
+  const cleanup = () => rm(directory, { recursive: true, force: true });
+  const configFile = join(directory, "config.yml");
+  try {
+    await chmod(directory, 0o700);
+    // JSON is valid YAML, and safely handles arbitrary profile names.
+    await writeFile(
+      configFile,
+      JSON.stringify({
+        version: 1,
+        defaultProfile: name,
+        profiles: { [name]: profile },
+      }),
+      { mode: 0o600 },
+    );
+    return { directory, configFile, cleanup };
+  } catch (error) {
+    await cleanup();
+    throw error;
+  }
+};
+
+// Match Prism's env.ts: blank action inputs are unset; nonblank values retain
+// their original text (including meaningful whitespace in a path/profile name).
+export const prismIsolationSource = (
+  environment: NodeJS.ProcessEnv = process.env,
+  homeDirectory = homedir(),
+) => {
+  const optional = (value: string | undefined) =>
+    value?.trim() ? value : undefined;
+  return {
+    sourceFile:
+      optional(environment.PRISM_CONFIG_FILE) ??
+      join(homeDirectory, ".config/prism/config.yml"),
+    selectedProfile: optional(environment.PRISM_PROFILE),
+    legacyUrl: optional(environment.PRISMATIC_URL),
+  };
+};
 
 /** Disable installed skills without changing the user's files or HOME. */
-export const disabledCodexSkills = (
+export const disabledCodexSkills = async (
   roots = [join(homedir(), ".agents/skills"), "/etc/codex/skills"],
-): { path: string; enabled: false }[] => {
+): Promise<{ path: string; enabled: false }[]> => {
   const paths = new Set<string>();
   const visited = new Set<string>();
-  const visit = (path: string): void => {
+  const visit = async (path: string): Promise<void> => {
     let canonical: string;
     try {
-      canonical = realpathSync(path);
+      canonical = await realpath(path);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
       throw error;
     }
     if (visited.has(canonical)) return;
     visited.add(canonical);
-    if (!lstatSync(canonical).isDirectory()) return;
-    const entries = readdirSync(canonical, { withFileTypes: true });
+    if (!(await lstat(canonical)).isDirectory()) return;
+    const entries = await readdir(canonical, { withFileTypes: true });
     if (entries.some((entry) => entry.name === "SKILL.md" && entry.isFile())) {
       paths.add(join(canonical, "SKILL.md"));
       return;
     }
     for (const entry of entries) {
       if (entry.isDirectory() || entry.isSymbolicLink()) {
-        visit(join(canonical, entry.name));
+        await visit(join(canonical, entry.name));
       }
     }
   };
-  for (const root of roots) visit(root);
+  for (const root of roots) await visit(root);
   return [...paths].sort().map((path) => ({ path, enabled: false }));
 };
 
 /** Native Grok configuration, not a replacement agent/transport. */
-export const createGrokIsolation = (
+export const createGrokIsolation = async (
   sourceDir = process.env.GROK_HOME ?? join(homedir(), ".grok"),
   parentDir = tmpdir(),
 ) => {
-  const directory = mkdtempSync(join(parentDir, "prismatic-eval-grok-"));
-  chmodSync(directory, 0o700);
-  const cleanup = () => rmSync(directory, { recursive: true, force: true });
+  const directory = await mkdtemp(join(parentDir, "prismatic-eval-grok-"));
+  const cleanup = () => rm(directory, { recursive: true, force: true });
   try {
+    await chmod(directory, 0o700);
     const sourceAuth = join(sourceDir, "auth.json");
     try {
-      if (!lstatSync(sourceAuth).isFile()) {
+      if (!(await lstat(sourceAuth)).isFile()) {
         throw new Error("Grok auth.json must be a regular file");
       }
-      copyFileSync(sourceAuth, join(directory, "auth.json"));
-      chmodSync(join(directory, "auth.json"), 0o600);
+      await copyFile(sourceAuth, join(directory, "auth.json"));
+      await chmod(join(directory, "auth.json"), 0o600);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
     // These evals explicitly read the frozen subject path. Disable every
     // implicitly discovered skill, including ~/.agents and bundled skills.
-    const root = parse(realpathSync(directory)).root;
+    const root = parse(await realpath(directory)).root;
     // Permission and environment imports use a separate Claude compatibility
     // loader; disabling compat.claude.rules does not disable that loader.
-    writeFileSync(
+    await writeFile(
       join(directory, "config.toml"),
       `[claude_compat]\nimported = true\n\n[skills]\nignore = [${JSON.stringify(root)}]\n\n[memory]\nenabled = false\n\n[workflows]\nenabled = false\n\n${[
         "claude",
@@ -88,6 +162,8 @@ export const createGrokIsolation = (
       GROK_HOME: directory,
       GROK_CONFIG: "{}",
       GROK_CONFIG_PATH: "",
+      // Disable native login-shell capture so sanitized launch variables stay isolated.
+      GROK_LOGIN_ENV: "0",
       GROK_MEMORY: "0",
       GROK_WORKFLOWS: "0",
     };
@@ -98,7 +174,7 @@ export const createGrokIsolation = (
     }
     return { directory, env, cleanup };
   } catch (error) {
-    cleanup();
+    await cleanup();
     throw error;
   }
 };
@@ -113,13 +189,14 @@ type GrokInspection = {
   lspServers?: unknown[];
 };
 
-export const inspectGrokIsolation = (
-  state: ReturnType<typeof createGrokIsolation>,
-): GrokInspection => {
+export const inspectGrokIsolation = async (
+  state: Awaited<ReturnType<typeof createGrokIsolation>>,
+  environment: NodeJS.ProcessEnv,
+): Promise<GrokInspection> => {
   const inspect = (): GrokInspection => {
     const result = spawnSync("grok", ["inspect", "--json"], {
       cwd: state.directory,
-      env: { ...process.env, ...state.env },
+      env: { ...environment, ...state.env },
       encoding: "utf8",
       timeout: 30_000,
       maxBuffer: 4_000_000,
@@ -147,7 +224,7 @@ export const inspectGrokIsolation = (
   // Disable every discovered plugin as well, using Grok's native config.
   const plugins = inspect().plugins ?? [];
   if (plugins.length > 0) {
-    appendFileSync(
+    await appendFile(
       join(state.directory, "config.toml"),
       `\n[plugins]\ndisabled = ${JSON.stringify(plugins.map(({ name }) => name))}\n`,
     );
@@ -168,18 +245,26 @@ export const inspectGrokIsolation = (
   return result;
 };
 
-let grokIsolation: ReturnType<typeof createGrokIsolation> | undefined;
+// Setup and cleanup belong to the awaited launcher, not synchronous config getters.
+export const prismIsolationState = () => {
+  if (process.env.PRISM_REUSE_PROFILE !== "1") return undefined;
+  const directory = process.env.PRISM_EVAL_CONFIG_DIR;
+  const configFile = process.env.PRISM_EVAL_CONFIG_FILE;
+  if (!directory || !configFile)
+    throw new Error(
+      "Launch the Antigravity profile through run-lux.ts to stage Prism authentication",
+    );
+  return { directory, configFile };
+};
+
 export const grokIsolationEnv = (): Record<string, string> => {
-  if (!grokIsolation) {
-    const state = createGrokIsolation();
-    try {
-      inspectGrokIsolation(state);
-    } catch (error) {
-      state.cleanup();
-      throw error;
-    }
-    grokIsolation = state;
-    process.once("exit", grokIsolation.cleanup);
-  }
-  return grokIsolation.env;
+  if (process.env.PRISM_EVAL_GROK_ISOLATED !== "1")
+    throw new Error(
+      "Launch the Grok profile through run-lux.ts to stage native isolation",
+    );
+  return Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([name, value]) => name.startsWith("GROK_") && value !== undefined,
+    ),
+  ) as Record<string, string>;
 };

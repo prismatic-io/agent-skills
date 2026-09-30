@@ -16,7 +16,13 @@ afterEach(async () => {
   );
 });
 const fixture = async (
-  items: Array<{ caseId: string; status: string; runDir: string | null }>,
+  items: Array<{
+    caseId: string;
+    status: string;
+    runDir: string | null;
+    exitReason?: string;
+    casePassed?: boolean | null;
+  }>,
   status = "failed",
 ) => {
   const root = await mkdtemp(join(tmpdir(), "quality-suite-"));
@@ -31,6 +37,122 @@ const fixture = async (
 };
 
 describe("private Lux suite quality report", () => {
+  it("recognizes the saved Claude/Codex abstention schema without hiding check failures", async () => {
+    // Both corrected migration smoke runs saved a passed suite and null case
+    // result, despite CLI exit 1. The local-scope rubric abstained with score 0.
+    const { root } = await fixture(
+      [
+        {
+          caseId: "prismatic-migrate-integration/workato-contact",
+          status: "completed",
+          runDir: "../../workato-contact/codex/one",
+          exitReason: "done",
+          casePassed: null,
+        },
+      ],
+      "passed",
+    );
+    const run = join(root, "workato-contact", "codex", "one");
+    await mkdir(run, { recursive: true });
+    const assertions: GradeEntry[] = [
+      { id: "completed", type: "run-succeeded", passed: true, score: 1 },
+      { id: "local-build", type: "command-exits-zero", passed: true, score: 1 },
+      {
+        id: "project-checks",
+        type: "command-exits-zero",
+        passed: true,
+        score: 1,
+      },
+      {
+        id: "callable-contact-behavior",
+        type: "rubric",
+        passed: true,
+        score: 0.8,
+      },
+      {
+        id: "failure-and-connection-contract",
+        type: "rubric",
+        passed: true,
+        score: 0.8,
+      },
+      { id: "meaningful-tests", type: "rubric", passed: true, score: 0.6 },
+      { id: "handoff", type: "rubric", passed: true, score: 0.8 },
+      {
+        id: "local-scope",
+        type: "rubric",
+        passed: false,
+        score: 0,
+        abstention: "insufficient-evidence",
+      },
+    ];
+    await writeFile(
+      join(run, "grading.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        casePassed: null,
+        caseScore: null,
+        assertions,
+      }),
+    );
+    const saved = await readSuiteQuality(root);
+    expect(saved?.items[0].quality.legacy.casePassed).toBeNull();
+    expect(classifySuiteOutcome(saved, 1, null)).toBe("grading-incomplete");
+    expect(classifySuiteOutcome(saved, 0, null)).toBe(
+      "execution-or-check-failure",
+    );
+    expect(classifySuiteOutcome(saved, 1, "SIGTERM")).toBe(
+      "execution-or-check-failure",
+    );
+    if (!saved) throw new Error("Missing fixture suite");
+    expect(classifySuiteOutcome({ ...saved, status: "running" }, 1, null)).toBe(
+      "execution-or-check-failure",
+    );
+    for (const passed of [false, null] as const) {
+      const failedCheck = reportQuality({
+        casePassed: null,
+        assertions: assertions.map((entry) =>
+          entry.id === "project-checks" ? { ...entry, passed } : entry,
+        ),
+      });
+      expect(
+        classifySuiteOutcome(
+          { ...saved, items: [{ ...saved.items[0], quality: failedCheck }] },
+          1,
+          null,
+        ),
+      ).toBe("execution-or-check-failure");
+    }
+    // An abstention in one case cannot explain an unrelated unknown case.
+    const unknown = {
+      ...saved.items[0],
+      caseId: "unknown",
+      quality: reportQuality({
+        casePassed: null,
+        assertions: assertions.slice(0, -1),
+      }),
+    };
+    expect(classifySuiteOutcome({ ...saved, items: [unknown] }, 1, null)).toBe(
+      "execution-or-check-failure",
+    );
+    expect(
+      classifySuiteOutcome(
+        { ...saved, items: [...saved.items, unknown] },
+        1,
+        null,
+      ),
+    ).toBe("execution-or-check-failure");
+    expect(
+      classifySuiteOutcome(
+        {
+          ...saved,
+          items: [...saved.items, { ...unknown, quality: reportQuality(null) }],
+        },
+        1,
+        null,
+      ),
+    ).toBe("execution-or-check-failure");
+  });
+
   it("forgives only an observed rubric-only exit one", () => {
     const checks: GradeEntry[] = [
       { id: "completed", type: "run-succeeded", passed: true, score: 1 },
@@ -79,24 +201,35 @@ describe("private Lux suite quality report", () => {
         1,
         null,
       ),
-    ).toBe("execution-or-check-failure");
+    ).toBe("grading-incomplete");
     expect(
       classifySuiteOutcome(
         suite([...checks, { ...rubric, abstention: "insufficient-evidence" }]),
         1,
         null,
       ),
-    ).toBe("execution-or-check-failure");
+    ).toBe("grading-incomplete");
     expect(
       classifySuiteOutcome(
         suite([...checks, { ...rubric, errorMessage: "grader unavailable" }]),
         1,
         null,
       ),
-    ).toBe("execution-or-check-failure");
+    ).toBe("grading-incomplete");
     expect(
       classifySuiteOutcome(
         suite([...checks.slice(0, 2), { ...checks[2], passed: false }, rubric]),
+        1,
+        null,
+      ),
+    ).toBe("execution-or-check-failure");
+    expect(
+      classifySuiteOutcome(
+        suite([
+          { ...rubric, abstention: "insufficient-evidence" },
+          ...checks.slice(0, 2),
+          { ...checks[2], passed: false },
+        ]),
         1,
         null,
       ),

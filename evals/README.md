@@ -14,6 +14,7 @@ incur-based Prism checkout at `../../prism` (relative to this directory).
 No local Lux checkout is required. Installable skills have no Lux dependency.
 
 The pinned Node.js 22.18.0 runs TypeScript directly; helpers need no build step.
+npm 11 is pinned separately to avoid npm 10 dependency-install failures.
 
 Prism must already be authenticated to the intended Prismatic sandbox using your
 usual development setup. The subject and publication check inherit that setup.
@@ -26,7 +27,9 @@ mise run eval:run     # run 13 component cases across Claude Code, Codex, and Gr
 mise run eval:cni     # run 12 CNI cases across the same profiles
 ```
 
-`eval:prepare` places a symlink to the chosen Prism build on the subject's PATH.
+`eval:prepare` places a launcher for the chosen Prism build on the subject's PATH.
+The noninteractive launcher filters bearer credentials and JWTs from Prism output;
+it does not sanitize arbitrary secrets or other executables.
 Verify the effective `prism --version` inside each agent: its shell environment
 can still select the old globally installed CLI despite this PATH prefix. Dependency
 versions are locked; keep the Prism revision and installed agent CLI versions
@@ -34,7 +37,7 @@ constant when comparing results. Record them with review notes.
 The case preamble names the cached Prism executable and requires its version
 check before other commands; subjects must not replace it with an `npx` download.
 
-For other Lux operations, run from `evals/`:
+For other Lux operations, run from `evals/` through the environment-filtering wrapper:
 
 ```sh
 node run-components.ts --list
@@ -43,7 +46,12 @@ npm run lux -- run --tag components --profile codex
 npm run lux -- run files-com --loop 3
 npm run lux -- view
 npm run lux -- compare <before-suite> <after-suite>
+PRISM_READ_ONLY=true node run-lux.ts run workato-contact --profile codex
 ```
+
+The runners allowlist inherited environment variables and isolate zsh startup files.
+Use native CLI authentication; provider API-key environment variables are not forwarded.
+Use `run-lux.ts` for direct Lux commands to retain this boundary. It is not a filesystem sandbox.
 
 Runs are retained in ignored `.lux-runs/`. Inspect the run, trace, grading, and
 component artifacts before changing instructions. Run packages and test scripts
@@ -70,8 +78,10 @@ from each invocation's own suite manifest. Runs are isolated under
 choose another parent directory. Missing or unfinished cases remain visible.
 The wrapper treats legacy rubric thresholds as diagnostic: a completed suite with
 only rubric threshold failures can exit successfully while reporting its quality
-scores. Execution failures, failed non-rubric checks, and grading errors still
-produce a nonzero exit. Direct Lux commands retain Lux's original exit behavior.
+scores. Execution failures, failed non-rubric checks, and incomplete grading still
+produce a nonzero exit. The report distinguishes incomplete grading from a
+demonstrated execution or check failure; abstention does not turn unassessed
+behavior into a skill defect. Direct Lux commands retain Lux's original exit behavior.
 
 ## Local Code Native Integration evaluations
 
@@ -94,7 +104,7 @@ it is not a security sandbox and cannot prevent arbitrary direct HTTP calls or
 a subject overriding its environment. Review execution traces for scope.
 Component runs retain their existing publication behavior. These are restrictions
 of the local eval cases, not of the installed skills, which support authorized
-platform verification. Direct Lux invocations bypass the suite wrappers: set
+platform verification. Direct `run-lux.ts` invocations bypass the matrix defaults: set
 `PRISM_READ_ONLY=true` explicitly when running local CNI or migration cases.
 These suites do not establish quality of the autonomous platform verification loop.
 
@@ -158,7 +168,8 @@ from fresh-workspace runs.
 ## Harness limits
 
 The component runner executes Claude Code, Codex, and Grok Build sequentially.
-Antigravity remains available through explicit profile selection:
+The migration runner also includes Antigravity; other runners keep it
+available through explicit profile selection:
 
 | Profile | Model | Effort | Interaction |
 | --- | --- | --- | --- |
@@ -171,12 +182,12 @@ Gemini Pro at low effort is the chosen comparison setting, not a claim of equal
 compute or capability. Persona answering and all rubric judging use Claude Code
 `claude-opus-5-5` at medium effort for every subject. Prompts, fixtures, and assertions
 are shared. Integration cases also default to Codex and can be run
-with `PRISM_READ_ONLY=true lux run --tag integration-skill` using the CLI path above.
+with `PRISM_READ_ONLY=true node run-lux.ts run --tag integration-skill`.
 
 Lux preview.28 supplies native Claude Code, Codex, Antigravity, and Grok Build
 drivers. `component-agents.ts` configures the additional profiles;
 `run-components.ts` runs the component-tagged cases once per profile. Direct
-`lux run` defaults to Codex; use `--profile` to select another subject.
+`node run-lux.ts run` defaults to Codex; use `--profile` to select another subject.
 All profiles use `idleTimeout: "20 minutes"` for inactivity. Claude deferred
 invocations also use `turnTimeout: "45 minutes"` to cap elapsed time; progress
 events stream live.
@@ -187,6 +198,12 @@ pending permission requests at completion. Grok usage/cost reporting remains
 unavailable; do not interpret it as zero cost.
 Protocol references: [Antigravity headless mode](https://antigravity.google/docs/cli/headless/)
 and [Grok headless mode](https://docs.x.ai/build/cli/headless-scripting).
+
+Antigravity uses private sandbox settings. To reuse native authentication, set
+`ANTIGRAVITY_REUSE_KEYCHAIN=1` or `ANTIGRAVITY_AUTH_TOKEN_FILE`.
+For Prism catalog access, `PRISM_REUSE_PROFILE=1` stages only the selected profile
+in a private temporary directory, leaving the original config untouched.
+Keep `PRISM_READ_ONLY=true` for local-only evaluations.
 
 Run `agy` interactively to sign in, and `grok login` for Grok. `agy models` and
 `grok models` check available models. `eval:doctor` checks config, tests, executable
@@ -269,21 +286,20 @@ These are grader research pointers, not answers supplied to the persona.
 
 ## Migration evaluations
 
-Run the 21 vendor-export and bespoke-code cases across the shared agent profiles
-with `mise run eval:migrations`. The runner produces the same continuous quality
+Run the 21 vendor-export and bespoke-code cases sequentially across Claude Code,
+Codex, Antigravity, and Grok Build with `mise run eval:migrations -- --concurrency 1`. The runner produces the same continuous quality
 reports as the component and CNI suites; deterministic build checks remain separate.
 They authorize local ports and assessments, not deployment or live mutations.
 Python 3.11+ and system IANA timezone data are required for source checks.
 The pinned Lux preview includes the migration capture and grading fixes.
-Migration cases use the shared Lux configuration and its default agent. Select
-other configured agents with Lux profiles. No container runtime or special Prism build is required.
+Migration cases use the shared Lux configuration. The migration runner selects the profiles above; direct Lux commands select one with `--profile`. No container runtime or special Prism build is required.
 Fresh artifact workspaces are not a security sandbox; subjects can access host
 tools and authentication, as in the other suites.
 
 After `mise run eval:prepare`, run one case from `evals/`:
 
 ```sh
-PRISM_READ_ONLY=true node node_modules/@prismatic-io/lux/lib/cli/bin.js run prismatic-migrate-integration/bespoke-order-sync --verbose
+PRISM_READ_ONLY=true node run-lux.ts run prismatic-migrate-integration/bespoke-order-sync --verbose
 ```
 
 `PRISM_MIGRATION_SKILL=migration` is the default; `build` selects the integration

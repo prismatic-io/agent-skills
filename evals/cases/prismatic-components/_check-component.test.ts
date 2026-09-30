@@ -19,6 +19,63 @@ import {
   withComponentWorkspace,
 } from "./_check-component.ts";
 
+test("artifact copies materialize internal links and reject links outside their root", async () => {
+  const root = await mkdtemp(join(tmpdir(), "artifact-copy-"));
+  const outside = await mkdtemp(join(tmpdir(), "artifact-outside-"));
+  try {
+    const project = join(root, "port");
+    await mkdir(join(project, "node_modules"), { recursive: true });
+    await mkdir(join(root, "legacy"));
+    await writeFile(join(root, "legacy/input.txt"), "original");
+    await symlink("../legacy/input.txt", join(project, "input.txt"));
+    await withComponentWorkspace(
+      project,
+      async (directory) => {
+        assert.equal(
+          await readFile(join(directory, "input.txt"), "utf8"),
+          "original",
+        );
+        await writeFile(join(directory, "input.txt"), "copy only");
+      },
+      { dependencyMode: "reuse", artifactRoot: root },
+    );
+    assert.equal(
+      await readFile(join(root, "legacy/input.txt"), "utf8"),
+      "original",
+    );
+    await writeFile(join(outside, "private.txt"), "outside");
+    await symlink(outside, join(root, "legacy/external"));
+    await assert.rejects(
+      withComponentWorkspace(
+        project,
+        async () => assert.fail("must reject external link"),
+        {
+          dependencyMode: "reuse",
+          artifactRoot: root,
+        },
+      ),
+      /must remain inside the project artifact workspace/,
+    );
+    await assert.rejects(
+      withComponentWorkspace(
+        outside,
+        async () => assert.fail("must reject outside project"),
+        {
+          artifactRoot: root,
+        },
+      ),
+      /must remain inside the project artifact workspace/,
+    );
+    assert.equal(
+      await readFile(join(outside, "private.txt"), "utf8"),
+      "outside",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
 test("component discovery excludes dependencies and generated build folders", async () => {
   const root = await mkdtemp(join(tmpdir(), "component-discovery-"));
   try {
@@ -360,7 +417,7 @@ test("failed dependency restoration removes its disposable workspace", async () 
     await writeFile(join(root, ".npmrc"), "cache=./.npm-cache\n");
     await writeFile(
       join(root, "fail-install.cjs"),
-      `require('node:fs').writeFileSync(${JSON.stringify(marker)}, process.cwd()); process.exit(1);`,
+      `require('node:fs/promises').writeFile(${JSON.stringify(marker)}, process.cwd()).then(() => { process.exitCode = 1; });`,
     );
     await assert.rejects(
       withComponentWorkspace(root, async () => {

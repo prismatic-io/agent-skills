@@ -8,6 +8,7 @@ test("Paragon fixture source declarations remain bounded to the supplied graph",
     process.execPath,
     [
       "--test",
+      "--test-reporter=tap",
       resolve(
         import.meta.dirname,
         "../../fixtures/migrations/paragon-send-slack-message/source-declarations.test.mjs",

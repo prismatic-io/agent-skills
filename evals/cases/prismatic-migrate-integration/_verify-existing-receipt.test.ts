@@ -46,7 +46,7 @@ const check = async (code: string, entrypoint = "dist/index.js") => {
     await writeFile(join(project, "source.cjs"), code);
     await writeFile(
       join(project, "build.cjs"),
-      `const fs=require('node:fs');fs.mkdirSync('dist');fs.copyFileSync('source.cjs',${JSON.stringify(entrypoint)});`,
+      `const fs=require('node:fs/promises');fs.mkdir('dist').then(() => fs.copyFile('source.cjs',${JSON.stringify(entrypoint)}));`,
     );
     const result = spawnSync(process.execPath, [verifier, directory], {
       encoding: "utf8",

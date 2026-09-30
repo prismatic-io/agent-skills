@@ -39,6 +39,7 @@ export interface SuiteQualityReport {
 export type SuiteOutcome =
   | "success"
   | "rubric-only"
+  | "grading-incomplete"
   | "execution-or-check-failure";
 
 /** Classify the saved assertions, never a guessed subset of check IDs. */
@@ -55,32 +56,54 @@ export const classifySuiteOutcome = (
   )
     return "execution-or-check-failure";
   let rubricFailed = false;
+  let gradingIncomplete = false;
   for (const item of suite.items) {
     if (item.status !== "completed" || item.exitReason !== "done")
       return "execution-or-check-failure";
     const assertions = item.quality.assertions;
-    if (!assertions?.length || item.quality.legacy.casePassed === null)
-      return "execution-or-check-failure";
+    if (!assertions?.length) return "execution-or-check-failure";
+    let itemGradingIncomplete = false;
     for (const assertion of assertions) {
-      if (
-        assertion.errorMessage !== undefined ||
-        assertion.abstention !== undefined
-      )
-        return "execution-or-check-failure";
       if (assertion.type === "rubric") {
         if (
+          assertion.errorMessage !== undefined ||
+          assertion.abstention !== undefined ||
           typeof assertion.score !== "number" ||
           !Number.isFinite(assertion.score) ||
           assertion.score < 0 ||
           assertion.score > 1 ||
           typeof assertion.passed !== "boolean"
-        )
-          return "execution-or-check-failure";
+        ) {
+          gradingIncomplete = true;
+          itemGradingIncomplete = true;
+          continue;
+        }
         if (!assertion.passed) rubricFailed = true;
-      } else if (assertion.passed !== true) {
+      } else if (
+        assertion.errorMessage !== undefined ||
+        assertion.abstention !== undefined ||
+        assertion.passed !== true
+      ) {
         return "execution-or-check-failure";
       }
     }
+    // Lux leaves casePassed null when a rubric abstains. Only that item's
+    // incomplete rubric explains an unknown case result; another case's
+    // abstention must not hide missing or inconsistent grading evidence.
+    if (item.quality.legacy.casePassed === null && !itemGradingIncomplete)
+      return "execution-or-check-failure";
+  }
+  if (gradingIncomplete) {
+    const hasFailedCase = suite.items.some(
+      (item) => item.quality.legacy.casePassed === false,
+    );
+    // Lux can save a passed suite when cases abstain, while its CLI exits 1.
+    // Preserve that distinction without accepting unfinished suite states.
+    return exitCode === 1 &&
+      ((suite.status === "passed" && !hasFailedCase) ||
+        (suite.status === "failed" && hasFailedCase))
+      ? "grading-incomplete"
+      : "execution-or-check-failure";
   }
   if (
     exitCode === 0 &&
