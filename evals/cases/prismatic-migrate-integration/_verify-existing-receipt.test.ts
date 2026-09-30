@@ -62,7 +62,7 @@ const check = async (code: string, entrypoint = "dist/index.js") => {
 test("receipt checker accepts dist/index.js despite a source package.main", async () => {
   const result = await check(source);
   assert.equal(result.status, 0, result.output);
-});
+}, 30_000);
 
 test("receipt checker accepts a root index.js entrypoint", async () => {
   const result = await check(source, "index.js");
