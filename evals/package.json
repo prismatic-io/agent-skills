@@ -5,9 +5,9 @@
   "devDependencies": {
     "@prismatic-io/lux": "0.0.2-preview.28",
     "@prismatic-io/spectral": "10.30.3",
-    "ajv": "8.17.1",
+    "ajv": "8.18.0",
     "ajv-draft-04": "1.0.0",
-    "vitest": "4.1.9",
+    "vitest": "4.1.11",
     "typescript-compiler-api": "npm:typescript@5.6.1-rc"
   },
   "scripts": {
