@@ -1,6 +1,11 @@
 import { existsSync } from "node:fs";
-import { dirname } from "node:path";
-import { type LuxConfig, subjectPath } from "@prismatic-io/lux";
+import { dirname, resolve } from "node:path";
+import {
+  defineLifecycleHooks,
+  exec,
+  type LuxConfig,
+  subjectPath,
+} from "@prismatic-io/lux";
 import { prismBin, prismRoot } from "./prism.ts";
 
 export const codexDriver = {
@@ -8,6 +13,7 @@ export const codexDriver = {
   config: {
     model: "gpt-6.1-sol",
     reasoningEffort: "low",
+    addDirs: [subjectPath("")],
     inheritEnv: [
       "PRISM_ROOT",
       "PRISM_CONFIG_FILE",
@@ -19,7 +25,7 @@ export const codexDriver = {
     approvalPolicy: "on-request",
     approvalsReviewer: "auto_review",
     idleTimeout: "20 minutes",
-    maxInterrupts: 6,
+    maxInterrupts: 8,
     isolation: {
       allowRead: [
         subjectPath(""),
@@ -35,7 +41,6 @@ export const codexDriver = {
     env: {
       PATH: `${prismBin}:${dirname(process.execPath)}:${process.env.PATH}`,
       npm_config_cache: ".npm-cache",
-      PRISM_READ_ONLY: "true",
     },
   },
 } satisfies LuxConfig["defaultDriver"];
@@ -45,12 +50,13 @@ export const claudeDriver = {
   config: {
     model: "claude-sonnet-5",
     reasoningEffort: "medium",
+    addDirs: codexDriver.config.addDirs,
     inheritEnv: codexDriver.config.inheritEnv,
     interactionMode: "defer-resume",
     permissionMode: "default",
     idleTimeout: "20 minutes",
     turnTimeout: "45 minutes",
-    maxInterrupts: 6,
+    maxInterrupts: 8,
     isolation: codexDriver.config.isolation,
     env: {
       ...codexDriver.config.env,
@@ -65,6 +71,40 @@ const config: LuxConfig = {
   runsRoot: "./.lux-runs",
   subjectRoot: "../skills",
   defaultDriver: claudeDriver,
+  lifecycleFixtures: [
+    defineLifecycleHooks({
+      name: "existing-development-session",
+      pluginVersion: "1",
+      identity: { prism: resolve(prismBin, "prism") },
+      setupSuite: async ({ abortSignal }) => {
+        const result = await exec(
+          process.execPath,
+          [resolve(prismBin, "prism"), "me", "--format", "json"],
+          { timeoutMs: 60_000, maxBuffer: 64_000, signal: abortSignal },
+        );
+        if (result.exitCode !== 0 || result.timedOut)
+          throw new Error(
+            "Cannot verify the existing Prism session with prism me.",
+          );
+        const session = JSON.parse(result.stdout);
+        const endpoint = new URL(session.endpointUrl);
+        if (
+          endpoint.protocol !== "https:" ||
+          !(
+            endpoint.hostname === "prismatic-dev.io" ||
+            endpoint.hostname.endsWith(".prismatic-dev.io")
+          )
+        )
+          throw new Error(
+            `Eval platform work requires a prismatic-dev.io session; current endpoint: ${endpoint.origin}`,
+          );
+        console.log(
+          `Using existing Prism session: ${endpoint.origin}, organization ${session.organization.name}`,
+        );
+        return undefined;
+      },
+    }),
+  ],
   defaultAnswerer: {
     name: "persona",
     config: {
@@ -84,25 +124,7 @@ const config: LuxConfig = {
 
 config.profiles = {
   "claude-code": { driver: claudeDriver },
-  "claude-code-sandbox": {
-    driver: {
-      ...claudeDriver,
-      config: {
-        ...claudeDriver.config,
-        env: { ...claudeDriver.config.env, PRISM_READ_ONLY: "false" },
-      },
-    },
-  },
   codex: { driver: codexDriver },
-  "codex-sandbox": {
-    driver: {
-      ...codexDriver,
-      config: {
-        ...codexDriver.config,
-        env: { ...codexDriver.config.env, PRISM_READ_ONLY: "false" },
-      },
-    },
-  },
 };
 
 export default config;

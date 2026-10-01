@@ -12,7 +12,7 @@ export default defineComponentCase({
   request:
     "In the embedded workflow builder, customers using our existing Create Task action should choose a project by name rather than find and paste its ID. Use the projects from their connected account. Keep existing integrations that already supply a project ID working. The connector is here and API.md describes the service.",
   persona:
-    "You embed Prismatic's workflow builder for customers. They need a dropdown on the action itself, not an integration config wizard. Project names may repeat. No live partner credentials are available; publish a sandbox copy for review.",
+    "You embed Prismatic's workflow builder for customers. They need a dropdown on the action itself, not an integration config wizard. Project names may repeat. No live partner credentials are available; publish a separate copy for review.",
   operations: [
     "Create Task with an account-specific project dropdown on the existing projectId input",
   ],

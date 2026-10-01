@@ -12,6 +12,30 @@ interface ComponentPackage {
   };
 }
 
+// Generated scripts need the local toolchain, not the platform credentials used
+// by the trusted publication query. This is environment filtering, not a sandbox.
+export const localCheckEnvironment = (
+  environment: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv => {
+  const result: NodeJS.ProcessEnv = { CI: "true" };
+  for (const name of [
+    "PATH",
+    "HOME",
+    "USERPROFILE",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "SystemRoot",
+    "ComSpec",
+    "PATHEXT",
+    "LANG",
+    "LC_ALL",
+  ]) {
+    if (environment[name] !== undefined) result[name] = environment[name];
+  }
+  return result;
+};
+
 export const findComponents = async (
   directory: string,
 ): Promise<ComponentPackage[]> => {
@@ -38,13 +62,14 @@ const run = (
   command: string,
   args: string[],
   stdio: "inherit" | "pipe",
+  env = localCheckEnvironment(),
 ) => {
   const result = spawnSync(command, args, {
     cwd: directory,
     stdio,
     encoding: "utf8",
     timeout: 180_000,
-    env: { ...process.env, CI: "true" },
+    env,
   });
   assert.ifError(result.error);
   assert.equal(
@@ -123,6 +148,7 @@ if (import.meta.main) {
       "prism",
       ["components", "signature", "--format", "json"],
       "pipe",
+      process.env,
     ),
   );
   assert.ok(

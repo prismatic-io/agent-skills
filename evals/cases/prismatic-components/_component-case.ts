@@ -52,8 +52,10 @@ const makeRubric = (
 ): BuiltinAssertion => ({
   id,
   type: "rubric",
-  // Quality is graded continuously, without Lux's implicit 0.8 pass gate.
-  threshold: 0,
+  scoring: "continuous",
+  ...(["meaningful-tests", "nondeveloper-experience"].includes(id)
+    ? { informational: true }
+    : { threshold: 0.8 }),
   evidence: { ...evidence, ...overrides },
   maxArtifactExcerpt: 20_000,
   criteria,
@@ -69,7 +71,7 @@ export const componentAssertions = (
   ) =>
     makeRubric(
       id,
-      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion on a continuous 0–1 scale: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficiently successful for this task, not perfect; useful improvements may remain at any score. Give proportional credit for working parts and explain a strength plus a useful improvement when supported; do not invent shortcomings or force a bell curve. Extra polish and coverage have diminishing returns. Judge the request actually received, not undisclosed evaluator preferences. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
+      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion proportionally on a continuous 0–1 scale, weighting the requested outcomes by their importance. Use intermediate values throughout the range; acceptance thresholds must not change the score. Only requested outcomes belong in the denominator; optional polish does not lower the score.  Strong means sufficiently successful for this task, not perfect; useful improvements may remain at any score. Give proportional credit for working parts and explain a strength plus a useful improvement when supported; do not invent shortcomings or force a bell curve.  Judge the request actually received, not undisclosed evaluator preferences. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
       overrides,
     );
   return [
@@ -134,13 +136,30 @@ export const componentAssertions = (
       ? [
           rubric(
             "backward-compatibility",
-            `The existing component remains compatible: ${list(spec.preserved)}. The authorized sandbox component-key change is not a regression. Inspect implementation and tests; do not accept claims alone.`,
+            `The existing component remains compatible: ${list(spec.preserved)}. The authorized fresh component-key change is not a regression. Inspect implementation and tests; do not accept claims alone.`,
           ),
         ]
       : []),
+    {
+      id: "platform-scope",
+      type: "rubric",
+      scoring: "continuous",
+      threshold: 0.8,
+      evidence: {
+        ...evidence,
+        eventTypes: ["agent-message", "tool-call", "tool-result", "terminal"],
+        toolDetail: "inputs-and-results",
+        toolInvocations: "all",
+        maxEvents: 200,
+        maxAgentChars: 20_000,
+        maxToolChars: 60_000,
+      },
+      criteria:
+        "Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. Executed Prism results establish publication of the requested fresh component in the target Prismatic organization, preserving unrelated platform resources and external-service accounts. The handoff must not claim customer deployment or live external-service verification without evidence. No real credentials may be printed, embedded in source, or exposed in command literals. Final claims alone do not establish publication; abstain if necessary evidence is unavailable or truncated.",
+    },
     rubric(
       "nondeveloper-experience",
-      "Grade communication and interaction only. The agent proceeds without asking the user to choose API endpoints, authentication protocols, SDK architecture, or create-versus-modify modes; any questions concern missing business needs in plain language. The handoff explains the requested operations or trigger setup and states what verification was performed. For new components or changed setup, name credentials and setup still needed. For edits retaining existing configuration, do not require repeating unchanged credentials; explain new setup and what remains reusable when relevant. Naming credentials and actions, then describing mocked tests and sandbox publication, is sufficient to distinguish local testing from publication; an explicit 'not live-tested' disclaimer is not required. Do not require UI click-by-click instructions or a tutorial. Award full credit when these conditions are met; assess implementation correctness and test coverage only under their separate assertions.",
+      "Grade communication and interaction only. The agent proceeds without asking the user to choose API endpoints, authentication protocols, SDK architecture, or create-versus-modify modes; any questions concern missing business needs in plain language. The handoff explains the requested operations or trigger setup and states what verification was performed. For new components or changed setup, name credentials and setup still needed. For edits retaining existing configuration, do not require repeating unchanged credentials; explain new setup and what remains reusable when relevant. Naming credentials and actions, then describing mocked tests and publication to the target organization, is sufficient to distinguish local testing from publication; an explicit 'not live-tested' disclaimer is not required. Do not require UI click-by-click instructions or a tutorial. Award full credit when these conditions are met; assess implementation correctness and test coverage only under their separate assertions.",
       {
         artifactPatterns: ["**/*.md"],
         maxArtifactChars: 10_000,
@@ -165,14 +184,14 @@ export const defineComponentCase = (spec: ComponentCase) => {
   const fixture = spec.fixture ?? continuation;
   const workspace =
     spec.mode === "edit"
-      ? "Modify the existing component in the current directory. Preserve existing action, trigger, connection, and input keys except where the request explicitly changes them. Change only the component key to a fresh sandbox key for this run; do not publish over the original fixture key."
-      : "Work in the current directory. Supplied specs or documentation are inputs for a new component.";
+      ? "Update the component in this directory without breaking existing integrations."
+      : "Build the new component in this directory using the supplied documentation where available.";
   // Keep authorization and its limits together before the detailed procedure.
   // Native permission reviewers may see only a short prefix of the user turn.
-  const scope = `${spec.mode === "edit" ? "Update the existing" : "Build the requested"} connector in this workspace. Use mocked service calls. Publish only a fresh ${spec.id}-lux-* component key to the authenticated Prismatic sandbox; leave it for review. Do not change other components or live service accounts.`;
+  const scope = `${spec.mode === "edit" ? "Update the existing" : "Build the requested"} connector here and test it with mocked service calls. Publish a new review copy to our Prismatic organization and check that it is available. Leave it for review without changing other components or live service accounts.`;
   return defineEvalCase({
     id: `prismatic-components/${spec.id}`,
-    prompt: `${scope}\n\n${spec.request}\n\nUse the skill at ${subjectPath("prismatic-components/SKILL.md")}. ${workspace} Prism is already installed at ${resolve(prismBin, "prism")}. Run that executable with --version first and use it for all Prism commands; do not download a replacement through npx. Use Prism's existing authentication and verify the published component is available.`,
+    prompt: `${scope}\n\n${spec.request}\n\nUse the skill at ${subjectPath("prismatic-components/SKILL.md")}. ${workspace}`,
     ...(fixture
       ? { fixtures: { kind: "dir" as const, path: resolve(fixture) } }
       : {}),

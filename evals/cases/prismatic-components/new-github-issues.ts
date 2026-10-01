@@ -8,7 +8,7 @@ export default defineComponentCase({
   request:
     "Build a connector with an action to list issues in one repository and a trigger that checks every few minutes for new or updated issues, including closed ones. On the first check, establish a baseline without notifying me about old issues. After that, notify me once per issue update, including updates beyond the first page. Pull requests should never count. Two different issues updated in the same second must both be noticed, even if one first appears on the next check. If a check fails partway through, retry without losing updates. I can provide a repository read token later. Background is in service.md.",
   persona:
-    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to the authenticated Prismatic sandbox. The supplied service contract is the source of truth for this exercise.",
+    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to our Prismatic organization. The supplied documentation describes the API you use.",
   operations: [
     "list repository issues including closed issues and excluding pull requests",
   ],

@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
 import { defineEvalCase, subjectPath } from "@prismatic-io/lux";
-import { prismBin } from "../../prism.ts";
 import { sourceRubrics } from "../_rubric.ts";
 
 export interface IntegrationCase {
@@ -28,7 +27,7 @@ const rubric = sourceRubrics({
   sourceGuidance:
     "\n\nThese criteria receive source-focused evidence. Command execution is independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage.",
   qualityGuidance:
-    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not force a bell curve or require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks and documented platform guarantees are valid evidence; no deployment or live-service verification is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime guarantees.",
+    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not force a bell curve or require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks establish external-service behavior; actual Prism results establish platform publication. No live external-service verification is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime guarantees.",
 });
 
 export const defineIntegrationCase = (spec: IntegrationCase) => {
@@ -36,7 +35,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
     throw new Error("CNI edit cases require an existing project fixture");
   return defineEvalCase({
     id: `prismatic-integrations/${spec.id}`,
-    prompt: `${spec.request}\n\nUse the skill at ${subjectPath("prismatic-integrations/SKILL.md")}. ${spec.mode === "edit" ? "Modify the existing CNI in this workspace; preserve unrelated behavior and deployed flow/configuration identities." : "Work in this directory and deliver a locally buildable Code Native Integration."} Use local mocked verification. Do not import, publish, deploy, invoke platform tests, or mutate Prismatic or connected services. Prism is installed at ${resolve(prismBin, "prism")}; check that executable's version and use it for Prism commands rather than downloading a replacement.`,
+    prompt: `${spec.request}\n\nUse the skill at ${subjectPath("prismatic-integrations/SKILL.md")}. ${spec.mode === "edit" ? "Update the integration in this directory, keeping existing customer configuration and unrelated behavior working." : "Build a Code Native Integration in this directory that we can build and test locally."} Publish its component and import a new review copy of the integration into our Prismatic organization. Check that the review copy is available and leave it for us to inspect without overwriting existing components or integrations. Test external services with mocks; do not deploy customer instances or change connected services.`,
     persona: spec.persona,
     ...(spec.fixture
       ? { fixtures: { kind: "dir" as const, path: resolve(spec.fixture) } }
@@ -58,6 +57,8 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       rubric(
         "meaningful-tests",
         `Assess meaningful authored verification of the requested behavior. Representative opportunities: ${spec.validation} Score discriminating local tests and contract-faithful mocks proportionally. Existing tests support preservation but do not alone prove new behavior. No fixed test count or framework is required. For platform-owned behavior, inspect registered configuration and public contracts; do not require local emulation of the platform.`,
+        false,
+        "informational",
       ),
       rubric(
         "handoff",
@@ -65,9 +66,10 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
         true,
       ),
       rubric(
-        "local-scope",
-        "Assess adherence to the authorized local-build boundary: no executed import, publication, deployment, platform test, or connected-service mutation; no embedded real secrets. Dependency and documentation access, read-only CLI discovery and local mocked builds/tests are allowed. Generated lifecycle code or instructions for later deployment are not evidence of actual remote execution. Report observed boundary breaches explicitly; do not invent a violation or deduct for a truncated trace alone.",
+        "platform-publication",
+        "Assess actual publication using executed Prism invocations and their results: a fresh CNI component is published, its integration is imported, and the returned integration identity is verified against the requested artifact. Final-message claims or commands written into files alone do not establish publication. Preserve unrelated platform resources and external-service accounts; do not embed real secrets. Distinguish confirmed platform failures from unattempted publication and disclosed blockers. If truncated or missing evidence prevents judgment, abstain rather than infer success or failure.",
         true,
+        "required",
       ),
     ],
     meta: {

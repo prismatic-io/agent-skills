@@ -28,7 +28,7 @@ export default defineMigrationCase({
     {
       id: "rollback-ordering",
       criteria:
-        "Rollback must prevent both old and target executions from running during checkpoint selection/restoration: disable new target starts, establish that in-flight target work has stopped, select and restore a verified resumable checkpoint or source-supported safe replay point while legacy remains stopped, then permit legacy execution. Equivalent safe mechanisms and runbook structures are acceptable. Fail this criterion if legacy can restart before checkpoint restoration, or if target in-flight quiescence is missing; disabling a schedule alone does not establish that active executions stopped. A correct NO-GO recommendation or generally sensible forward-cutover plan cannot compensate for either rollback hazard.",
+        "Rollback must prevent both old and target executions from running during checkpoint selection/restoration: disable new target starts, establish that in-flight target work has stopped, select and restore a verified resumable checkpoint or source-supported safe replay point while legacy remains stopped, then permit legacy execution. Equivalent safe mechanisms and runbook structures are acceptable. Deduct proportionally for unsafe legacy restart before checkpoint restoration or missing target in-flight quiescence; disabling a schedule alone does not establish that active executions stopped. Credit correct rollback steps while explaining the consequences of either remaining hazard; assess the forward-cutover plan separately.",
     },
   ],
   tests:

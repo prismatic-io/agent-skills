@@ -4,7 +4,6 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
-import { prismBin } from "../../prism.ts";
 
 test("Lux discovers the embedded cases with colocated local verification", async () => {
   const discovery = await discoverCases(import.meta.dirname);
@@ -32,16 +31,15 @@ test("Lux discovers the embedded cases with colocated local verification", async
     assert.equal(spec.fixtures.kind, "dir");
     await access(resolve(spec.fixtures.path, "server", "app.ts"));
     assert.match(spec.prompt, /prismatic-embedded\/SKILL\.md/);
-    assert.ok(
-      spec.prompt.includes(
-        `Prism is installed at ${resolve(prismBin, "prism")};`,
-      ),
+    assert.doesNotMatch(
+      spec.prompt,
+      /Prism is installed at|check that executable's version/,
     );
     assert.match(
       spec.prompt,
       keyCreation
-        ? /Creating the signing key requested above is authorized/
-        : /Do not call Prismatic APIs/,
+        ? /Create the requested signing key/
+        : /existing signing key|existing keys/i,
     );
   }
 });

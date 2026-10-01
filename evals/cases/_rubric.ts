@@ -22,11 +22,14 @@ export const sourceRubrics = (policy: {
     id: string,
     criteria: string,
     interaction = false,
+    mode: "required" | "informational" = "required",
   ): BuiltinAssertion => ({
     id,
     type: "rubric",
-    // Quality scores are not acceptance gates (Lux otherwise defaults to 0.8).
-    threshold: 0,
+    scoring: "continuous",
+    ...(mode === "informational"
+      ? { informational: true }
+      : { threshold: 0.8 }),
     ...(policy.timeout ? { timeout: policy.timeout } : {}),
     evidence: interaction
       ? {
@@ -47,6 +50,6 @@ export const sourceRubrics = (policy: {
         }
       : evidence,
     maxArtifactExcerpt: 20_000,
-    criteria: `${criteria}${interaction ? "" : policy.sourceGuidance}\n\nReturn a continuous quality score, not a binary verdict: 0 absent, 0.25 limited, 0.5 partial, 0.75 solid, 1 strong. Strong means sufficiently successful for the request, not perfect; further improvements can remain at any score. Credit working parts proportionally and describe a strength plus a useful improvement when supported. Do not invent a shortcoming just to suggest an improvement. Extra polish and coverage have diminishing returns. ${policy.qualityGuidance}`,
+    criteria: `${criteria}${interaction ? "" : policy.sourceGuidance}\n\nScore this criterion continuously from 0 to 1 in proportion to the requested outcomes demonstrated, weighting their importance to the user. Credit independently working parts even when another part is missing or incorrect. Use intermediate values throughout the range; do not round to a verdict, impose score bands, or change a score to cross an acceptance threshold. Zero means no demonstrated credit and one means the requested outcome is fully demonstrated. Optional polish is not part of the denominator. Explain the evidence, strengths, and remaining gaps without inventing shortcomings. ${policy.qualityGuidance}`,
   });
 };

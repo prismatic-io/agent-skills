@@ -6,9 +6,9 @@ export default defineIntegrationCase({
   mode: "edit",
   fixture: resolve(import.meta.dirname, "../../fixtures/integrations/tickets"),
   request:
-    "Customers want to choose which ticket queues Ticket Mirror sends to the archive. Add a deployer-facing queue chooser populated from the customer's source account, rather than requiring people to type IDs or edit code. The source queue list is paginated. Let a customer select one or more queues; only webhook tickets from those queues should be archived. Existing instances without a queue selection must keep mirroring all queues. Add source credentials to the wizard and preserve the existing archive connection, webhook flow and Health flow. SOURCE.md describes the fictional source; use mocked calls only.",
+    "Customers want to choose which ticket queues Ticket Mirror sends to the archive. Add a deployer-facing queue chooser populated from the customer's source account, rather than requiring people to type IDs or edit code. The source queue list is paginated. Let a customer select one or more queues; only webhook tickets from those queues should be archived. Existing instances without a queue selection must keep mirroring all queues. Add source credentials to the wizard and preserve the existing archive connection, webhook flow and Health flow. SOURCE.md describes the source; use mocked calls only.",
   persona:
-    "You operate Ticket Mirror for customers whose queue IDs differ. The source account exposes queue names and opaque IDs; customers recognize names and may choose several. The existing ticket webhook contains queueId. An absent selection means the old all-queues behavior, including existing configured instances; a configured selection filters to those IDs. The source API uses customer bearer credentials and hasMore/nextCursor pagination, even when a page has no queues. You have no preference for a particular supported data-source or wizard implementation.",
+    "You operate Ticket Mirror for customers whose queue IDs differ. Customers recognize queue names and may choose several. An absent selection must preserve the existing all-queues behavior. The service details are in SOURCE.md. You want a usable chooser and reliable filtering, with no preference about its implementation.",
   criteria: [
     {
       id: "ticket-queue-chooser",

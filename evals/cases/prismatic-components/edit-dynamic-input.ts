@@ -12,7 +12,7 @@ export default defineComponentCase({
   request:
     "Add one Create Record action to the existing Partner Records connector. Choosing Person should show first name, last name, and email; choosing Company should instead show company name and website. I want the relevant fields to change in the designer, without writing JSON. Keep the existing Create Person action working. API.md has the request formats.",
   persona:
-    "You are a low-code integration builder. You want one action with a choice of record type and only the fields for that type. Existing integrations use Create Person. No live account is available; publish a sandbox copy for review.",
+    "You are a low-code integration builder. You want one action with a choice of record type and only the fields for that type. Existing integrations use Create Person. No live account is available; publish a separate copy for review.",
   operations: [
     "one new Create Record action supporting Person and Company through a dynamic object input",
   ],

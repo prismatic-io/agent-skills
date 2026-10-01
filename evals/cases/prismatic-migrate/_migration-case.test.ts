@@ -49,7 +49,7 @@ test("invalid baseline selectors fail rather than silently choosing a skill", ()
   assert.throws(() => migrationVariant("typo"), /PRISM_MIGRATION_SKILL/);
 });
 
-test("source expectations are grader-only and local constraints survive all variants", () => {
+test("source expectations are grader-only and platform authorization survives all variants", () => {
   for (const variant of ["migration", "build", "none"] as const) {
     const result = defineMigrationCase(spec, variant);
     assert.doesNotMatch(
@@ -57,10 +57,7 @@ test("source expectations are grader-only and local constraints survive all vari
       /PRIVATE_GRADER_FACT|durable page progress/,
     );
     assert.doesNotMatch(String(result.persona ?? ""), /PRIVATE_GRADER_FACT/);
-    assert.match(
-      result.prompt,
-      /Do not mutate Prismatic or connected services/,
-    );
+    assert.match(result.prompt, /Publish the replacement component/);
     assert.match(JSON.stringify(result.assertions), /PRIVATE_GRADER_FACT/);
     assert.ok(
       Array.isArray(result.meta?.tags) && result.meta.tags.includes("train"),
@@ -82,8 +79,14 @@ test("assessment cases can disclose genuine blockers without fabricating a build
   });
   assert.ok(!assessment.assertions?.some(({ id }) => id === "local-checks"));
   assert.ok(assessment.assertions?.some(({ id }) => id === "meaningful-tests"));
-  assert.ok(assessment.assertions?.some(({ id }) => id === "local-scope"));
-  assert.match(assessment.prompt, /available evidence/);
+  assert.ok(assessment.assertions?.some(({ id }) => id === "platform-scope"));
+  assert.match(assessment.prompt, /supplied material/);
+  assert.doesNotMatch(assessment.prompt, /Publish the completed/);
+  const scope = assessment.assertions?.find(
+    ({ id }) => id === "platform-scope",
+  );
+  assert.ok(scope?.type === "rubric");
+  assert.match(String(scope.criteria), /do not implement a live cutover/);
 });
 
 test("one native dependency-backed check covers build, declared tests and registered execution", () => {
@@ -137,11 +140,13 @@ test("authored cases copy only input directories, excluding grader answers", asy
           String(assertion.criteria).length <= 8_000,
           `${filename}: ${assertion.id} exceeds Lux rubric budget`,
         );
-        assert.equal(
-          assertion.threshold,
-          0,
-          `${filename}: quality rubrics must not impose a pass threshold`,
-        );
+        if (assertion.id === "meaningful-tests") {
+          assert.equal(assertion.informational, true);
+          assert.equal(assertion.threshold, undefined);
+        } else {
+          assert.notEqual(assertion.informational, true);
+          assert.equal(assertion.threshold, 0.8);
+        }
       }
     }
     assert.equal(authored.fixtures.path.split("/").at(-1), "input");
@@ -156,7 +161,7 @@ test("authored cases copy only input directories, excluding grader answers", asy
 
 test("behavioral grading receives execution results and missing trace cannot prove a clean run", () => {
   const assertions = migrationAssertions(spec);
-  for (const id of ["meaningful-tests", "local-scope"]) {
+  for (const id of ["meaningful-tests", "platform-scope"]) {
     const assertion = assertions.find((entry) => entry.id === id);
     assert.ok(assertion && "evidence" in assertion && "criteria" in assertion);
     const selected = assertion.evidence as {
@@ -211,7 +216,7 @@ test("existing integration cases extend the supplied project and retain build ve
     ...spec,
     deliverable: "existing-integration",
   });
-  assert.match(result.prompt, /Extend the supplied.*in place/);
+  assert.match(result.prompt, /Update our existing Prismatic integration here/);
   assert.doesNotMatch(result.prompt, /new top-level subdirectory/);
   assert.ok(result.assertions?.some(({ id }) => id === "local-checks"));
 });

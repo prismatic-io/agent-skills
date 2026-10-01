@@ -5,7 +5,7 @@ export default defineIntegrationCase({
   request:
     "I maintain Asana. I need to build an integration for my customers so when\nthey create a task in a project, a notification is sent to Slack that the task was created.\nBuild an integration that prompts a user who deploys the integration for their Slack and Asana\ncredentials, which Asana project(s) they want to watch, and which Slack channel to send the\nnotifications to.",
   persona:
-    "You are the product developer requesting the integration. You can clarify the\nAsana-to-Slack behavior but have no preferences about APIs, authentication protocols, code\nstructure, or libraries. Asana and Slack credentials are not available in this session;\ndeployment and live verification are outside this request.",
+    "You are the product developer requesting the integration. You can clarify the\nAsana-to-Slack behavior but have no preferences about APIs, authentication protocols, code\nstructure, or libraries. Asana and Slack credentials are not available in this session;\ncustomer deployment and live service verification are outside this request.",
   criteria: [
     {
       id: "requested-integration",

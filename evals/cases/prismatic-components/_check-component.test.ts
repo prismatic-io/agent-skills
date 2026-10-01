@@ -1,9 +1,42 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "vitest";
-import { checkBaseline, findComponents } from "./_check-component.ts";
+import {
+  checkBaseline,
+  findComponents,
+  localCheckEnvironment,
+} from "./_check-component.ts";
+
+test("generated checks receive toolchain variables without platform tokens or runtime injection", () => {
+  const env = localCheckEnvironment({
+    PATH: process.env.PATH,
+    HOME: process.env.HOME,
+    PRISM_ACCESS_TOKEN: "synthetic-access-token",
+    PRISM_REFRESH_TOKEN: "synthetic-refresh-token",
+    PRISM_CONFIG_FILE: "/synthetic/credentials.json",
+    PRISM_PROFILE: "synthetic-profile",
+    NODE_OPTIONS: "--require /synthetic/injection.js",
+    NPM_TOKEN: "synthetic-registry-token",
+  });
+  const result = spawnSync(
+    process.execPath,
+    [
+      "-e",
+      `
+    const assert = require("node:assert/strict");
+    for (const key of ["PRISM_ACCESS_TOKEN", "PRISM_REFRESH_TOKEN", "PRISM_CONFIG_FILE", "PRISM_PROFILE", "NODE_OPTIONS", "NPM_TOKEN"])
+      assert.equal(process.env[key], undefined, key);
+    assert.equal(process.env.CI, "true");
+    assert.ok(process.env.PATH);
+  `,
+    ],
+    { env, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+});
 
 test("component discovery excludes dependencies and generated build folders", async () => {
   const root = await mkdtemp(join(tmpdir(), "component-discovery-"));

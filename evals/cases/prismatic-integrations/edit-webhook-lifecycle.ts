@@ -8,7 +8,7 @@ export default defineIntegrationCase({
   request:
     "Customers currently configure the Order Relay webhook manually. Update this existing CNI so deploying an instance automatically subscribes Relay Order to order.created events from the source service, and deleting the instance cleans up its subscription. Redeploying or changing settings must not leave duplicate or stale subscriptions. Add source credentials to the configuration wizard. Keep the existing order delivery and Health behavior. SOURCE.md describes the source API; use mocked calls only.",
   persona:
-    "You own this customer integration. Customers should no longer copy callback URLs. Only order.created events are wanted. Preserve the current destination and order format. No real credentials are available, and platform deployment or live service calls are outside this request. No designer listening-mode subscription is requested. Choose technical details from the service contract.",
+    "You own this customer integration. Customers should no longer copy callback URLs. Only order.created events are wanted. Preserve the current destination and order format. No real credentials are available, and customer deployment or live service calls are outside this request. No designer listening-mode subscription is requested. Choose technical details from the service contract.",
   criteria: [
     {
       id: "subscription-lifecycle",
