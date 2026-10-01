@@ -35,12 +35,12 @@ test("truncated permission context retains publication scope and restrictions to
     // Grok's native classifier retains 397 bytes plus an ellipsis per turn.
     const prefix = Buffer.from(result.prompt).subarray(0, 397).toString();
     assert.match(prefix, /mocked service calls/);
-    assert.match(prefix, /Publish only a fresh edit-webhook-listening-lux-\*/);
-    assert.match(prefix, /authenticated Prismatic sandbox/);
-    assert.match(prefix, /leave it for review/);
+    assert.match(prefix, /Publish a new review copy/);
+    assert.match(prefix, /our Prismatic organization/);
+    assert.match(prefix, /leave it for review/i);
     assert.match(
       prefix,
-      /Do not change other components or live service accounts\./,
+      /without changing other components or live service accounts\./,
     );
     assert.ok(result.prompt.includes(base.request));
   }
@@ -70,12 +70,9 @@ test("edit cases use their own fixture and preserve member keys while publishing
     preserved: ["getContact", "apiKey"],
   });
   assert.deepEqual(result.fixtures, { kind: "dir", path: fixture });
-  assert.match(result.prompt, /(?:existing|seeded) component/i);
-  assert.match(
-    result.prompt,
-    /(?:preserv|retain|keep)[\s\S]*(?:keys|identit)/i,
-  );
-  assert.match(result.prompt, /(?:fresh|unique)[\s\S]*harness-test-lux-/i);
+  assert.match(result.prompt, /Update the (?:existing connector|component)/i);
+  assert.match(result.prompt, /without breaking existing integrations/i);
+  assert.match(result.prompt, /new review copy/i);
   const criteria = componentAssertions({
     ...base,
     fixture,
@@ -111,7 +108,7 @@ test("the legacy continuation override cannot silently replace an authored fixtu
   }
 });
 
-test("the broad original case retains its seven independent checks", () => {
+test("component checks cover local behavior and platform scope", () => {
   assert.deepEqual(
     componentAssertions({
       ...base,
@@ -125,6 +122,7 @@ test("the broad original case retains its seven independent checks", () => {
       "trigger",
       "documentation-accuracy",
       "meaningful-tests",
+      "platform-scope",
       "nondeveloper-experience",
     ],
   );

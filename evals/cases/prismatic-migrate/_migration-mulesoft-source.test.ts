@@ -86,7 +86,7 @@ test("Mule discovery separates source inputs, review evidence and project checks
     "report-and-output-contract",
     "meaningful-tests",
     "handoff",
-    "local-scope",
+    "platform-scope",
   ])
     assert.ok(ids?.includes(id), id);
   assert.ok(

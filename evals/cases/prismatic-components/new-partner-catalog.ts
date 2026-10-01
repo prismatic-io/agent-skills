@@ -6,9 +6,9 @@ export default defineComponentCase({
   service: "the fictional Partner Catalog API",
   fixture: resolve(import.meta.dirname, "../../fixtures/specs/partner-catalog"),
   request:
-    "Build a connector using service.md so I can list products and get one product by ID. Each customer gives us application credentials, and nobody signs into a browser. I want to configure those credentials once on the connection and keep using the actions after access tokens expire. We do not have real credentials for this exercise.",
+    "Build a connector using service.md so I can list products and get one product by ID. Each customer gives us application credentials, and nobody signs into a browser. I want to configure those credentials once on the connection and keep using the actions after access tokens expire. We do not have real credentials available yet.",
   persona:
-    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to the authenticated Prismatic sandbox. The supplied service contract is the source of truth for this exercise.",
+    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to our Prismatic organization. The supplied documentation describes the API you use.",
   operations: ["list products", "get product by opaque ID"],
   tests: [
     "resource calls use the configured access token as a Bearer token",

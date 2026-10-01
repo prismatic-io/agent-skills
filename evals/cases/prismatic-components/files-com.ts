@@ -11,7 +11,7 @@ protocols, SDKs, or the difference between webhooks and polling. You want to rea
 when files are added or their contents change; a delay of a few minutes is acceptable.
 You want to encrypt files for a partner and decrypt files they send you. You do not
 have Files.com credentials or encryption keys available in this session. Publish
-the connector to the authenticated Prismatic sandbox so I can use it in the low-code
+the connector to our Prismatic organization so I can use it in the low-code
 designer. Do not change live Files.com accounts. You have no preferences about
 code structure or libraries.`,
   operations: [

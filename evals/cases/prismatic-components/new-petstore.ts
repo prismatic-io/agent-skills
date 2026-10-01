@@ -8,7 +8,7 @@ export default defineComponentCase({
   request:
     "Build a connector from openapi.yaml so I can list pets with an optional result limit, create a pet, and retrieve a pet by its ID. I only need these three actions. Use the supplied version of the API.",
   persona:
-    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to the authenticated Prismatic sandbox. The supplied service contract is the source of truth for this exercise.",
+    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to our Prismatic organization. The supplied documentation describes the API you use.",
   operations: [
     "list pets with an optional limit",
     "create a pet",

@@ -15,7 +15,7 @@ export default defineComponentCase({
   request:
     "Our Contact Changed trigger receives events after deployment, but Test Listener receives nothing. Update the existing connector so registration and cleanup work in Listening Mode as well as after deployment. Repeating registration must not create duplicate subscriptions, and two flows must not interfere with one another. Preserve the delivered data. API.md describes our small partner webhook API, including cleanup behavior.",
   persona:
-    "You test integrations in the designer before deploying. You have two flows using this trigger and want test subscriptions cleaned up when you stop listening. No live account is available; publish a sandbox copy for review.",
+    "You test integrations in the designer before deploying. You have two flows using this trigger and want test subscriptions cleaned up when you stop listening. No live account is available; publish a separate copy for review.",
   operations: [],
   trigger:
     "Contact Changed supports webhook registration and cleanup during both Listening Mode and deployment, preserving incoming payloads",

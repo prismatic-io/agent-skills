@@ -58,6 +58,12 @@ integration locally with the installed SDK to catch registration errors that
 typechecking and bundling can miss. For lifecycle hooks or polling triggers,
 consult [SDK registration boundaries](references/registration.md).
 
+Before importing a requested separate copy, read
+[platform verification](references/platform-verification.md) and establish fresh
+integration and generated component identities, including inherited publishing
+metadata. Preserve the flow and configuration identities needed within the copy.
+Omitting an import ID does not establish that the original will remain unchanged.
+
 Carry implementation through platform verification when it is within the user's
 request. Use the selected development or test environment and existing authorization
 to import, publish versions, configure or deploy test instances, execute flows,

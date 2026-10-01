@@ -8,7 +8,7 @@ export default defineComponentCase({
   request:
     "Build a connector from openapi.yaml so I can list special events, buy either a general-admission or special-event ticket, and download the ticket’s QR image to send as an attachment. I only need these three actions. The downloaded image must be usable as a file.",
   persona:
-    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to the authenticated Prismatic sandbox. The supplied service contract is the source of truth for this exercise.",
+    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to our Prismatic organization. The supplied documentation describes the API you use.",
   operations: [
     "list special events",
     "buy a general or event ticket",
