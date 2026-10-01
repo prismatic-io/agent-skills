@@ -60,7 +60,7 @@ Tell me what organization setup remains.`,
       maxArtifactExcerpt: 20_000,
       criteria: `Orby decomposes the request and uses the canonical installed
 prismatic-components skill for the Acme webhook connector and the canonical installed
-prismatic-build-integration skill for the Acme-to-Slack integration. Each specialist is selected
+prismatic-integrations skill for the Acme-to-Slack integration. Each specialist is selected
 from its description before its implementation stage. A successful named invocation is ideal;
 when the harness cannot invoke an additional-directory skill by name, reading and applying that
 canonical skill file is equivalent evidence. The result contains distinct local component and

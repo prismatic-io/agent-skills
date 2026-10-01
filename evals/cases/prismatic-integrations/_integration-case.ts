@@ -35,8 +35,8 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
   if (spec.mode === "edit" && !spec.fixture)
     throw new Error("CNI edit cases require an existing project fixture");
   return defineEvalCase({
-    id: `prismatic-build-integration/${spec.id}`,
-    prompt: `${spec.request}\n\nUse the skill at ${subjectPath("prismatic-build-integration/SKILL.md")}. ${spec.mode === "edit" ? "Modify the existing CNI in this workspace; preserve unrelated behavior and deployed flow/configuration identities." : "Work in this directory and deliver a locally buildable Code Native Integration."} Use local mocked verification. Do not import, publish, deploy, invoke platform tests, or mutate Prismatic or connected services. Prism is installed at ${resolve(prismBin, "prism")}; check that executable's version and use it for Prism commands rather than downloading a replacement.`,
+    id: `prismatic-integrations/${spec.id}`,
+    prompt: `${spec.request}\n\nUse the skill at ${subjectPath("prismatic-integrations/SKILL.md")}. ${spec.mode === "edit" ? "Modify the existing CNI in this workspace; preserve unrelated behavior and deployed flow/configuration identities." : "Work in this directory and deliver a locally buildable Code Native Integration."} Use local mocked verification. Do not import, publish, deploy, invoke platform tests, or mutate Prismatic or connected services. Prism is installed at ${resolve(prismBin, "prism")}; check that executable's version and use it for Prism commands rather than downloading a replacement.`,
     persona: spec.persona,
     ...(spec.fixture
       ? { fixtures: { kind: "dir" as const, path: resolve(spec.fixture) } }
@@ -71,7 +71,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       ),
     ],
     meta: {
-      skill: "prismatic-build-integration",
+      skill: "prismatic-integrations",
       tags: [
         "integration-skill",
         spec.mode ?? "create",

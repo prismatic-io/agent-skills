@@ -57,10 +57,7 @@ test("Mule authored rubrics satisfy the actual Lux runtime schema", () => {
 });
 
 test("Mule discovery separates source inputs, review evidence and project checks", async () => {
-  assert.equal(
-    authored.id,
-    "prismatic-migrate-integration/mulesoft-order-processing",
-  );
+  assert.equal(authored.id, "prismatic-migrate/mulesoft-order-processing");
   const fixture = authored.fixtures;
   assert.ok(fixture && typeof fixture === "object" && fixture.kind === "dir");
   const files = await readdir(fixture.path, { recursive: true });

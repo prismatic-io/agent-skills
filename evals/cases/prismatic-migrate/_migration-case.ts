@@ -184,10 +184,10 @@ export const defineMigrationCase = (
     variant === "none"
       ? undefined
       : variant === "build"
-        ? "prismatic-build-integration"
-        : "prismatic-migrate-integration";
+        ? "prismatic-integrations"
+        : "prismatic-migrate";
   return defineEvalCase({
-    id: `prismatic-migrate-integration/${spec.id}`,
+    id: `prismatic-migrate/${spec.id}`,
     prompt: `${skill ? `Use the skill at ${subjectPath(`${skill}/SKILL.md`)}.\n` : ""}Work entirely in the current directory. The supplied files are legacy integration inputs. ${spec.deliverable === "assessment" ? "Assess the requested migration work from the available evidence; produce the requested local deliverables and identify unresolved blockers." : spec.deliverable === "existing-integration" ? "Extend the supplied Prismatic Code Native Integration in place, preserving its existing behavior." : "Deliver a locally buildable Prismatic Code Native Integration in a new top-level subdirectory."} Do not mutate Prismatic or connected services. Do not import, publish, deploy, or invoke platform tests. Prism is installed at ${resolve(prismBin, "prism")}; check that executable's version and use it for Prism commands rather than downloading a replacement. Use local fixtures and mocked service calls for verification.\n\n${spec.request}`,
     persona: `${spec.persona}\n\nRespond as this stakeholder, using only the supplied facts. Answer the question asked in ordinary language; do not volunteer a test checklist or coach the implementation. You can confirm business priorities within your remit but cannot invent source behavior, credentials, exports, platform guarantees, or completed operational work. Say when you do not know and who would need to confirm. Do not approve a change to business behavior merely because the agent proposes it; if no authority or preference is stated here, keep that decision open. Routine implementation choices are the agent's responsibility.`,
     fixtures: { kind: "dir", path: resolve(spec.fixture) },

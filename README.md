@@ -16,8 +16,8 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 | --- | --- |
 | [orby](skills/orby/SKILL.md) | Explore, operate, and troubleshoot Prismatic environments, and coordinate end-to-end platform outcomes. |
 | [prismatic-components](skills/prismatic-components/SKILL.md) | Build and update custom connectors for Prismatic low-code integrations. |
-| [prismatic-build-integration](skills/prismatic-build-integration/SKILL.md) | Build and update Prismatic Code Native Integrations, then verify them through local checks and authorized platform execution. |
-| [prismatic-migrate-integration](skills/prismatic-migrate-integration/SKILL.md) | Port vendor workflows or bespoke integration code to Prismatic using source evidence and behavioral verification. |
+| [prismatic-integrations](skills/prismatic-integrations/SKILL.md) | Build and update Prismatic Code Native Integrations, then verify them through local checks and authorized platform execution. |
+| [prismatic-migrate](skills/prismatic-migrate/SKILL.md) | Port vendor workflows or bespoke integration code to Prismatic using source evidence and behavioral verification. |
 | [prismatic-embedded](skills/prismatic-embedded/SKILL.md) | Embed Prismatic's marketplace and other screens in a web app, with backend-signed embedded-user tokens and the embedded SDK. |
 
 ## Installation
@@ -58,7 +58,7 @@ instructions and any supporting scripts, references, or assets.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, and
 [AGENTS.md](AGENTS.md) for authoring guidance.
 See [evals/README.md](evals/README.md) for the Lux workflow and current coverage.
-Run a specific skill with `mise run eval:run -- prismatic-build-integration`;
+Run a specific skill with `mise run eval:run -- prismatic-integrations`;
 use a canonical case ID for tighter iteration and native Lux profiles for comparisons.
 
 ## Releases

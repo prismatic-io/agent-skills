@@ -13,7 +13,7 @@ test("Lux discovers twelve CNI cases with colocated local verification", async (
   await access(checker);
   const modes = { create: 0, edit: 0 };
   for (const entry of discovery.cases) {
-    assert.ok(entry.id.startsWith("prismatic-build-integration/"));
+    assert.ok(entry.id.startsWith("prismatic-integrations/"));
     const { default: spec } = await import(pathToFileURL(entry.path).href);
     const local = spec.assertions.find(
       (item: { id: string }) => item.id === "local-checks",
