@@ -30,8 +30,8 @@ test("baseline variants change only skill selection and variant metadata", () =>
   const migration = defineMigrationCase(spec, "migration");
   const build = defineMigrationCase(spec, "build");
   const none = defineMigrationCase(spec, "none");
-  assert.match(migration.prompt, /prismatic-migrate-integration\/SKILL.md/);
-  assert.match(build.prompt, /prismatic-build-integration\/SKILL.md/);
+  assert.match(migration.prompt, /prismatic-migrate\/SKILL.md/);
+  assert.match(build.prompt, /prismatic-integrations\/SKILL.md/);
   assert.doesNotMatch(none.prompt, /Use the skill/);
   assert.equal(migration.prompt.split("\n").slice(1).join("\n"), none.prompt);
   assert.equal(build.prompt.split("\n").slice(1).join("\n"), none.prompt);

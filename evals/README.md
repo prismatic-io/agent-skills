@@ -15,10 +15,10 @@ read-only scaffold and optional editor-hint fixes.
 ```sh
 mise run eval:prepare
 mise run eval:run -- --help
-mise run eval:run -- prismatic-build-integration --list
-mise run eval:run -- prismatic-build-integration
-mise run eval:run -- prismatic-build-integration/edit-order-mapping
-mise run eval:run -- prismatic-migrate-integration --loop 3
+mise run eval:run -- prismatic-integrations --list
+mise run eval:run -- prismatic-integrations
+mise run eval:run -- prismatic-integrations/edit-order-mapping
+mise run eval:run -- prismatic-migrate --loop 3
 mise run eval:run -- prismatic-components --profile claude-code-sandbox
 mise run eval:check
 ```
