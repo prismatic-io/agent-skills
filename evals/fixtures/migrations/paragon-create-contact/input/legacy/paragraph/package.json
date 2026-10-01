@@ -39,7 +39,6 @@
     "@types/underscore.string": "^0.0.42",
     "@types/unzipper": "^0.10.11",
     "@types/uuid": "^11.0.0",
-    "aws-sdk": "^2.1693.0",
     "cheerio": "^1.2.0",
     "csv": "^6.6.4",
     "date-fns": "^4.4.0",
@@ -65,8 +64,6 @@
     "@useparagon/core": {
       "uuid": "11.1.1"
     },
-    "aws-sdk": {
-      "uuid": "11.1.1"
-    }
+    "@grpc/grpc-js": "1.13.6"
   }
 }
