@@ -8,7 +8,7 @@ export default defineMigrationCase({
     "../../fixtures/migrations/logic-apps-binary-copy/input",
   ),
   request:
-    "Move this Dropbox-to-OneDrive Logic Apps template to Prismatic. The important part is that newly created files arrive with their original bytes and usable filenames. Work locally with mocked accounts; identify the folder and connection settings we still need to supply.",
+    "Move this Dropbox-to-OneDrive Logic Apps template to Prismatic. The important part is that newly created files arrive with their original bytes and usable filenames. Verify external-service behavior with mocked accounts, publish and import a fresh Prismatic review integration, and identify the folder and connection settings we still need to supply.",
   persona:
     "You own the file backup integration. Files can be binary and filenames can contain spaces or non-ASCII characters. The source is the supplied public template; it is not a fully configured account export. The Dropbox folder and both accounts' credentials will be provided at deployment. No preference about implementation libraries or trigger style.",
   sourceContract:

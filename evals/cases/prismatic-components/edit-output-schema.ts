@@ -12,7 +12,7 @@ export default defineComponentCase({
   request:
     "Our existing Partner Records connector is in this directory, with its API contract in API.md. Get Contact works, but builders cannot see its output fields until they execute it. Make the fields available beforehand in the low-code designer, including its address, tags, and optional email. Keep the output and existing integrations working as they do now.",
   persona:
-    "You use the low-code designer and want to map contact fields before running the integration. You do not write code and have no live partner credentials. Publish a sandbox copy for review. Existing integrations and baseline tests must keep working.",
+    "You use the low-code designer and want to map contact fields before running the integration. You do not write code and have no live partner credentials. Publish a separate copy for review. Existing integrations must keep working.",
   operations: ["Get Contact with output fields discoverable before execution"],
   apiFailure: false,
   preserved: [

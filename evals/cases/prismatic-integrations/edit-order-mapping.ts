@@ -8,7 +8,7 @@ export default defineIntegrationCase({
   request:
     "Our existing Order Relay works, but different customers keep order email and total in different fields. Let the person configuring the integration choose which source fields supply email and amount, without changing code. For example, one customer uses buyer.emailAddress and pricing.grandTotal. Keep the existing customer.email and total behavior as the default so existing customers do not need to reconfigure. The order ID still comes from id. Preserve the existing flows, connection, and other behavior.",
   persona:
-    "You manage customers using the existing Order Relay. Their order data is JSON and nested fields are common. The example customer's fields are buyer.emailAddress and pricing.grandTotal; the original customer.email and total remain the defaults. The destination body still needs externalId, email, and numeric amount, and the order ID always comes from id. Configuration can use any clear supported mapping interface; you have no SDK or library preferences. There are no live credentials; use local mocks.",
+    "You manage customers using the existing Order Relay. Their order data is JSON and nested fields are common. The example customer's fields are buyer.emailAddress and pricing.grandTotal; the original customer.email and total remain the defaults. The destination body still needs externalId, email, and numeric amount, and the order ID always comes from id. Configuration can use any clear supported mapping interface; you have no SDK or library preferences. External-service credentials are not available yet; use local mocks.",
   criteria: [
     {
       id: "configured-mapping",

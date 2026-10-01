@@ -19,7 +19,7 @@ export default defineComponentCase({
   request:
     "Add a new action to our existing Partner Records connector for creating an employee. Builders should enter a name and fill in the grouped address fields rather than write JSON. Let them optionally supply the metadata external ID too. Keep the existing Create Employee action because current integrations use it. The small API contract is in API.md.",
   persona:
-    "You build integrations in the designer. You want a grouped address editor with named fields and no JSON authoring. Existing integrations still use the old JSON action. No live account is available; publish a sandbox copy for review.",
+    "You build integrations in the designer. You want a grouped address editor with named fields and no JSON authoring. Existing integrations still use the old JSON action. No live account is available; publish a separate copy for review.",
   operations: [
     "a new Create Employee action with a structured address input and optional metadata",
   ],

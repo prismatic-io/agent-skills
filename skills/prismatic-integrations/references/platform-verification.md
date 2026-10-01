@@ -7,6 +7,15 @@ operations. Select the intended organization/profile, integration, version, and
 test instance from project evidence and the user's request before writing remotely.
 Reuse that target through iterations so fixes do not create unrelated integrations.
 
+When the user requests a separate copy, establish distinct top-level integration
+and generated component identities before the first import. Preserve flow and
+configuration identities needed for compatibility within that copy. Inspect
+publishing metadata and the complete relevant platform results for accidental
+reuse of the original target; omitting an integration ID does not by itself prove
+that an import creates a new integration. Verify the returned ID belongs to the
+requested copy, then reuse it for repairs. Resolve a copy's name or identity
+collision without renaming, deleting, or overwriting the original.
+
 Import the built CNI for runner testing. Import creates a test instance; publishing
 a version and deploying an instance are distinct operations. Publish and deploy
 when required by the requested verification, and ensure the instance under test

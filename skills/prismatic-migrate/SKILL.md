@@ -65,6 +65,12 @@ change. Distinguish partial work from preserved behavior; passing self-authored
 tests does not establish equivalence. For implemented ports, run project checks
 and the production build.
 
+Before importing a requested separate copy, read
+[platform verification](references/platform-verification.md) and establish fresh
+integration and generated component identities, including inherited publishing
+metadata. Preserve the flow and configuration identities needed within the copy.
+Omitting an import ID does not establish that the original will remain unchanged.
+
 When the request includes platform verification, use the selected development or
 test environment and existing authorization to import, publish versions, configure
 or deploy test instances, execute flows, and run smoke tests as needed. Continue

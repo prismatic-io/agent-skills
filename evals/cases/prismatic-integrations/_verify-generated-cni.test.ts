@@ -1,10 +1,27 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "vitest";
 import { findCniProjects, verifyCni } from "./_verify-generated-cni.mjs";
+
+const require = createRequire(import.meta.url);
+const spectralPath = require.resolve("@prismatic-io/spectral");
+const yamlPath = require.resolve("yaml");
+// Positive controls come from the installed SDK's compiler, independently of
+// the verifier's understanding of its generated registration structure.
+const validEntry = `
+const { integration, flow } = require(${JSON.stringify(spectralPath)});
+module.exports.default = integration({
+  name: "Checker control",
+  flows: [flow({
+    name: "Receive", stableKey: "receive",
+    onExecution: async () => ({ data: { received: true } }),
+  })],
+});
+`;
 
 const fixture = async (fn: (root: string) => Promise<void>) => {
   const root = await mkdtemp(join(tmpdir(), "cni-check-test-"));
@@ -29,10 +46,7 @@ const project = async (
     }),
   );
   await mkdir(join(root, "dist"), { recursive: true });
-  await writeFile(
-    join(root, "dist", "index.js"),
-    'module.exports = { default: { codeNativeIntegrationYAML: "flows: []" } };\n',
-  );
+  await writeFile(join(root, "dist", "index.js"), validEntry);
 };
 test("discovers root and deeply nested Spectral projects", async () =>
   fixture(async (root) => {
@@ -123,10 +137,7 @@ test("Prism prefers root index.js over dist and stale package main", async () =>
       'throw new Error("wrong entry");\n',
     );
     const entry = join(directory, "index.js");
-    await writeFile(
-      entry,
-      'module.exports = { default: { codeNativeIntegrationYAML: "flows: []" } };\n',
-    );
+    await writeFile(entry, validEntry);
     const valid = await verifyCni(root);
     assert.equal(valid.ok, true);
     assert.equal(valid.entryLoad, "checked");
@@ -180,12 +191,70 @@ test("an arbitrary package main is not treated as a supported Prism entry", asyn
     await project(root, undefined, "output/integration.js");
     await rm(join(root, "dist", "index.js"));
     await mkdir(join(root, "output"));
-    await writeFile(
-      join(root, "output", "integration.js"),
-      'module.exports = { default: { codeNativeIntegrationYAML: "flows: []" } };\n',
-    );
+    await writeFile(join(root, "output", "integration.js"), validEntry);
     const result = await verifyCni(root);
     assert.equal(result.ok, false);
     assert.equal(result.checks.at(-1)?.script, "entry-load");
     assert.equal(result.checks.at(-1)?.status, "failed");
+  }));
+
+test("entry diagnostic rejects fake, empty, malformed, and disconnected definitions", async () =>
+  fixture(async (root) => {
+    await project(root);
+    const mutations = [
+      "definition.codeNativeIntegrationYAML = true;",
+      'definition.codeNativeIntegrationYAML = "flows: [";',
+      'definition.codeNativeIntegrationYAML = "";',
+      "document.isCodeNative = false;",
+      "document.flows = [];",
+      'definition.key = "";',
+      "document.flows[0].steps = [];",
+      "document.flows[0].steps = document.flows[0].steps.filter(step => !step.isTrigger);",
+      'document.flows[0].steps.find(step => !step.isTrigger).action.component.key = "different-component";',
+      "definition.actions = {};",
+      'Object.values(definition.actions)[0].perform = "not callable";',
+      'document.flows.push({ name: "Unwired", steps: [document.flows[0].steps[0]] });',
+    ];
+    for (const mutation of mutations) {
+      await writeFile(
+        join(root, "dist", "index.js"),
+        `${validEntry}
+const definition = module.exports.default;
+const { parse, stringify } = require(${JSON.stringify(yamlPath)});
+const original = definition.codeNativeIntegrationYAML;
+const document = parse(original);
+${mutation}
+if (definition.codeNativeIntegrationYAML === original) {
+  definition.codeNativeIntegrationYAML = stringify(document);
+}
+`,
+      );
+      const result = spawnSync(
+        process.execPath,
+        [join(import.meta.dirname, "_load-cni-entry.mjs"), root],
+        { encoding: "utf8", timeout: 5_000 },
+      );
+      assert.equal(result.status, 1, `${mutation}: ${result.stderr}`);
+    }
+  }));
+
+test("entry diagnostic accepts SDK-generated custom triggers and multiple flows", async () =>
+  fixture(async (root) => {
+    await project(root);
+    await writeFile(
+      join(root, "dist", "index.js"),
+      `
+const { integration, flow } = require(${JSON.stringify(spectralPath)});
+module.exports.default = integration({
+  name: "Custom trigger control",
+  flows: ["First", "Second"].map(name => flow({
+    name, stableKey: name.toLowerCase(),
+    onTrigger: async (_context, payload) => ({ payload }),
+    onExecution: async () => ({ data: name }),
+  })),
+});
+`,
+    );
+    const result = await verifyCni(root);
+    assert.equal(result.ok, true);
   }));

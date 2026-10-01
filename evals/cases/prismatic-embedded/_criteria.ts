@@ -1,7 +1,7 @@
 export const embeddedMarketplace = {
   id: "embedded-marketplace",
   criteria:
-    "The Integrations section of Settings renders Prismatic's marketplace with @prismatic-io/embedded for signed-in users. Browser code initializes the SDK once per page load, fetches a token from the app's backend with the existing session, authenticates before showing the marketplace, renders into a mounted container with a usable height (or an intentional popover), re-authenticates before the token expires without re-rendering the iframe, cleans up timers on unmount, and shows a visible state when the token fetch or authentication fails. Existing Settings content and navigation remain. Do not require a particular component structure, hook, or refresh timing.",
+    "The Integrations section of Settings renders Prismatic's marketplace with @prismatic-io/embedded for signed-in users. Browser code initializes the SDK once per page load, fetches a token from the app's backend with the existing session, authenticates before showing the marketplace, uses the presentation requested by the stakeholder, with a mounted container of usable height for inline embedding, re-authenticates before the token expires without re-rendering the iframe, cleans up timers on unmount, and shows a visible state when the token fetch or authentication fails. Existing Settings content and navigation remain. Do not require a particular component structure, hook, or refresh timing.",
 };
 
 export const tokenDesign = {

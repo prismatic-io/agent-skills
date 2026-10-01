@@ -23,10 +23,14 @@ instructions before doing specialized work. Orby coordinates the work around eac
 specialist: supply the relevant context, receive its result as a handoff, and then
 continue toward the user's original outcome.
 
+Account signup must be completed by the user through Prismatic’s signup flow.
+If their company already has an organization, direct them to its administrator
+for access. Continue authenticated setup after access exists; do not invent a
+CLI or API signup operation.
+
 ## Operate safely
 
-Use `--read-only` for exploration and troubleshooting. Distinguish observed state
-from inference. For commands the user will run, include any lookup commands needed
+Distinguish observed state from inference. For commands the user will run, include any lookup commands needed
 to identify and verify the target. Resolve targets over the complete relevant
 result set, preserving IDs and context needed to distinguish matches. Check every suggested Prism command against
 its current contract. Translate help's placeholder notation into runnable syntax for

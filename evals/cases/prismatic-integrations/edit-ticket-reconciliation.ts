@@ -6,9 +6,9 @@ export default defineIntegrationCase({
   mode: "edit",
   fixture: resolve(import.meta.dirname, "../../fixtures/integrations/tickets"),
   request:
-    "Our existing Ticket Mirror handles live webhooks, but a webhook outage can leave the archive behind. Add a customer-configured scheduled reconciliation that reads the ticket source's change feed and upserts changed tickets into the same archive. On the first check, backfill retained tickets. Later checks should continue from saved progress, including across multiple or empty source pages. An archive failure must not silently skip an unconfirmed ticket. Add source credentials and a schedule to the wizard, preserving the existing webhook flow and Health flow. SOURCE.md and API.md describe these fictional services; use mocked calls only.",
+    "Our existing Ticket Mirror handles live webhooks, but a webhook outage can leave the archive behind. Add a customer-configured scheduled reconciliation that reads the ticket source's change feed and upserts changed tickets into the same archive. On the first check, backfill retained tickets. Later checks should continue from saved progress, including across multiple or empty source pages. An archive failure must not silently skip an unconfirmed ticket. Add source credentials and a schedule to the wizard, preserving the existing webhook flow and Health flow. SOURCE.md and API.md describe these services; use mocked calls only.",
   persona:
-    "You operate Ticket Mirror. The existing webhook remains the low-latency path; reconciliation repairs gaps and may see a ticket already archived by the webhook. The archive PUT is idempotent for the same ticket ID and body. The source gives an opaque per-instance cursor and explicit hasMore, and a cursorless first request starts retained history. Customers provide source credentials and cadence. You do not require a polling versus scheduled-flow architecture, exact batch size, or timing beyond bounded work and safe continuation.",
+    "You operate Ticket Mirror. Webhooks remain the prompt delivery path; reconciliation repairs gaps and may encounter tickets already archived. Customers provide source credentials and choose how often reconciliation runs. SOURCE.md and API.md contain the service details available to you. You want all retained tickets included initially and later checks to resume safely. You have no preference about implementation architecture.",
   criteria: [
     {
       id: "ticket-reconciliation",
@@ -17,7 +17,7 @@ export default defineIntegrationCase({
     },
   ],
   preserved:
-    "Preserve Mirror Ticket stableKey mirror-ticket and its current webhook PUT body, Ticket Archive connection stableKey ticket-archive with baseUrl/token, and Health stableKey ticket-health and ready response. Existing webhook-only customers remain usable while new source/schedule setup is added for reconciliation. Do not import, deploy or use live service credentials.",
+    "Preserve Mirror Ticket stableKey mirror-ticket and its current webhook PUT body, Ticket Archive connection stableKey ticket-archive with baseUrl/token, and Health stableKey ticket-health and ready response. Existing webhook-only customers remain usable while new source/schedule setup is added for reconciliation. Import a fresh review copy; do not deploy customer instances or use live service credentials.",
   validation:
     "first cursorless run, a later page including an empty hasMore page, source and archive failures with fresh-invocation progress, repeated ticket upsert, existing webhook, and Health are representative; source data and archive HTTP response wrappers must follow SOURCE.md/API.md",
   tags: [

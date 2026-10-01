@@ -8,7 +8,7 @@ export default defineIntegrationCase({
     "../../fixtures/integrations/webhook-contract",
   ),
   request:
-    "Build an integration that receives our partner's order webhooks and sends new orders to each customer's order service. Only genuine order.created events should create an order; other event types should do nothing. The partner signs the exact request bytes, so verify the signature before trusting the contents. Customers must configure their signing secret and destination credentials. API.md describes both sides. There are no live credentials or services here.",
+    "Build an integration that receives our partner's order webhooks and sends new orders to each customer's order service. Only genuine order.created events should create an order; other event types should do nothing. The partner signs the exact request bytes, so verify the signature before trusting the contents. Customers must configure their signing secret and destination credentials. API.md describes both sides. External-service credentials are not available yet.",
   persona:
     "You operate the partner order feed and want a customer-configured CNI. Order.created is the only event to deliver; canceled and test events are ignored. Each event contains one order. Customers supply their own signing secret, destination URL, and bearer token later. Preserve the order ID, email, and numeric total. Reject unsigned or incorrectly signed requests without sending anything. You have no preference about libraries or code organization; use the supplied API contract and mocked verification.",
   criteria: [

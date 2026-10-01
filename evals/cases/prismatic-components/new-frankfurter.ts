@@ -8,7 +8,7 @@ export default defineComponentCase({
   request:
     "Build a connector from openapi.json to list available currencies and get the rate for a currency pair. I normally want the latest rate, but sometimes supply a historical date. Keep the date and numeric rate that the service actually returns. These two actions are enough.",
   persona:
-    "You build integrations in Prismatic’s low-code designer and do not write code. You want the requested connector, have no architectural preferences, and can supply real service credentials later. Use mocked service calls now and publish only to the authenticated Prismatic sandbox. The supplied service contract is the source of truth for this exercise.",
+    "You build integrations in Prismatic’s low-code designer and do not write code. You need the requested currency actions using the supplied API documentation. You have no architectural preferences. Use mocked service calls for verification and publish a separate component for review.",
   operations: [
     "list available currencies",
     "get latest or dated exchange rate for a currency pair",

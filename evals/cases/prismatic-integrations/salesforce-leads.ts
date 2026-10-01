@@ -5,7 +5,7 @@ export default defineIntegrationCase({
   request:
     "My customers use Salesforce. I need an integration that syncs Salesforce\nleads to my app. In addition to syncing Leads as they're created, I'll need to sync existing leads\nto my app (there may be thousands or millions). Also, my customers may not store Leads in standard\nLeads record type, and may have custom fields associated with their Lead or custom record type.\nI'll need a field mapper that maps SFDC fields to my app.",
   persona:
-    "You are the product developer requesting the integration. You can clarify the\nSalesforce-to-application behavior but have no preferences about APIs, authentication protocols,\ncode structure, or libraries. Salesforce and application credentials are not available in this\nsession; deployment and live verification are outside this request.",
+    "You are the product developer requesting the integration. You can clarify the\nSalesforce-to-application behavior but have no preferences about APIs, authentication protocols,\ncode structure, or libraries. Salesforce and application credentials are not available in this\nsession; customer deployment and live service verification are outside this request.",
   criteria: [
     {
       id: "requested-integration",
