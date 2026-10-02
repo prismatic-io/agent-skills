@@ -1,8 +1,9 @@
 # Skill evaluations
 
 Lux runs cases in `cases/<skill>/` and retains native grades, traces, and artifacts
-in `.lux-runs/`. Use a built Prism checkout at `../prism` or set `PRISM_ROOT`.
-Authenticate Claude Code. Evals use your existing Prism session and may publish
+in `.lux-runs/`. `mise run eval:prepare` installs the published Prism and Lux
+previews pinned in `package.json` and `bun.lock`; no sibling checkouts are needed.
+Authenticate Claude Code and Prism. Evals use your existing Prism session and may publish
 components and integrations or create signing keys. Authentication and endpoint provisioning belong to the harness; case prompts
 request outcomes without prescribing session setup.
 The default subject uses `claude-sonnet-5` with medium reasoning effort; the
@@ -11,10 +12,9 @@ Use `--profile codex` to switch the subject, judge, and persona together to
 Codex Sol with low effort. Lux registers the supplied skills with each driver’s
 native discovery while keeping model and permission configuration in the harness.
 
-The Prism checkout must include the native command-routing, agent permission-hint,
-diagnostic-redaction changes, and `integrations validate`. `LUX_PACKAGE` can
-override the installed Lux package with a built `.tgz` when testing unreleased
-Lux changes.
+To test local builds, set `PRISM_PACKAGE` or `LUX_PACKAGE` to an absolute `.tgz`
+path. Overrides leave the manifest and lockfile unchanged; supply them on each
+invocation. Normal preparation restores the pinned packages.
 
 ```sh
 mise run eval:prepare

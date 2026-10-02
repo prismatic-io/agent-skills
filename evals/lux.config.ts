@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname } from "node:path";
 import { type LuxConfig, subjectPath } from "@prismatic-io/lux";
-import { prismBin, prismRoot } from "./prism.ts";
+import { evalBin, evalModules } from "./tools.ts";
 
 export const codexDriver = {
   name: "codex",
@@ -16,12 +16,7 @@ export const codexDriver = {
       subjectPath("prismatic-migrate"),
       subjectPath("prismatic-embedded"),
     ],
-    inheritEnv: [
-      "PRISM_ROOT",
-      "PRISM_CONFIG_FILE",
-      "PRISM_PROFILE",
-      "PRISMATIC_URL",
-    ],
+    inheritEnv: ["PRISM_CONFIG_FILE", "PRISM_PROFILE", "PRISMATIC_URL"],
     interactionMode: "app-server",
     config: { features: { default_mode_request_user_input: true } },
     approvalPolicy: "on-request",
@@ -31,8 +26,8 @@ export const codexDriver = {
     isolation: {
       allowRead: [
         subjectPath(""),
-        prismBin,
-        prismRoot,
+        evalBin,
+        evalModules,
         dirname(dirname(process.execPath)),
         ...[
           "/System/Library/OpenSSL/openssl.cnf",
@@ -41,7 +36,7 @@ export const codexDriver = {
       ],
     },
     env: {
-      PATH: `${prismBin}:${dirname(process.execPath)}:${process.env.PATH}`,
+      PATH: `${evalBin}:${dirname(process.execPath)}:${process.env.PATH}`,
       npm_config_cache: ".npm-cache",
     },
   },

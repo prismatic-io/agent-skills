@@ -46,19 +46,8 @@ description = "Check local discovery with the skills CLI"
 run = "bunx skills add . --list"
 
 [tasks."eval:prepare"]
-description = "Install Lux and capture the native Prism scaffold contract"
-run = '''
-bun install --cwd evals --frozen-lockfile
-if [ -n "${LUX_PACKAGE:-}" ]; then
-  npm install --prefix evals --no-save --package-lock=false --no-audit --no-fund "$LUX_PACKAGE"
-fi
-prism_root="$(node -p 'require("node:path").resolve(process.env.PRISM_ROOT ?? "../prism")')"
-prism_cache="$PWD/evals/.lux-cache/$(basename "$prism_root")"
-mkdir -p "$prism_cache/bin"
-ln -sf "$prism_root/lib/run.js" "$prism_cache/bin/prism"
-"$prism_cache/bin/prism" components init --schema --format json > "$prism_cache/prism-init.schema.json"
-"$prism_cache/bin/prism" integrations validate --schema --format json > /dev/null
-'''
+description = "Install locked eval tools and verify native Prism contracts"
+run = "node evals/tools.ts"
 
 [tasks."eval:doctor"]
 description = "Validate Lux cases and driver availability without model calls"

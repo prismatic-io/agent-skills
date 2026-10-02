@@ -3,7 +3,6 @@ import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { prismRoot } from "../prism.ts";
 
 const excluded = new Set([
   "node_modules",
@@ -80,7 +79,10 @@ export const verifyCni = async (root, { run = spawnSync } = {}) => {
   );
   if (built)
     runCheck("registration", process.execPath, [
-      resolve(prismRoot, "lib/run.js"),
+      resolve(
+        import.meta.dirname,
+        "../node_modules/@prismatic-io/prism/lib/run.js",
+      ),
       "integrations",
       "validate",
       "--format",

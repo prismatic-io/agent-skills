@@ -47,7 +47,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
         type: "command-exits-zero",
         requiresExecutionWorkspace: true,
         command: `node ${quote(resolve(import.meta.dirname, "../_verify-cni.mjs"))}`,
-        inheritEnv: ["PATH", "PRISM_ROOT"],
+        inheritEnv: ["PATH"],
         timeout: "10 minutes",
       },
       ...spec.criteria.map(({ id, criteria }) => rubric(id, criteria)),

@@ -115,7 +115,7 @@ export const migrationAssertions = (
             type: "command-exits-zero" as const,
             requiresExecutionWorkspace: true,
             command: `node ${shellQuote(resolve(import.meta.dirname, "../_verify-cni.mjs"))}`,
-            inheritEnv: ["PATH", "PRISM_ROOT"],
+            inheritEnv: ["PATH"],
             timeout: "8 minutes",
           },
         ]),
