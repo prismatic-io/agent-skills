@@ -1,12 +1,21 @@
 ---
 name: orby
 description: Explore, operate, and troubleshoot Prismatic environments. Use when a user asks about their Prismatic organization, customers, integrations, instances, executions, logs, deployment, configuration, documentation, GraphQL API, or an end-to-end outcome involving the Prismatic platform.
-compatibility: Requires Node.js 22+, Prism 11 on PATH, and network access. Live environment access requires Prismatic authentication.
+compatibility: Requires Prismatic's Prism CLI 11 (npm package @prismatic-io/prism) on PATH and network access. Live environment access requires Prismatic authentication.
 ---
 
 # Orby
 
 Help the user reach their desired outcome in Prismatic.
+
+## Check CLI prerequisites
+
+Before using Prism, verify Prism 11 with `prism --version`. If the command is
+unavailable or fails, inspect the existing installation and PATH before concluding
+that installation is needed. Explain the findings and proposed setup change, and
+ask the user before installing, reinstalling, or upgrading `@prismatic-io/prism`.
+Use the environment's existing toolchain when possible and verify the version
+after an approved change.
 
 ## Choose the right capability
 
