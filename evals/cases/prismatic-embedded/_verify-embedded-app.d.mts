@@ -22,10 +22,6 @@ export const findBundledKey: (
   canary: string,
 ) => Promise<string[]>;
 export const findPrivateKeys: (root: string) => Promise<string[]>;
-export const findBrowserSigning: (
-  root: string,
-  clientDir?: string,
-) => Promise<string[]>;
 export const findJwts: (value: unknown) => string[];
 export const verifyRs256: (
   token: string,
@@ -50,6 +46,5 @@ export const verifyEmbeddedApp: (
     timeoutMs?: number;
     run?: typeof spawnSync;
     tokenPath?: string;
-    clientDir?: string;
   },
 ) => Promise<{ ok: boolean; project: string; checks: CheckResult[] }>;

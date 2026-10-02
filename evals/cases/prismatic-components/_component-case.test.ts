@@ -51,7 +51,6 @@ test("a spec fixture does not turn a creation case into an edit case", () => {
   const result = defineComponentCase({ ...base, fixture, mode: "create" });
   assert.deepEqual(result.fixtures, { kind: "dir", path: fixture });
   assert.ok(Array.isArray(result.meta?.tags));
-  assert.ok(!result.meta.tags.includes("continuation"));
   assert.doesNotMatch(
     result.prompt,
     /preserve .*existing.*(?:action|trigger).*keys/i,
@@ -86,28 +85,6 @@ test("edit cases use their own fixture and preserve member keys while publishing
   assert.match(criteria, /apiKey/);
 });
 
-test("the legacy continuation override cannot silently replace an authored fixture", () => {
-  const previous = process.env.PRISM_EVAL_FIXTURE;
-  process.env.PRISM_EVAL_FIXTURE = "/tmp/unrelated-component";
-  try {
-    assert.throws(
-      () =>
-        defineComponentCase({
-          ...base,
-          fixture: resolve(
-            import.meta.dirname,
-            "../../fixtures/contact-example",
-          ),
-          mode: "edit",
-        }),
-      /fixture|override|continuation/i,
-    );
-  } finally {
-    if (previous === undefined) delete process.env.PRISM_EVAL_FIXTURE;
-    else process.env.PRISM_EVAL_FIXTURE = previous;
-  }
-});
-
 test("component checks cover local behavior and platform scope", () => {
   assert.deepEqual(
     componentAssertions({
@@ -127,6 +104,16 @@ test("component checks cover local behavior and platform scope", () => {
     ],
   );
   assert.match(rubricText(base, "meaningful-tests"), /API failure/i);
+  const checks = componentAssertions(base).find(
+    ({ id }) => id === "component-checks",
+  );
+  assert.ok(checks && checks.type === "command-exits-zero");
+  assert.deepEqual(checks.inheritEnv, []);
+  assert.deepEqual(checks.env, { PATH: process.env.PATH ?? "", CI: "true" });
+  const platform = rubricText(base, "platform-scope");
+  assert.match(platform, /publication and availability/);
+  assert.match(platform, /published member metadata/);
+  assert.match(platform, /separately built review copy/);
 });
 
 test("metadata edits require behavioral tests without inventing an API failure requirement", () => {

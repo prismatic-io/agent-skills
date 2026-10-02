@@ -5,11 +5,11 @@ import { pathToFileURL } from "node:url";
 import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
 
-test("Lux discovers twelve CNI cases with colocated local verification", async () => {
+test("Lux discovers twelve CNI cases with native local verification", async () => {
   const discovery = await discoverCases(import.meta.dirname);
   assert.deepEqual(discovery.problems, []);
   assert.equal(discovery.cases.length, 12);
-  const checker = resolve(import.meta.dirname, "_verify-generated-cni.mjs");
+  const checker = resolve(import.meta.dirname, "../_verify-cni.mjs");
   await access(checker);
   const modes = { create: 0, edit: 0 };
   for (const entry of discovery.cases) {

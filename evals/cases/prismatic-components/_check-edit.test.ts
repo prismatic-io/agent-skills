@@ -639,6 +639,53 @@ test("an unrelated data source cannot substitute for input linkage", async () =>
   );
 });
 
+test("project picklist allows meaningful duplicate-name labels", async () => {
+  const component = goodComponent();
+  const source = component.dataSources.projects;
+  const original = source.perform;
+  source.perform = async (context, params) => {
+    const result = await original(context, params);
+    assert.ok(Array.isArray(result.result));
+    return {
+      ...result,
+      result: (result.result as { key: string; label: string }[]).map(
+        (choice) => ({
+          ...choice,
+          label: `${choice.label} (${choice.key})`,
+        }),
+      ),
+    };
+  };
+  await checkCompiledEdit(component, caseChecks["edit-project-picklist"]);
+});
+
+test.each(["wrong-ids", "missing-name"])(
+  "project picklist rejects %s",
+  async (fault) => {
+    const component = goodComponent();
+    const source = component.dataSources.projects;
+    const original = source.perform;
+    source.perform = async (context, params) => {
+      const result = await original(context, params);
+      assert.ok(Array.isArray(result.result));
+      return {
+        ...result,
+        result: (result.result as { key: string; label: string }[]).map(
+          (choice) => ({
+            ...choice,
+            ...(fault === "wrong-ids"
+              ? { key: choice.label }
+              : { label: choice.key }),
+          }),
+        ),
+      };
+    };
+    await assert.rejects(() =>
+      checkCompiledEdit(component, caseChecks["edit-project-picklist"]),
+    );
+  },
+);
+
 test("correct metadata with a stub dynamic implementation is rejected", async () => {
   const component = goodComponent();
   component.actions.record.perform = async () => ({ data: {} });

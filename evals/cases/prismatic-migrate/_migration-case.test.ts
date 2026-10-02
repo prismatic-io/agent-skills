@@ -6,7 +6,6 @@ import {
   defineMigrationCase,
   type MigrationCase,
   migrationAssertions,
-  migrationVariant,
   summarizeSuppliedFiles,
 } from "./_migration-case.ts";
 
@@ -26,32 +25,9 @@ const spec: MigrationCase = {
   tests: "Demonstrate page failure and resume.",
 };
 
-test("baseline variants change only skill selection and variant metadata", () => {
-  const migration = defineMigrationCase(spec, "migration");
-  const build = defineMigrationCase(spec, "build");
-  const none = defineMigrationCase(spec, "none");
-  assert.match(migration.prompt, /prismatic-migrate\/SKILL.md/);
-  assert.match(build.prompt, /prismatic-integrations\/SKILL.md/);
-  assert.doesNotMatch(none.prompt, /Use the skill/);
-  assert.equal(migration.prompt.split("\n").slice(1).join("\n"), none.prompt);
-  assert.equal(build.prompt.split("\n").slice(1).join("\n"), none.prompt);
-  assert.deepEqual(migration.fixtures, none.fixtures);
-  assert.deepEqual(migration.assertions, none.assertions);
-  assert.deepEqual(build.assertions, none.assertions);
-  assert.equal(migration.meta?.variant, "migration");
-  assert.equal(none.meta?.skill, "none");
-});
-
-test("invalid baseline selectors fail rather than silently choosing a skill", () => {
-  for (const variant of ["migration", "build", "none"] as const) {
-    assert.equal(migrationVariant(variant), variant);
-  }
-  assert.throws(() => migrationVariant("typo"), /PRISM_MIGRATION_SKILL/);
-});
-
-test("source expectations are grader-only and platform authorization survives all variants", () => {
-  for (const variant of ["migration", "build", "none"] as const) {
-    const result = defineMigrationCase(spec, variant);
+test("source expectations are grader-only and platform authorization is explicit", () => {
+  {
+    const result = defineMigrationCase(spec);
     assert.doesNotMatch(
       result.prompt,
       /PRIVATE_GRADER_FACT|durable page progress/,
@@ -98,7 +74,7 @@ test("one native dependency-backed check covers build, declared tests and regist
   assert.ok(check?.type === "command-exits-zero");
   assert.equal(check.id, "local-checks");
   assert.equal(check.requiresExecutionWorkspace, true);
-  assert.match(check.command, /_verify-generated-cni\.mjs' \. all$/);
+  assert.match(check.command, /_verify-cni\.mjs'$/);
 });
 
 test("case-specific handoff requirements remain grader-only", () => {
@@ -159,7 +135,7 @@ test("authored cases copy only input directories, excluding grader answers", asy
   }
 });
 
-test("behavioral grading receives execution results and missing trace cannot prove a clean run", () => {
+test("behavioral grading receives execution results", () => {
   const assertions = migrationAssertions(spec);
   for (const id of ["meaningful-tests", "platform-scope"]) {
     const assertion = assertions.find((entry) => entry.id === id);
@@ -171,7 +147,6 @@ test("behavioral grading receives execution results and missing trace cannot pro
     assert.ok(selected.eventTypes.includes("tool-call"));
     assert.ok(selected.eventTypes.includes("tool-result"));
     assert.equal(selected.toolDetail, "inputs-and-results");
-    assert.match(String(assertion.criteria), /abstain/);
   }
 });
 

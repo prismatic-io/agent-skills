@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import type { Component, EditCheck, Input, Json } from "./_check-edit.ts";
+import type { EditCheck, Input, Json } from "./_check-edit.ts";
 import { baselineActions, fields, object } from "./_check-edit.ts";
 import { defineComponentCase } from "./_component-case.ts";
 
@@ -38,13 +38,6 @@ export default defineComponentCase({
 });
 
 export const check: EditCheck = {
-  kind: "actions",
-  member: (component: Component) =>
-    Object.entries(component.actions).find(
-      ([key, action]) =>
-        !baselineActions.has(key) &&
-        action.inputs.some(({ type }) => type === "dynamicObject"),
-    )?.[0],
   feature: async ({ component, harness, connection, calls }) => {
     const added = Object.entries(component.actions).filter(
       ([key]) => !baselineActions.has(key),

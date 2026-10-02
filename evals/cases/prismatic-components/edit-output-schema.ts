@@ -30,8 +30,6 @@ export default defineComponentCase({
 });
 
 export const check: EditCheck = {
-  kind: "actions",
-  member: () => "getContact",
   feature: async ({ component, harness, connection, calls }) => {
     const schema = component.actions.getContact.outputSchema;
     assert.equal(

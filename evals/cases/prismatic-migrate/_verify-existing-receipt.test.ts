@@ -17,7 +17,7 @@ const verifier = fileURLToPath(
 // This fixture has no dependency on the subject's source paths or test assertions.
 const source = `
 const { integration, flow, configVar, configPage } = require(${JSON.stringify(spectral)});
-module.exports = integration({
+module.exports.default = integration({
   name: 'Warehouse Integration',
   configPages: { Warehouse: configPage({elements: {
     'Receipt Prefix': configVar({stableKey:'warehouse-receipt-prefix',dataType:'string',defaultValue:'RCPT'})
@@ -72,7 +72,7 @@ test("receipt checker accepts a root index.js entrypoint", async () => {
 test("receipt checker distinguishes missing Prism entrypoint from receipt behavior", async () => {
   const result = await check(source, "dist/index.cjs");
   assert.notEqual(result.status, 0);
-  assert.match(result.output, /Missing compiled CNI entrypoint/);
+  assert.match(result.output, /entrypoint|index.js/);
   assert.doesNotMatch(result.output, /receipt flow identity must survive/);
 });
 

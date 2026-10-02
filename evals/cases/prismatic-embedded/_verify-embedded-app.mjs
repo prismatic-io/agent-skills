@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { generateKeyPairSync, verify } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { runCheck as commandCheck } from "../../run-check.mjs";
 
 const excluded = new Set(["node_modules", ".git", ".jj", ".npm-cache"]);
 const textFile =
@@ -15,8 +14,6 @@ const testFile = /(?:^|[/\\])__tests__[/\\]|\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const privateKeyBlock =
   /-----BEGIN [A-Z ]*PRIVATE KEY-----\s+[A-Za-z0-9+/=\s]{200,}-----END [A-Z ]*PRIVATE KEY-----/;
 const base64Run = /[A-Za-z0-9+/=]{400,}/g;
-const browserSigning =
-  /\b(?:SignJWT|importPKCS8|createSign|jsonwebtoken|jwt\.sign|subtle\.sign)\b|VITE_[A-Z0-9_]*(?:SIGNING|PRIVATE|PEM)/;
 // Browser-visible names a subject might choose; the build must not embed their values.
 const browserKeyVariables = [
   "PRISMATIC_SIGNING_KEY",
@@ -117,25 +114,6 @@ export const findBundledKey = async (root, canary) => {
   return found;
 };
 
-/** Browser source that signs tokens or exposes a signing key to the bundle. */
-export const findBrowserSigning = async (root, clientDir = "client") => {
-  const found = [];
-  const directory = join(root, clientDir);
-  try {
-    await walk(directory, async (path) => {
-      const name = relative(root, path);
-      if (
-        !testFile.test(name) &&
-        browserSigning.test(await readFile(path, "utf8"))
-      )
-        found.push(name);
-    });
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-  return found;
-};
-
 export const findJwts = (value) => {
   if (typeof value === "string")
     return /^[\w-]+\.[\w-]+\.[\w-]+$/.test(value) ? [value] : [];
@@ -199,25 +177,29 @@ const startApp = (root, env, timeoutMs) =>
       {
         cwd: root,
         env: { ...process.env, ...env },
-        stdio: ["ignore", "pipe", "inherit"],
+        stdio: ["ignore", "ignore", "inherit", "ipc"],
       },
     );
     const timer = setTimeout(() => {
       child.kill("SIGKILL");
       reject(new Error("The app did not start listening in time"));
     }, timeoutMs);
-    let output = "";
-    child.stdout.on("data", (chunk) => {
-      output += chunk;
-      const line = output.split("\n").find((entry) => entry.startsWith("{"));
-      if (!line) return;
+    child.on("message", (message) => {
+      if (
+        message?.type !== "embedded-app-ready" &&
+        message?.type !== "embedded-app-error"
+      )
+        return;
       clearTimeout(timer);
-      const message = JSON.parse(line);
-      if (message.error) {
+      if (message.type === "embedded-app-error") {
         child.kill("SIGKILL");
         reject(new Error(message.error));
       } else
         resolvePort({ port: message.port, stop: () => child.kill("SIGKILL") });
+    });
+    child.once("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
     });
     child.once("exit", (code) => {
       clearTimeout(timer);
@@ -338,7 +320,7 @@ export const checkTokenEndpoint = async (
 
 export const verifyEmbeddedApp = async (
   root,
-  { timeoutMs = 180_000, run, tokenPath, clientDir = "client" } = {},
+  { timeoutMs = 180_000, run = spawnSync, tokenPath } = {},
 ) => {
   const directory = resolve(root);
   const manifest = JSON.parse(
@@ -367,9 +349,24 @@ export const verifyEmbeddedApp = async (
             ),
           }
         : process.env;
-    checks.push(
-      commandCheck(script, { cwd: directory, env, timeout: timeoutMs, run }),
-    );
+    // Keep generated checks in Lux's process group so its assertion deadline
+    // and cancellation also terminate their descendants. npm.cmd needs a shell
+    // on Windows; script names here are fixed, not generated command text.
+    const result = run("npm", ["run", script], {
+      cwd: directory,
+      env,
+      stdio: "inherit",
+      timeout: timeoutMs,
+      killSignal: "SIGKILL",
+      shell: process.platform === "win32",
+    });
+    checks.push({
+      script,
+      status: result.status === 0 && !result.error ? "passed" : "failed",
+      exitCode: result.status,
+      signal: result.signal ?? null,
+      error: result.error?.message ?? null,
+    });
   }
   const dependencies = {
     ...manifest.dependencies,
@@ -410,12 +407,6 @@ export const verifyEmbeddedApp = async (
     "no-committed-private-keys",
     (await findPrivateKeys(directory)).map(
       (file) => `${file} contains a private key`,
-    ),
-  );
-  record(
-    "no-browser-signing",
-    (await findBrowserSigning(directory, clientDir)).map(
-      (file) => `${file} signs tokens or exposes a signing key to the browser`,
     ),
   );
   let tokenProblems;

@@ -40,7 +40,7 @@ export default {
       type: "command-exits-zero" as const,
       requiresExecutionWorkspace: true,
       command: `node '${resolve(import.meta.dirname, "./_verify-existing-receipt.mjs").replaceAll("'", "'\\''")}'`,
-      inheritEnv: ["PATH"],
+      inheritEnv: ["PATH", "PRISM_ROOT"],
       timeout: "4 minutes",
     },
   ],

@@ -17,18 +17,18 @@ export default defineComponentCase({
     "Review Contact with distinct discoverable fields for Approved and Rejected",
   ],
   apiFailure: false,
+  contract:
+    "Spectral 10.30 public types define authoring outputSchema as { type: 'branchingOutput', branchSchemas: Record<string, JsonSchema> }. The SDK converts that source map into the registered component’s branchSchemas array of { name, schema: JSON string }. Judge the authored declaration against the public authoring API, not the compiled server representation. Independent component-checks verify the compiled representation plus routing and payloads. The platform rubric checks published metadata.",
   preserved: [
     "all existing action/connection/input keys, exact Approved and Rejected branch names, payload shapes, and routing",
   ],
-  // component-checks verifies compiled branch schemas, routing, payloads, and
-  // published metadata. A source-text rubric can misread SDK serialization.
+  // component-checks verifies compiled branch schemas, routing, and payloads.
+  // A source-text rubric can misread SDK serialization.
   tests: [],
   tags: ["edit", "output-schema", "branching"],
 });
 
 export const check: EditCheck = {
-  kind: "actions",
-  member: () => "reviewContact",
   feature: async ({ component, harness, connection, controls }) => {
     const action = component.actions.reviewContact;
     assert.deepEqual([...(action.staticBranchNames ?? [])].sort(), [

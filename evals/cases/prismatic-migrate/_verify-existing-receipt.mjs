@@ -2,10 +2,10 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
-import { resolveCniEntrypoint } from "../_cni-entrypoint.mjs";
+import { prismRoot } from "../../prism.ts";
 
 const project = resolve(process.argv[2] ?? ".", "existing-integration");
 
@@ -15,18 +15,30 @@ const build = spawnSync("npm", ["run", "build"], {
   cwd: directory,
   stdio: "inherit",
   env: process.env,
+  shell: process.platform === "win32",
 });
 assert.ifError(build.error);
 assert.equal(build.status, 0, "Existing integration must still build");
-const entrypoint = await resolveCniEntrypoint(directory);
-let component = await import(pathToFileURL(entrypoint).href);
-for (
-  let i = 0;
-  i < 3 && !component.codeNativeIntegrationYAML && component.default;
-  i++
-) {
-  component = component.default;
-}
+const validation = spawnSync(
+  process.execPath,
+  [
+    resolve(prismRoot, "lib/run.js"),
+    "integrations",
+    "validate",
+    "--format",
+    "json",
+  ],
+  {
+    cwd: directory,
+    env: process.env,
+    encoding: "utf8",
+  },
+);
+assert.ifError(validation.error);
+assert.equal(validation.status, 0, validation.stderr || validation.stdout);
+const { entrypoint } = JSON.parse(validation.stdout);
+const require = createRequire(import.meta.url);
+const component = require(entrypoint).default;
 const definition = parse(component.codeNativeIntegrationYAML);
 const flow = definition.flows.find(
   (item) => item.stableKey === "warehouse-receipt-v1",

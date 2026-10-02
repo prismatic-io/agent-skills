@@ -51,7 +51,7 @@ instead of typing it. Publish its component and import a new review copy of the 
       scoring: "continuous",
       threshold: 0.9,
       evidence,
-      criteria: `Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. Orby recognizes an existing Code Native Integration and uses the canonical
+      criteria: `Orby recognizes an existing Code Native Integration and uses the canonical
 installed prismatic-integrations skill to make the change in place. It does not treat this
 as a platform-operation request or stop after recommending a skill. A successful named invocation or
 reading and applying the canonical skill file both establish explicit loading. Reading another
@@ -64,7 +64,7 @@ skill while choosing the specialist is allowed; grade the implementation route a
       threshold: 0.85,
       evidence,
       maxArtifactExcerpt: 20_000,
-      criteria: `Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. The specialist handoff produces a useful local result: the Salesforce Record Type
+      criteria: `The specialist handoff produces a useful local result: the Salesforce Record Type
 deployer field is changed from a raw string to a Spectral data-source configuration variable
 backed by a Salesforce record-type data source and the existing Salesforce connection. Judge the
 handoff and successful project build; detailed specialist correctness belongs to the
@@ -76,7 +76,7 @@ prismatic-integrations skill's evaluations.`,
       scoring: "continuous",
       threshold: 0.8,
       evidence,
-      criteria: `Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. Executed Prism results establish component publication and import and verification of a fresh review integration in the target Prismatic organization. The final answer reports actual checks and publication without claiming customer deployment or live Salesforce behavior. Preserve unrelated resources and external accounts. Final claims or planned commands do not establish publication; abstain if necessary evidence is missing or truncated.`,
+      criteria: `Executed Prism results establish component publication and import and verification of a fresh review integration in the target Prismatic organization. The final answer reports actual checks and publication without claiming customer deployment or live Salesforce behavior. Preserve unrelated resources and external accounts. Final claims or planned commands do not establish publication.`,
     },
   ],
   meta: {

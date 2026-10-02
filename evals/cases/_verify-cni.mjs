@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { runCheck as commandCheck } from "../../run-check.mjs";
+import { pathToFileURL } from "node:url";
+import { prismRoot } from "../prism.ts";
 
 const excluded = new Set([
   "node_modules",
@@ -39,7 +40,7 @@ export const findCniProjects = async (root) => {
   return projects;
 };
 
-export const verifyCni = async (root, { timeoutMs = 120_000, run } = {}) => {
+export const verifyCni = async (root, { run = spawnSync } = {}) => {
   const projects = await findCniProjects(root);
   if (projects.length !== 1)
     return {
@@ -49,15 +50,21 @@ export const verifyCni = async (root, { timeoutMs = 120_000, run } = {}) => {
     };
   const { directory, manifest } = projects[0];
   const checks = [];
-  const runCheck = (script, command, args) =>
-    checks.push(
-      commandCheck(
-        script,
-        { cwd: directory, timeout: timeoutMs, run },
-        command,
-        args,
-      ),
-    );
+  const runCheck = (script, command = "npm", args = ["run", script]) => {
+    // Keep children in Lux's process group so its assertion timeout owns cleanup.
+    const result = run(command, args, {
+      cwd: directory,
+      env: process.env,
+      stdio: "inherit",
+      shell: process.platform === "win32" && command === "npm",
+    });
+    checks.push({
+      script,
+      status: result.status === 0 && !result.error ? "passed" : "failed",
+      exitCode: result.status,
+      error: result.error?.message ?? null,
+    });
+  };
   if (!manifest.scripts?.build)
     checks.push({
       script: "build",
@@ -71,17 +78,18 @@ export const verifyCni = async (root, { timeoutMs = 120_000, run } = {}) => {
   const built = checks.some(
     (check) => check.script === "build" && check.status === "passed",
   );
-  // Prism 11 selects root index.js, then dist/index.js, regardless of main.
   if (built)
-    runCheck("entry-load", process.execPath, [
-      fileURLToPath(new URL("./_load-cni-entry.mjs", import.meta.url)),
-      directory,
+    runCheck("registration", process.execPath, [
+      resolve(prismRoot, "lib/run.js"),
+      "integrations",
+      "validate",
+      "--format",
+      "json",
     ]);
   return {
     ok: checks.every((check) => check.status === "passed"),
     project: directory,
     checks,
-    entryLoad: built ? "checked" : "unassessed",
   };
 };
 
