@@ -13,11 +13,10 @@ export const findCniProjects: (
 >;
 export const verifyCni: (
   root: string,
-  options?: { timeoutMs?: number; run?: typeof spawnSync },
+  options?: { run?: typeof spawnSync },
 ) => Promise<{
   ok: boolean;
   error?: string;
   project?: string;
   checks: CheckResult[];
-  entryLoad?: "checked" | "unassessed";
 }>;

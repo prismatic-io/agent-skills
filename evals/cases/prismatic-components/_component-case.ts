@@ -5,7 +5,6 @@ import {
   type RubricEvidence,
   subjectPath,
 } from "@prismatic-io/lux";
-import { prismBin, prismEnv } from "../../prism.ts";
 
 export interface ComponentCase {
   id: string;
@@ -71,7 +70,7 @@ export const componentAssertions = (
   ) =>
     makeRubric(
       id,
-      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nGrade only this criterion proportionally on a continuous 0–1 scale, weighting the requested outcomes by their importance. Use intermediate values throughout the range; acceptance thresholds must not change the score. Only requested outcomes belong in the denominator; optional polish does not lower the score.  Strong means sufficiently successful for this task, not perfect; useful improvements may remain at any score. Give proportional credit for working parts and explain a strength plus a useful improvement when supported; do not invent shortcomings or force a bell curve.  Judge the request actually received, not undisclosed evaluator preferences. Local mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, publication, and baseline compatibility are independently checked by component-checks; do not demand their command output in this source-focused evidence. Files selected (N of M) counts evidence-selector matches among captured artifacts, not failed capture. Do not infer missing tests solely from N < M or speculate about unlisted test files. Judge the supplied inventory and contents; abstain when relevant evidence is actually unavailable or incomplete.`,
+      `${spec.contract && id !== "nondeveloper-experience" ? `Authoritative service contract for this case: ${spec.contract}\n\n` : ""}${criteria}\n\nLocal mocked verification is expected; live service verification is not required. For implementation criteria, inspect the actual code; score missing test coverage under meaningful-tests, not as proof that correct code is unimplemented. Build, test execution, registered behavior, and baseline compatibility are independently checked by component-checks; publication is assessed separately by platform-scope; do not demand their command output in this source-focused evidence.`,
       overrides,
     );
   return [
@@ -81,11 +80,8 @@ export const componentAssertions = (
       type: "command-exits-zero",
       requiresExecutionWorkspace: true,
       command: `node ${shellQuote(resolve(import.meta.dirname, "_check-component.ts"))}${spec.mode === "edit" && spec.fixture ? ` --baseline ${shellQuote(spec.fixture)} --case ${shellQuote(resolve(import.meta.dirname, `${spec.id}.ts`))}` : ""}`,
-      env: {
-        PATH: `${prismBin}:${process.env.PATH}`,
-        PRISM_AGENT: "1",
-      },
-      inheritEnv: prismEnv,
+      env: { PATH: process.env.PATH ?? "", CI: "true" },
+      inheritEnv: [],
       timeout: "10 minutes",
     },
     ...(spec.operations.length
@@ -127,7 +123,7 @@ export const componentAssertions = (
       ? [
           rubric(
             "meaningful-tests",
-            `Score authored tests as continuous evidence of the requested behavior. Relevant scenarios include: ${list(spec.tests)}.${spec.apiFailure === false ? " This change does not require a new API failure test." : " A genuine API failure path strengthens confidence; one is enough, without repeating it for every action."} Give proportional credit for correctly exercised paths and discriminating assertions. A missing boundary reduces confidence rather than making all useful coverage worthless. Prefer tests that exercise registered behavior and service-shaped responses; equivalent approaches are valid. Scaffold tests, assertions detached from the implementation, or a claim that tests passed provide little evidence. Mocks that repeat an incorrect assumption weaken confidence. Existing baseline tests support compatibility but do not alone prove the requested change. For metadata-only changes, registered metadata assertions plus existing runtime coverage can suffice; do not require a schema library or duplicate runtime tests.`,
+            `Assess authored tests for the requested behavior. Relevant scenarios include: ${list(spec.tests)}.${spec.apiFailure === false ? " This change does not require a new API failure test." : " A genuine API failure path strengthens confidence; one is enough, without repeating it for every action."} A missing boundary reduces confidence rather than making all useful coverage worthless. Prefer tests that exercise registered behavior and service-shaped responses; equivalent approaches are valid. Scaffold tests, assertions detached from the implementation, or a claim that tests passed provide little evidence. Mocks that repeat an incorrect assumption weaken confidence. Existing baseline tests support compatibility but do not alone prove the requested change. For metadata-only changes, registered metadata assertions plus existing runtime coverage can suffice; do not require a schema library or duplicate runtime tests.`,
           ),
         ]
       : []),
@@ -155,7 +151,7 @@ export const componentAssertions = (
         maxToolChars: 60_000,
       },
       criteria:
-        "Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. Executed Prism results establish publication of the requested fresh component in the target Prismatic organization, preserving unrelated platform resources and external-service accounts. The handoff must not claim customer deployment or live external-service verification without evidence. No real credentials may be printed, embedded in source, or exposed in command literals. Final claims alone do not establish publication; abstain if necessary evidence is unavailable or truncated.",
+        "Executed Prism results establish publication and availability of the requested fresh component in the target Prismatic organization. For requested changes to designer inputs, outputs, or triggers, assess published member metadata against the requested capability. A separately built review copy may have a different key, label, or directory from the maintained source project; matching that source project’s identity or package signature is not required. Credit demonstrated publication, availability, and requested configuration proportionally while preserving unrelated platform resources and external-service accounts. The handoff must not claim customer deployment or live external-service verification without evidence. No real credentials may be printed, embedded in source, or exposed in command literals. Final claims alone do not establish publication.",
     },
     rubric(
       "nondeveloper-experience",
@@ -172,16 +168,10 @@ export const componentAssertions = (
 };
 
 export const defineComponentCase = (spec: ComponentCase) => {
-  const continuation = process.env.PRISM_EVAL_FIXTURE;
-  if (continuation && spec.fixture) {
-    throw new Error(
-      "PRISM_EVAL_FIXTURE cannot replace an authored case fixture",
-    );
-  }
   if (spec.mode === "edit" && !spec.fixture) {
     throw new Error("Edit cases require an authored component fixture");
   }
-  const fixture = spec.fixture ?? continuation;
+  const fixture = spec.fixture;
   const workspace =
     spec.mode === "edit"
       ? "Update the component in this directory without breaking existing integrations."
@@ -203,7 +193,7 @@ export const defineComponentCase = (spec: ComponentCase) => {
         spec.id,
         ...(spec.tags ?? []),
         spec.mode ?? "create",
-        continuation ? "continuation" : "train",
+        "train",
       ],
     },
   });

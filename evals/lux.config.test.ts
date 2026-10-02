@@ -9,3 +9,16 @@ test("drivers and every profile omit Prism read-only policy", () => {
     "codex",
   ]);
 });
+
+test("the Codex profile switches subject, persona, and judge together", () => {
+  const profile = config.profiles?.codex;
+  const harness = {
+    provider: "codex",
+    inheritEnv: [],
+    model: codexDriver.config.model,
+    reasoningEffort: codexDriver.config.reasoningEffort,
+  };
+  assert.deepEqual(profile?.driver, codexDriver);
+  assert.deepEqual(profile?.answerer, { name: "persona", config: harness });
+  assert.deepEqual(profile?.harness, harness);
+});

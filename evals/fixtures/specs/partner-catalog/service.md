@@ -1,7 +1,7 @@
 # Partner Catalog API, version 1
 
-This fictional service contract was authored for these evaluations. The .invalid
-host is intentionally not live. Use mocked HTTP calls for verification.
+This document describes the Partner Catalog API. The example .invalid host is
+not live; use mocked HTTP calls until account credentials are available.
 
 Base URL: https://catalog.partner.invalid/v1
 

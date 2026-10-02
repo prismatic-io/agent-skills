@@ -5,12 +5,13 @@
     "": {
       "name": "@prismatic-io/agent-skills-evals",
       "devDependencies": {
-        "@prismatic-io/lux": "0.0.2-preview.33",
+        "@prismatic-io/lux": "0.0.2-preview.37",
         "@prismatic-io/spectral": "10.30.3",
         "ajv": "8.18.0",
         "ajv-draft-04": "1.0.0",
         "typescript-compiler-api": "npm:typescript@5.6.1-rc",
         "vitest": "4.1.11",
+        "yaml": "2.9.1",
       },
     },
   },
@@ -85,7 +86,7 @@
 
     "@oxc-project/types": ["@oxc-project/types@0.142.0", "", {}, "sha512-7W+2q5AKQVU36fkaryontrHn3YDt1RyUYXatw9i5H8ocYe2sPKSFB6eS8WNPeRKiN1qAWWZUPm7gwFzJGrccqQ=="],
 
-    "@prismatic-io/lux": ["@prismatic-io/lux@0.0.2-preview.33", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "@vscode/windows-process-tree": "0.8.0", "incur": "^0.5.1", "oxc-parser": "^0.142.0", "tempy": "^3.2.0", "tinyexec": "1.2.4", "tinyglobby": "^0.2.17", "xstate": "5.32.0", "zod": "^4.4.3" }, "bin": { "lux": "lib/cli/bin.js" } }, "sha512-gikyDcii17RYVtQ2WD45a9nK4mH9sUHAX91hK8kEbRZa6GIhvqHl4voRr2htaq7FHJxRTpWOV+04E3VU92GulA=="],
+    "@prismatic-io/lux": ["@prismatic-io/lux@0.0.2-preview.37", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "@vscode/windows-process-tree": "0.8.0", "incur": "^0.5.1", "oxc-parser": "^0.142.0", "tempy": "^3.2.0", "tinyexec": "1.2.4", "tinyglobby": "^0.2.17", "xstate": "5.32.0", "yaml": "^2.9.0", "zod": "^4.4.3" }, "bin": { "lux": "lib/cli/bin.js" } }, "sha512-vfkCrqupw1mBxl2k5LHdvsW4t0CXf7w5iXOgOZNimh9dq80YU/xxpAQ0OKRlTMHXVHjFz9XjllhXIvLQCi2epQ=="],
 
     "@prismatic-io/spectral": ["@prismatic-io/spectral@10.30.3", "", { "dependencies": { "axios": "^1.19.0", "axios-retry": "^4.5.0", "date-fns": "^4.4.0", "ejs": "^6.0.1", "form-data": "^4.0.6", "jest-mock": "^30.4.1", "lodash": "^4.18.1", "object-sizeof": "^2.6.4", "prettier": "^3.9.6", "safe-stable-stringify": "^2.5.0", "valid-url": "1.0.9", "yaml": "^2.9.0" }, "bin": { "component-manifest": "bin/component-manifest.js", "cni-component-manifest": "bin/cni-component-manifest.js" } }, "sha512-AJW8KGxHxdrA4agvhZYkWQ8ko1Q5KIwviznRYqn67QgED6ProbNgpzE6If+EqxwqBdZP7C61mZobXfiJ71ZIxw=="],
 

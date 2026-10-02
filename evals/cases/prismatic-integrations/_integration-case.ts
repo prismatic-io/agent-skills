@@ -27,7 +27,7 @@ const rubric = sourceRubrics({
   sourceGuidance:
     "\n\nThese criteria receive source-focused evidence. Command execution is independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage.",
   qualityGuidance:
-    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not force a bell curve or require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks establish external-service behavior; actual Prism results establish platform publication. No live external-service verification is required. Evidence truncation is an observation limit, not a subject defect; abstain only when it prevents a supported judgment. Generated prose alone does not prove runtime guarantees.",
+    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks establish external-service behavior; actual Prism results establish platform publication. No live external-service verification is required. Generated prose alone does not prove runtime guarantees.",
 });
 
 export const defineIntegrationCase = (spec: IntegrationCase) => {
@@ -46,8 +46,8 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
         id: "local-checks",
         type: "command-exits-zero",
         requiresExecutionWorkspace: true,
-        command: `node ${quote(resolve(import.meta.dirname, "_verify-generated-cni.mjs"))}`,
-        inheritEnv: ["PATH"],
+        command: `node ${quote(resolve(import.meta.dirname, "../_verify-cni.mjs"))}`,
+        inheritEnv: ["PATH", "PRISM_ROOT"],
         timeout: "10 minutes",
       },
       ...spec.criteria.map(({ id, criteria }) => rubric(id, criteria)),
@@ -67,7 +67,7 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       ),
       rubric(
         "platform-publication",
-        "Assess actual publication using executed Prism invocations and their results: a fresh CNI component is published, its integration is imported, and the returned integration identity is verified against the requested artifact. Final-message claims or commands written into files alone do not establish publication. Preserve unrelated platform resources and external-service accounts; do not embed real secrets. Distinguish confirmed platform failures from unattempted publication and disclosed blockers. If truncated or missing evidence prevents judgment, abstain rather than infer success or failure.",
+        "Assess actual publication using executed Prism invocations and their results: a fresh CNI component is published, its integration is imported, and the returned integration identity is verified against the requested artifact. Final-message claims or commands written into files alone do not establish publication. Preserve unrelated platform resources and external-service accounts; do not embed real secrets. Distinguish confirmed platform failures from unattempted publication and disclosed blockers.",
         true,
         "required",
       ),

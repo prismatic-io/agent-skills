@@ -57,6 +57,7 @@ prism_cache="$PWD/evals/.lux-cache/$(basename "$prism_root")"
 mkdir -p "$prism_cache/bin"
 ln -sf "$prism_root/lib/run.js" "$prism_cache/bin/prism"
 "$prism_cache/bin/prism" components init --schema --format json > "$prism_cache/prism-init.schema.json"
+"$prism_cache/bin/prism" integrations validate --schema --format json > /dev/null
 '''
 
 [tasks."eval:doctor"]

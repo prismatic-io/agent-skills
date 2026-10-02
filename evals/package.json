@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@prismatic-io/lux": "0.0.2-preview.33",
+    "@prismatic-io/lux": "0.0.2-preview.37",
     "@prismatic-io/spectral": "10.30.3",
     "ajv": "8.18.0",
     "ajv-draft-04": "1.0.0",
+    "typescript-compiler-api": "npm:typescript@5.6.1-rc",
     "vitest": "4.1.11",
-    "typescript-compiler-api": "npm:typescript@5.6.1-rc"
+    "yaml": "2.9.1"
   },
   "scripts": {
     "typecheck": "npm --prefix .. run typecheck -- --project evals/tsconfig.json",

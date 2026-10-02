@@ -35,8 +35,6 @@ export default defineComponentCase({
 });
 
 export const check: EditCheck = {
-  kind: "actions",
-  member: () => "createTask",
   feature: async ({ component, harness, connection, calls, controls }) => {
     const input = component.actions.createTask.inputs.find(
       ({ key }) => key === "projectId",
@@ -48,15 +46,15 @@ export const check: EditCheck = {
     );
     const first = await harness.dataSource(input.dataSource, { connection });
     assert.ok(Array.isArray(first.result));
-    assert.deepEqual(
-      [...first.result].sort((a, b) =>
-        String(object(a).key).localeCompare(String(object(b).key)),
-      ),
-      [
-        { key: "a/b", label: "Same name" },
-        { key: "p2", label: "Same name" },
-      ],
-    );
+    const choices = first.result.map(object);
+    assert.deepEqual(choices.map(({ key }) => key).sort(), ["a/b", "p2"]);
+    for (const choice of choices) {
+      assert.equal(typeof choice.label, "string");
+      assert.ok(
+        String(choice.label).includes("Same name"),
+        "Project option must retain its name; duplicate names may include distinguishing details",
+      );
+    }
     assert.equal(calls.at(-1)?.path, "/projects");
     controls.emptyProjects = true;
     assert.deepEqual(

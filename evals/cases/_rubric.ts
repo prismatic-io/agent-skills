@@ -50,6 +50,6 @@ export const sourceRubrics = (policy: {
         }
       : evidence,
     maxArtifactExcerpt: 20_000,
-    criteria: `${criteria}${interaction ? "" : policy.sourceGuidance}\n\nScore this criterion continuously from 0 to 1 in proportion to the requested outcomes demonstrated, weighting their importance to the user. Credit independently working parts even when another part is missing or incorrect. Use intermediate values throughout the range; do not round to a verdict, impose score bands, or change a score to cross an acceptance threshold. Zero means no demonstrated credit and one means the requested outcome is fully demonstrated. Optional polish is not part of the denominator. Explain the evidence, strengths, and remaining gaps without inventing shortcomings. ${policy.qualityGuidance}`,
+    criteria: `${criteria}${interaction ? "" : policy.sourceGuidance}\n\n${policy.qualityGuidance}`,
   });
 };

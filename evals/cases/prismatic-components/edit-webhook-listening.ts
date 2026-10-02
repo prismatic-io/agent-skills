@@ -43,8 +43,6 @@ export default defineComponentCase({
 });
 
 export const check: EditCheck = {
-  kind: "triggers",
-  member: () => "contactChanged",
   feature: async ({
     component,
     connection,

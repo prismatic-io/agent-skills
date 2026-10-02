@@ -7,8 +7,15 @@ export const codexDriver = {
   name: "codex",
   config: {
     model: "gpt-6.1-sol",
-    reasoningEffort: "low",
+    reasoningEffort: "low" as const,
     addDirs: [subjectPath("")],
+    skillDirs: [
+      subjectPath("orby"),
+      subjectPath("prismatic-components"),
+      subjectPath("prismatic-integrations"),
+      subjectPath("prismatic-migrate"),
+      subjectPath("prismatic-embedded"),
+    ],
     inheritEnv: [
       "PRISM_ROOT",
       "PRISM_CONFIG_FILE",
@@ -46,6 +53,7 @@ export const claudeDriver = {
     model: "claude-sonnet-5",
     reasoningEffort: "medium",
     addDirs: codexDriver.config.addDirs,
+    skillDirs: codexDriver.config.skillDirs,
     inheritEnv: codexDriver.config.inheritEnv,
     interactionMode: "defer-resume",
     permissionMode: "default",
@@ -53,11 +61,7 @@ export const claudeDriver = {
     turnTimeout: "45 minutes",
     maxInterrupts: 8,
     isolation: codexDriver.config.isolation,
-    env: {
-      ...codexDriver.config.env,
-      CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1",
-      CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
-    },
+    env: codexDriver.config.env,
   },
 } satisfies LuxConfig["defaultDriver"];
 
@@ -85,7 +89,24 @@ const config: LuxConfig = {
 
 config.profiles = {
   "claude-code": { driver: claudeDriver },
-  codex: { driver: codexDriver },
+  codex: {
+    driver: codexDriver,
+    answerer: {
+      name: "persona",
+      config: {
+        provider: "codex",
+        inheritEnv: [],
+        model: codexDriver.config.model,
+        reasoningEffort: codexDriver.config.reasoningEffort,
+      },
+    },
+    harness: {
+      provider: "codex",
+      inheritEnv: [],
+      model: codexDriver.config.model,
+      reasoningEffort: codexDriver.config.reasoningEffort,
+    },
+  },
 };
 
 export default config;
