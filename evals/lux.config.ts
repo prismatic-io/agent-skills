@@ -6,7 +6,7 @@ import {
   type LuxConfig,
   subjectPath,
 } from "@prismatic-io/lux";
-import { prismBin, prismRoot } from "./prism.ts";
+import { evalBin, evalModules } from "./tools.ts";
 
 export const codexDriver = {
   name: "codex",
@@ -21,12 +21,7 @@ export const codexDriver = {
       subjectPath("prismatic-migrate"),
       subjectPath("prismatic-embedded"),
     ],
-    inheritEnv: [
-      "PRISM_ROOT",
-      "PRISM_CONFIG_FILE",
-      "PRISM_PROFILE",
-      "PRISMATIC_URL",
-    ],
+    inheritEnv: ["PRISM_CONFIG_FILE", "PRISM_PROFILE", "PRISMATIC_URL"],
     interactionMode: "app-server",
     config: { features: { default_mode_request_user_input: true } },
     approvalPolicy: "on-request",
@@ -36,8 +31,8 @@ export const codexDriver = {
     isolation: {
       allowRead: [
         subjectPath(""),
-        prismBin,
-        prismRoot,
+        evalBin,
+        evalModules,
         dirname(dirname(process.execPath)),
         ...[
           "/System/Library/OpenSSL/openssl.cnf",
@@ -46,7 +41,7 @@ export const codexDriver = {
       ],
     },
     env: {
-      PATH: `${prismBin}:${dirname(process.execPath)}:${process.env.PATH}`,
+      PATH: `${evalBin}:${dirname(process.execPath)}:${process.env.PATH}`,
       npm_config_cache: ".npm-cache",
     },
   },
@@ -79,11 +74,11 @@ const config: LuxConfig = {
     defineLifecycleHooks({
       name: "existing-development-session",
       pluginVersion: "1",
-      identity: { prism: resolve(prismBin, "prism") },
+      identity: { prism: resolve(evalBin, "prism") },
       setupSuite: async ({ abortSignal }) => {
         const result = await exec(
           process.execPath,
-          [resolve(prismBin, "prism"), "me", "--format", "json"],
+          [resolve(evalBin, "prism"), "me", "--format", "json"],
           { timeoutMs: 60_000, maxBuffer: 64_000, signal: abortSignal },
         );
         if (result.exitCode !== 0 || result.timedOut)

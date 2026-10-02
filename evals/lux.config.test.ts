@@ -9,7 +9,7 @@ vi.mock("@prismatic-io/lux", async (importOriginal) => ({
 }));
 
 import config, { codexDriver } from "./lux.config.ts";
-import { prismBin } from "./prism.ts";
+import { evalBin } from "./tools.ts";
 
 const setupSuite = config.lifecycleFixtures?.[0]?.setupSuite;
 assert.ok(setupSuite);
@@ -46,7 +46,7 @@ for (const endpoint of [
     const [executable, args, options] = nativeExec.mock.calls[0];
     assert.equal(executable, process.execPath);
     assert.deepEqual(args, [
-      resolve(prismBin, "prism"),
+      resolve(evalBin, "prism"),
       "me",
       "--format",
       "json",
