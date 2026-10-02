@@ -1,7 +1,7 @@
 ---
 name: prismatic-integrations
 description: Build, update, and verify a Prismatic Code Native Integration (CNI), including local checks and iterative platform testing. Use for new integration requirements, ongoing CNI development, and debugging flow executions. For assessing or replacing an existing non-Prismatic integration system, prefer prismatic-migrate when available.
-compatibility: Requires Node.js 22+, npm, Prism 11 on PATH, and network access to documentation and packages. Platform verification also requires Prismatic authentication and connections for the intended test environment.
+compatibility: Requires Node.js 22+, npm, Prism 11.0.0-preview.1 or newer on PATH, and network access to documentation and packages. Platform verification also requires Prismatic authentication and connections for the intended test environment.
 ---
 
 # Build a Prismatic integration
@@ -54,8 +54,12 @@ rules.
 
 Install dependencies and run the generated project's typecheck, lint, tests, and
 production build when those scripts exist. After building, run
-`prism integrations validate` to check the compiled integration’s registration
-before importing it. For lifecycle hooks or polling triggers,
+`prism integrations validate` from the project directory to check that Prism can
+load the compiled CNI and validate its local definition before importing it.
+Loading executes the project module, so use it only with trusted projects. This
+local check does not publish the integration or run flows; platform verification
+still establishes remote acceptance and behavior.
+For lifecycle hooks or polling triggers,
 consult [SDK registration boundaries](references/registration.md).
 
 Before importing a requested separate copy, read

@@ -127,3 +127,14 @@ test("migration tests retain access to sibling source files", async () =>
     });
     assert.equal((await verifyCni(root)).ok, true);
   }));
+
+test("published import convention prefers root index.js and ignores package main", async () =>
+  fixture(async (root) => {
+    await project(root, undefined, "missing-custom-entry.js");
+    assert.equal((await verifyCni(root)).ok, true);
+    await writeFile(
+      join(root, "index.js"),
+      "throw new Error('root entry failed');",
+    );
+    assert.equal((await verifyCni(root)).ok, false);
+  }));

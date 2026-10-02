@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { parse } from "yaml";
-import { prismRoot } from "../../prism.ts";
+import { evalModules } from "../../tools.ts";
 
 const project = resolve(process.argv[2] ?? ".", "existing-integration");
 
@@ -22,7 +22,7 @@ assert.equal(build.status, 0, "Existing integration must still build");
 const validation = spawnSync(
   process.execPath,
   [
-    resolve(prismRoot, "lib/run.js"),
+    resolve(evalModules, "@prismatic-io/prism/lib/run.js"),
     "integrations",
     "validate",
     "--format",
