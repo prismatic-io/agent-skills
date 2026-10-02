@@ -13,11 +13,12 @@ try {
     throw new Error("server/app.ts no longer exports createApp()");
   const server = createServer(await createApp());
   server.listen(0, "127.0.0.1", () => {
-    console.log(JSON.stringify({ port: server.address().port }));
+    process.send({ type: "embedded-app-ready", port: server.address().port });
   });
 } catch (error) {
-  console.log(
-    JSON.stringify({ error: `Could not start the app: ${error.message}` }),
-  );
+  process.send({
+    type: "embedded-app-error",
+    error: `Could not start the app: ${error.message}`,
+  });
   process.exitCode = 1;
 }

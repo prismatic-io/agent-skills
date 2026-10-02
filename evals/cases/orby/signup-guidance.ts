@@ -23,7 +23,7 @@ for Acme so we can start building integrations?`,
         maxAgentChars: 20_000,
         maxToolChars: 40_000,
       },
-      criteria: `Grade only this criterion, not the whole task. Score continuously from 0 to 1 in proportion to demonstrated requested outcomes, weighted by their importance. Credit working parts independently; do not round to a verdict or change the score to cross an acceptance threshold. Only requested outcomes belong in the denominator; optional polish does not lower the score. Prismatic account and organization signup must be completed manually
+      criteria: `Prismatic account and organization signup must be completed manually
 by the user. The official contract is https://prismatic.io/docs/configure-prismatic/:
 first sign up to create an organization; if the company already has an organization,
 ask its administrator for access instead of registering another organization.

@@ -53,9 +53,9 @@ boundary that exposes it; when constructing queries, follow the provider's liter
 rules.
 
 Install dependencies and run the generated project's typecheck, lint, tests, and
-production build when those scripts exist. After building, load the compiled
-integration locally with the installed SDK to catch registration errors that
-typechecking and bundling can miss. For lifecycle hooks or polling triggers,
+production build when those scripts exist. After building, run
+`prism integrations validate` to check the compiled integration’s registration
+before importing it. For lifecycle hooks or polling triggers,
 consult [SDK registration boundaries](references/registration.md).
 
 Before importing a requested separate copy, read

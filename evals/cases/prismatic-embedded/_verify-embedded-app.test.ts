@@ -9,7 +9,6 @@ import {
   checkTokenEndpoint,
   claimProblems,
   containsPrivateKey,
-  findBrowserSigning,
   findBundledKey,
   findJwts,
   findPrivateKeys,
@@ -202,25 +201,54 @@ test("reports build output that embeds a build-time key", async () =>
     ]);
   }));
 
-test("reports browser signing and browser-visible signing keys", async () =>
+test("allows client guidance and decode-only JWT use while retaining security probes", async () =>
   workspace(async (root) => {
-    await mkdir(join(root, "client"), { recursive: true });
+    await writeFakeApp(root, sessionToken);
+    await mkdir(join(root, "client"));
+    await mkdir(join(root, "dist"));
     await writeFile(
-      join(root, "client", "token.ts"),
-      'import { SignJWT } from "jose";',
+      join(root, "package.json"),
+      JSON.stringify({
+        dependencies: { "@prismatic-io/embedded": "1.0.0" },
+        scripts: { build: "fixture build" },
+      }),
     );
     await writeFile(
-      join(root, "client", "config.ts"),
-      "export const key = import.meta.env.VITE_PRISMATIC_SIGNING_KEY;",
+      join(root, "client", "session.ts"),
+      `
+// Signing stays on the backend; never use jwt.sign or VITE_PRISMATIC_SIGNING_KEY here.
+import jwt from "jsonwebtoken";
+export const expiry = (token) => jwt.decode(token)?.exp;
+`,
     );
     await writeFile(
-      join(root, "client", "embed.ts"),
-      'await prismatic.authenticate({ token: await (await fetch("/api/prismatic/token")).text() });',
+      join(root, "dist", "index.js"),
+      'const sdkClass = "pio__embedded";',
     );
-    assert.deepEqual((await findBrowserSigning(root)).sort(), [
-      join("client", "config.ts"),
-      join("client", "token.ts"),
-    ]);
+    const run = (() => ({ status: 0 })) as unknown as typeof spawnSync;
+    const result = await verifyEmbeddedApp(root, { run });
+    assert.equal(result.ok, true, JSON.stringify(result.checks));
+    for (const name of [
+      "no-committed-private-keys",
+      "no-bundled-signing-key",
+      "token-endpoint",
+    ])
+      assert.equal(
+        result.checks.find(({ script }) => script === name)?.status,
+        "passed",
+      );
+    await writeFile(
+      join(root, "client", "key.ts"),
+      `export const key = ${JSON.stringify(keys.privateKey)};`,
+    );
+    const exposed = await verifyEmbeddedApp(root, { run });
+    assert.equal(exposed.ok, false);
+    assert.equal(
+      exposed.checks.find(
+        ({ script }) => script === "no-committed-private-keys",
+      )?.status,
+      "failed",
+    );
   }));
 
 test("passes an endpoint that signs session identity", async () =>
@@ -252,6 +280,20 @@ test("fails an endpoint that serves tokens without a session", async () =>
     );
     const problems = await checkTokenEndpoint(root);
     assert.match(problems[0], /unauthenticated request received 200/);
+  }));
+
+test("application JSON logs and partial stdout cannot become readiness messages", async () =>
+  workspace(async (root) => {
+    await mkdir(join(root, "server"), { recursive: true });
+    await writeFile(
+      join(root, "server", "app.ts"),
+      `console.log(JSON.stringify({ port: 1, error: "ordinary application log" }));
+process.stdout.write('{"partial":');
+await new Promise((resolve) => setTimeout(resolve, 10));
+process.stdout.write('true}\\n{"incomplete":');
+${fakeApp(sessionToken)}`,
+    );
+    assert.deepEqual(await checkTokenEndpoint(root), []);
   }));
 
 test("reports an app that cannot start", async () =>
