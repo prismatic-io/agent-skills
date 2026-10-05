@@ -8,9 +8,9 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@prismatic-io/spectral": "10.23.0"
+    "@prismatic-io/spectral": "10.31.1"
   },
   "devDependencies": {
-    "typescript": "5.9.2"
+    "typescript": "7.0.2"
   }
 }
