@@ -27,7 +27,7 @@ const rubric = sourceRubrics({
   sourceGuidance:
     "\n\nThese criteria receive source-focused evidence. Command execution is independently checked by local-checks; do not infer that commands were not run from the terminal-only trace or demand their output here. Judge authored tests by their meaningful coverage.",
   qualityGuidance:
-    "Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks establish external-service behavior; actual Prism results establish platform publication. No live external-service verification is required. Generated prose alone does not prove runtime guarantees.",
+    "Score continuously in proportion to the requested outcomes demonstrated, giving partial credit for working portions without rounding to a verdict or imposing score bands. Omitted or truncated evidence is not an implementation or communication defect; abstain when it prevents a supported judgment. Missing a particular test reduces validation confidence, not credit for correctly implemented behavior. Do not require one file layout, library, auth mechanism, or architecture when an equivalent supported approach works. Prefer the actual user-visible request over unstated evaluator preferences. Local mocks establish external-service behavior; actual Prism results establish platform publication. No live external-service verification is required. Generated prose alone does not prove runtime guarantees.",
 });
 
 export const defineIntegrationCase = (spec: IntegrationCase) => {
@@ -62,12 +62,12 @@ export const defineIntegrationCase = (spec: IntegrationCase) => {
       ),
       rubric(
         "handoff",
-        "Assess communication and interaction: appropriate business questions, deployer configuration and credentials explained, useful handoff describing changes, material assumptions and actual verification. Technical implementation choices should be researched rather than delegated to a nontechnical requester. A sufficient final message is valid; no separate documentation file, tutorial, exhaustive edge-case catalog, or repetition of unchanged setup is required. Do not deduct again for implementation or test gaps already graded elsewhere unless the handoff independently misrepresents them.",
+        "Assess communication and interaction: material business ambiguities resolved through available context, reasonable disclosed assumptions, or questions when necessary; deployer configuration and credentials explained; useful handoff describing changes, material assumptions and actual verification. Asking questions is not itself required. Technical implementation choices should be researched rather than delegated to a nontechnical requester. A sufficient final message is valid; no separate documentation file, tutorial, exhaustive edge-case catalog, or repetition of unchanged setup is required. Do not deduct again for implementation or test gaps already graded elsewhere unless the handoff independently misrepresents them.",
         true,
       ),
       rubric(
         "platform-publication",
-        "Assess actual publication using executed Prism invocations and their results: a fresh CNI component is published, its integration is imported, and the returned integration identity is verified against the requested artifact. Final-message claims or commands written into files alone do not establish publication. Preserve unrelated platform resources and external-service accounts; do not embed real secrets. Distinguish confirmed platform failures from unattempted publication and disclosed blockers.",
+        "Assess actual publication using executed Prism invocations and their results: a fresh CNI component is published, its integration is imported, and the returned integration identity is verified against the requested artifact. A successful CNI import reporting integration and generated component identities establishes bundled component publication; do not require a separate publish command. Interpret follow-up lookup failures against the command's selector contract before treating them as publication failures. Final-message claims or commands written into files alone do not establish publication. Preserve unrelated platform resources and external-service accounts; do not embed real secrets. Distinguish confirmed platform failures from unattempted publication and disclosed blockers.",
         true,
         "required",
       ),
