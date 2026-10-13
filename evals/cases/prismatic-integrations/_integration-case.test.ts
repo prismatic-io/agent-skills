@@ -5,10 +5,10 @@ import { pathToFileURL } from "node:url";
 import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
 
-test("Lux discovers twelve CNI cases with native local verification", async () => {
+test("Lux discovers thirteen CNI cases with native local verification", async () => {
   const discovery = await discoverCases(import.meta.dirname);
   assert.deepEqual(discovery.problems, []);
-  assert.equal(discovery.cases.length, 12);
+  assert.equal(discovery.cases.length, 13);
   const checker = resolve(import.meta.dirname, "../_verify-cni.mjs");
   await access(checker);
   const modes = { create: 0, edit: 0 };
@@ -22,5 +22,5 @@ test("Lux discovers twelve CNI cases with native local verification", async () =
     assert.equal(local.type, "command-exits-zero");
     modes[spec.meta.tags.includes("edit") ? "edit" : "create"]++;
   }
-  assert.deepEqual(modes, { create: 6, edit: 6 });
+  assert.deepEqual(modes, { create: 7, edit: 6 });
 });

@@ -12,11 +12,14 @@ present; otherwise scaffold one with `prism integrations:init <name>`. Use
 capabilities. Prefer Prism's generated project and toolchain over custom
 scaffolding.
 
-Research the connected services in their official documentation. Use
+Research the connected services in their official documentation. Before choosing
+an architecture, consult [Prismatic's documentation index](https://prismatic.io/docs/llms.txt)
+for relevant patterns and prefer Prismatic's documented approaches when they fit
+the request and existing project. Use
 [Prismatic's CNI docs](https://prismatic.io/docs/integrations/code-native/),
 [CNI examples](https://github.com/prismatic-io/examples/tree/main/integrations/code-native),
 installed manifest documentation, and installed `@prismatic-io/spectral` public
-types for current SDK patterns.
+types to verify the chosen approach.
 
 Translate the request into triggers, source and destination operations,
 deployer-owned configuration, expected volume, customer-specific mapping, and
