@@ -3,10 +3,7 @@
   <h1>Prismatic Agent Skills</h1>
 </div>
 
-Reusable skills for AI agents working with [Prismatic](https://prismatic.io/).
-This repository is organized as a collection of independently installable skills
-using the [Agent Skills format](https://agentskills.io/specification) and
-[Vercel's skills CLI](https://github.com/vercel-labs/skills).
+Reusable skills for AI agents working with [Prismatic](https://prismatic.io/), covering platform operations, custom connectors, code-native integrations, migrations, and embedded experiences. Each skill is independently installable and uses the [Agent Skills format](https://agentskills.io/specification).
 
 [![skills.sh](https://skills.sh/b/prismatic-io/agent-skills)](https://skills.sh/prismatic-io/agent-skills)
 
@@ -22,57 +19,18 @@ using the [Agent Skills format](https://agentskills.io/specification) and
 
 ## Installation
 
-Once skills are published, use Node.js and npm to browse and install them:
+With Node.js and npm installed, choose skills and your agent interactively:
 
 ```sh
-# Preview the available skills.
-npx skills add prismatic-io/agent-skills --list
-
-# Choose skills and agents interactively.
 npx skills add prismatic-io/agent-skills
-
-# Install the whole collection for a chosen agent.
-npx skills add prismatic-io/agent-skills --skill '*' --agent claude-code
 ```
 
-For one skill, replace `SKILL_NAME` with a name from the catalog:
+Run `npx skills update` to update installed skills.
+See the [skills CLI](https://github.com/vercel-labs/skills) for installation options.
 
-```sh
-npx skills add prismatic-io/agent-skills --skill SKILL_NAME
-```
+## Contributing
 
-Installation is project-scoped by default; add `--global` for your user account.
-The CLI supports multiple agents; select yours with `--agent` or the interactive
-prompt. Read each skill's prerequisites before use.
-
-Update installed skills with:
-
-```sh
-npx skills update
-```
-
-## Development
-
-Skills live in `skills/<skill-name>/SKILL.md`. Each folder contains its own
-instructions and any supporting scripts, references, or assets.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, and
-[AGENTS.md](AGENTS.md) for authoring guidance.
-See [evals/README.md](evals/README.md) for the Lux workflow and current coverage.
-Run a specific skill with `mise run eval:run -- prismatic-integrations`;
-use a canonical case ID for tighter iteration and native Lux profiles for comparisons.
-
-## Releases
-
-Skills are distributed directly from GitHub. Default-branch changes are available
-to new installs; existing users run `npx skills update`. No npm publish is required.
-Optional repository-wide tags and GitHub Releases can mark milestones.
-
-Before publishing, run `mise run release:check` and `mise run skills:list`.
-The release check requires a nonempty catalog.
-
-[skills.sh listing](https://skills.sh/docs/faq) follows installation telemetry.
-Use [skills.sh.json](https://skills.sh/docs/customize) to group published skills;
-[packs](https://skills.sh/docs/packs) optionally bundle skills across repositories.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development, evaluations, and releases.
 
 ## What is Prismatic?
 
@@ -90,9 +48,23 @@ With Prismatic, you can:
 - Run integrations in a secure, scalable infrastructure designed for B2B SaaS
 - Customize the platform to fit your product, industry, and development workflows
 
+## Who uses Prismatic?
 
-For more information, visit our [website](https://prismatic.io/) and [documentation](https://prismatic.io/docs/).
+Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
+
+Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
+
+## What kind of integrations can you build using Prismatic?
+
+Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
+
+- Connect your product with customers' ERPs, CRMs, and other business systems
+- Process data from multiple sources with customer-specific transformation requirements
+- Automate workflows with customizable triggers, actions, and schedules
+- Handle complex authentication flows and data mapping scenarios
+
+For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
 
 ## License
 
-[MIT](LICENSE), consistent with Prism.
+This repository is MIT licensed.
