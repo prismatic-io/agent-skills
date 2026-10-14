@@ -1,7 +1,7 @@
 ---
 name: prismatic-integrations
 description: Build, update, and verify a Prismatic Code Native Integration (CNI), including local checks and iterative platform testing. Use for new integration requirements, ongoing CNI development, and debugging flow executions. For assessing or replacing an existing non-Prismatic integration system, prefer prismatic-migrate when available.
-compatibility: Requires Node.js 22+, npm, Prism 11.0.0-preview.1 or newer on PATH, and network access to documentation and packages. Platform verification also requires Prismatic authentication and connections for the intended test environment.
+compatibility: Requires Node.js 22+, npm, Prism CLI (npm package @prismatic-io/prism) v11 or higher on PATH, and network access to documentation and packages. Platform operations also require Prismatic authentication and any connections needed for the intended environment.
 ---
 
 # Build a Prismatic integration

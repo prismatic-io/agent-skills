@@ -1,7 +1,7 @@
 ---
 name: prismatic-embedded
 description: Embed Prismatic in a customer-facing web application, including a backend endpoint that signs embedded-user JWTs, frontend setup of the @prismatic-io/embedded SDK, and the integration marketplace or other embedded screens. Use when a user wants their customers to find, activate, or configure integrations inside the user's own app, or asks about embedded authentication, signing keys, or the embedded SDK.
-compatibility: Requires Node.js 22+, npm, and a web application with a backend. Prism CLI 11 or later on PATH is optional for organization and signing-key tasks, which also require Prismatic authentication.
+compatibility: Requires Node.js 22+, npm, Prism CLI (npm package @prismatic-io/prism) v11 or higher on PATH, and network access to documentation and packages. Platform operations also require Prismatic authentication and any connections needed for the intended environment.
 ---
 
 # Embed Prismatic
