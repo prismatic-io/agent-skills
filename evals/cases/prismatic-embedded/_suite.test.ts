@@ -6,8 +6,11 @@ import { discoverCases } from "@prismatic-io/lux";
 import { test } from "vitest";
 
 test("Lux discovers the embedded cases with colocated local verification", async () => {
-  const discovery = await discoverCases(import.meta.dirname);
+  const discovery = await discoverCases(resolve(import.meta.dirname, ".."));
   assert.deepEqual(discovery.problems, []);
+  discovery.cases = discovery.cases.filter((entry) =>
+    entry.id.startsWith("prismatic-embedded/"),
+  );
   assert.deepEqual(discovery.cases.map((entry) => entry.id).sort(), [
     "prismatic-embedded/browser-signing-request",
     "prismatic-embedded/create-signing-key",
@@ -22,14 +25,33 @@ test("Lux discovers the embedded cases with colocated local verification", async
       (item: { id: string }) => item.id === "local-checks",
     );
     assert.equal(local.type, "command-exits-zero");
-    const keyCreation = entry.id.endsWith("/create-signing-key");
-    assert.equal(
-      local.command,
-      `node '${checker}' --token-path '/api/prismatic/token'`,
+    assert.equal(local.requiresExecutionWorkspace, true);
+    assert.equal(local.timeout, "15 minutes");
+    const platform = spec.assertions.find(
+      (item: { id: string }) => item.id === "platform-scope",
     );
-    assert.ok(spec.meta.tags.includes("embedded-skill"));
-    assert.equal(spec.fixtures.kind, "dir");
-    await access(resolve(spec.fixtures.path, "server", "app.ts"));
+    assert.equal(platform.evidence.view, "execution");
+    assert.doesNotMatch(
+      String(platform.guidance ?? ""),
+      /source-focused evidence/,
+    );
+    assert.match(platform.criteria, /without replacing existing keys/);
+    const verification = spec.assertions.find(
+      (item: { id: string }) => item.id === "meaningful-tests",
+    );
+    assert.equal(verification.informational, true);
+    assert.equal(verification.evidence.view, "source");
+    const keyCreation = entry.id.endsWith("/create-signing-key");
+    assert.deepEqual(local.command, [
+      process.execPath,
+      checker,
+      "--token-path",
+      "/api/prismatic/token",
+    ]);
+    assert.equal(typeof spec.fixtures, "string");
+    await access(
+      resolve(import.meta.dirname, spec.fixtures, "server", "app.ts"),
+    );
     assert.match(spec.prompt, /prismatic-embedded\/SKILL\.md/);
     assert.doesNotMatch(
       spec.prompt,
@@ -38,7 +60,7 @@ test("Lux discovers the embedded cases with colocated local verification", async
     assert.match(
       spec.prompt,
       keyCreation
-        ? /Create the requested signing key/
+        ? /create our signing key/
         : /existing signing key|existing keys/i,
     );
   }

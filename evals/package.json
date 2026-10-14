@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@prismatic-io/lux": "0.0.2-preview.37",
+    "@prismatic-io/lux": "0.0.2-preview.41",
     "@prismatic-io/prism": "11.0.0-preview.1",
     "@prismatic-io/spectral": "10.30.3",
     "ajv": "8.18.0",

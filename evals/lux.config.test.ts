@@ -19,6 +19,7 @@ test("the Codex profile switches subject, persona, and judge together", () => {
     reasoningEffort: codexDriver.config.reasoningEffort,
   };
   assert.deepEqual(profile?.driver, codexDriver);
-  assert.deepEqual(profile?.answerer, { name: "persona", config: harness });
+  assert.equal(config.defaultAnswerer, undefined);
+  assert.equal(profile?.answerer, undefined);
   assert.deepEqual(profile?.harness, harness);
 });

@@ -2,39 +2,36 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import type { EditCheck, Input, Json } from "./_check-edit.ts";
 import { baselineActions, fields, object } from "./_check-edit.ts";
-import { defineComponentCase } from "./_component-case.ts";
+import * as suite from "./_suite.ts";
 
-export default defineComponentCase({
-  id: "edit-dynamic-input",
-  service: "Partner Records",
-  mode: "edit",
-  fixture: resolve(import.meta.dirname, "../../fixtures/components/records"),
-  request:
+export default suite.defineCase({
+  prompt: suite.prompt(
     "Add one Create Record action to the existing Partner Records connector. Choosing Person should show first name, last name, and email; choosing Company should instead show company name and website. I want the relevant fields to change in the designer, without writing JSON. Keep the existing Create Person action working. API.md has the request formats.",
-  persona:
-    "You are a low-code integration builder. You want one action with a choice of record type and only the fields for that type. Existing integrations use Create Person. No live account is available; publish a separate copy for review.",
-  operations: [
-    "one new Create Record action supporting Person and Company through a dynamic object input",
-  ],
-  contract:
-    "Spectral dynamic object action inputs use { configuration, values } at the SDK invocation boundary. Tests should pass that wrapper to the registered action. The service HTTP request body must contain the selected fields without that wrapper. Do not confuse the SDK input representation with the outbound API body; accepting the documented wrapper at the action boundary is correct.",
-  preserved: [
-    "createPerson with its original connection/firstName/lastName/email inputs and output",
-    "all other existing action and connection contracts",
-  ],
-  criteria: [
+  ),
+  fixtures: "../../fixtures/components/records",
+  assertions: [
     {
+      id: "component-checks",
+      type: "command-exits-zero",
+      command: suite.componentCommand(
+        "--baseline",
+        resolve(import.meta.dirname, "../../fixtures/components/records"),
+        "--case",
+        resolve(import.meta.dirname, "edit-dynamic-input.ts"),
+      ),
+    },
+    {
+      type: "rubric",
       id: "dynamic-record-configurations",
       criteria:
-        "One registered new action uses Spectral dynamic object input configurations declared for Person and Company so the designer can show the appropriate fields. Person calls POST /people with firstName/lastName/email; Company calls POST /companies with companyName/website. For valid inputs from the selected configuration, the API body contains that configuration's fields without the configuration/values envelope. Forwarding the selected values object is acceptable; sanitizing injected fields outside the declared configuration is not required. A static union of all inputs, two separate replacement actions, or JSON text does not meet the request. The original Create Person action remains usable.",
+        "One registered new action uses Spectral dynamic object input configurations declared for Person and Company so the designer can show the appropriate fields. Person calls POST /people with firstName/lastName/email; Company calls POST /companies with companyName/website. For valid inputs from the selected configuration, the API body contains that configuration's fields without the configuration/values envelope. Forwarding the selected values object is acceptable; sanitizing injected fields outside the declared configuration is not required. A static union of all inputs, two separate replacement actions, or JSON text does not meet the request. The original Create Person action remains usable. Spectral dynamic object action inputs use { configuration, values } at the SDK invocation boundary. Tests should pass that wrapper to the registered action. The service HTTP request body must contain the selected fields without that wrapper. Do not confuse the SDK input representation with the outbound API body; accepting the documented wrapper at the action boundary is correct.",
+    },
+    {
+      ...suite.compatibility,
+      criteria:
+        "createPerson with its original connection/firstName/lastName/email inputs and output; all other existing action and connection contracts",
     },
   ],
-  tests: [
-    "both Person and Company configurations execute the registered action with the SDK's actual dynamic input value shape",
-    "valid Person and Company inputs reach their respective endpoints without the configuration/values envelope",
-    "legacy Create Person still works",
-  ],
-  tags: ["edit", "dynamic-input", "compatibility"],
 });
 
 export const check: EditCheck = {

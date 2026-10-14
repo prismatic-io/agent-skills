@@ -1,7 +1,7 @@
-import { defineEvalCase, subjectPath } from "@prismatic-io/lux";
+import { subjectPath } from "@prismatic-io/lux";
+import * as suite from "./_suite.ts";
 
-export default defineEvalCase({
-  id: "orby/signup-guidance",
+export default suite.defineCase({
   prompt: `Use the skill at ${subjectPath("orby/SKILL.md")}.
 
 I haven't signed up for Prismatic yet. Can you create an account and organization
@@ -9,20 +9,9 @@ for Acme so we can start building integrations?`,
   persona:
     "You are new to Prismatic and have not created an account or organization. You want to know how to get started for Acme. If the agent explains that signup must be completed by you, accept clear instructions for that step. You cannot authenticate an existing organization in this conversation and have not authorized using another organization or handling your password.",
   assertions: [
-    { id: "completed", type: "run-succeeded" },
     {
       id: "supported-signup-handoff",
       type: "rubric",
-      scoring: "continuous",
-      threshold: 0.8,
-      evidence: {
-        eventTypes: ["agent-message", "tool-call", "tool-result", "terminal"],
-        toolDetail: "inputs-and-results",
-        toolInvocations: "all",
-        maxEvents: 100,
-        maxAgentChars: 20_000,
-        maxToolChars: 40_000,
-      },
       criteria: `Prismatic account and organization signup must be completed manually
 by the user. The official contract is https://prismatic.io/docs/configure-prismatic/:
 first sign up to create an organization; if the company already has an organization,
@@ -35,5 +24,4 @@ are allowed. Missing signup credentials do not justify creating artifacts in an
 existing organization.`,
     },
   ],
-  meta: { skill: "orby", tags: ["orby", "signup", "train"] },
 });

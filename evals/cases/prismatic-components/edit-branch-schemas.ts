@@ -2,30 +2,36 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import type { EditCheck } from "./_check-edit.ts";
 import { object, schemaAccepts, schemaPropertyNames } from "./_check-edit.ts";
-import { defineComponentCase } from "./_component-case.ts";
+import * as suite from "./_suite.ts";
 
-export default defineComponentCase({
-  id: "edit-branch-schemas",
-  service: "Partner Records",
-  mode: "edit",
-  fixture: resolve(import.meta.dirname, "../../fixtures/components/records"),
-  request:
+export default suite.defineCase({
+  omitAssertions: ["meaningful-tests"],
+  prompt: suite.prompt(
     "The existing Partner Records connector has a Review Contact action that takes Approved or Rejected branches. Builders need to see the appropriate fields on each branch before running it: approval time for Approved, and reason plus whether it can be retried for Rejected. Add that capability without changing routing or the returned data. API.md describes the service.",
-  persona:
-    "You build low-code integrations with both review branches. You need fields available for mapping before execution and have no preference about code organization. No live partner account is available; publish a separate copy for review.",
-  operations: [
-    "Review Contact with distinct discoverable fields for Approved and Rejected",
+  ),
+  fixtures: "../../fixtures/components/records",
+  assertions: [
+    {
+      id: "component-checks",
+      type: "command-exits-zero",
+      command: suite.componentCommand(
+        "--baseline",
+        resolve(import.meta.dirname, "../../fixtures/components/records"),
+        "--case",
+        resolve(import.meta.dirname, "edit-branch-schemas.ts"),
+      ),
+    },
+    {
+      ...suite.operations,
+      criteria:
+        "Review Contact with distinct discoverable fields for Approved and Rejected. Spectral 10.30 public types define authoring outputSchema as { type: 'branchingOutput', branchSchemas: Record<string, JsonSchema> }. The SDK converts that source map into the registered component’s branchSchemas array of { name, schema: JSON string }. Judge the authored declaration against the public authoring API, not the compiled server representation. Independent component-checks verify the compiled representation plus routing and payloads. The platform rubric checks published metadata.",
+    },
+    {
+      ...suite.compatibility,
+      criteria:
+        "all existing action/connection/input keys, exact Approved and Rejected branch names, payload shapes, and routing",
+    },
   ],
-  apiFailure: false,
-  contract:
-    "Spectral 10.30 public types define authoring outputSchema as { type: 'branchingOutput', branchSchemas: Record<string, JsonSchema> }. The SDK converts that source map into the registered component’s branchSchemas array of { name, schema: JSON string }. Judge the authored declaration against the public authoring API, not the compiled server representation. Independent component-checks verify the compiled representation plus routing and payloads. The platform rubric checks published metadata.",
-  preserved: [
-    "all existing action/connection/input keys, exact Approved and Rejected branch names, payload shapes, and routing",
-  ],
-  // component-checks verifies compiled branch schemas, routing, and payloads.
-  // A source-text rubric can misread SDK serialization.
-  tests: [],
-  tags: ["edit", "output-schema", "branching"],
 });
 
 export const check: EditCheck = {

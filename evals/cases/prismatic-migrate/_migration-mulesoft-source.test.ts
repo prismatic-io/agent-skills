@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import { matchesGlob, resolve } from "node:path";
-import { RubricConfigSchema } from "@prismatic-io/lux";
+import { discoverCases, RubricConfigSchema } from "@prismatic-io/lux";
 import { test } from "vitest";
 import authored from "./mulesoft-order-processing.ts";
 
@@ -57,10 +57,17 @@ test("Mule authored rubrics satisfy the actual Lux runtime schema", () => {
 });
 
 test("Mule discovery separates source inputs, review evidence and project checks", async () => {
-  assert.equal(authored.id, "prismatic-migrate/mulesoft-order-processing");
+  const discovery = await discoverCases(resolve(import.meta.dirname, ".."));
+  assert.ok(
+    discovery.cases.some(
+      ({ id }) => id === "prismatic-migrate/mulesoft-order-processing",
+    ),
+  );
   const fixture = authored.fixtures;
-  assert.ok(fixture && typeof fixture === "object" && fixture.kind === "dir");
-  const files = await readdir(fixture.path, { recursive: true });
+  assert.equal(typeof fixture, "string");
+  const files = await readdir(resolve(import.meta.dirname, String(fixture)), {
+    recursive: true,
+  });
   assert.ok(
     files.some((name) =>
       name.endsWith("ProcessingOrdersWithDataweaveAndApikitIT.java"),
@@ -100,10 +107,12 @@ test("Mule discovery separates source inputs, review evidence and project checks
     ({ id }) => id === "report-and-output-contract",
   );
   assert.ok(report?.type === "rubric");
-  assert.match(String(report.criteria), /149\.93/);
-  assert.match(String(report.criteria), /## Grader summary/);
-  assert.match(String(report.criteria), /not fresh native Mule execution/);
-  const evidence = report.evidence as { artifactPatterns: string[] };
+  assert.match(`${report.criteria} ${report.guidance ?? ""}`, /149\.93/);
+  assert.match(
+    JSON.stringify(authored.assertions),
+    /not fresh native Mule execution/,
+  );
+  const evidence = RubricConfigSchema.parse(report).evidence;
   for (const file of [
     "port/output/orders.json",
     "port/output/report.csv",

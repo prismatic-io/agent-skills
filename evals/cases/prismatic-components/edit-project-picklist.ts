@@ -2,36 +2,36 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import type { EditCheck } from "./_check-edit.ts";
 import { object } from "./_check-edit.ts";
-import { defineComponentCase } from "./_component-case.ts";
+import * as suite from "./_suite.ts";
 
-export default defineComponentCase({
-  id: "edit-project-picklist",
-  service: "Partner Tasks",
-  mode: "edit",
-  fixture: resolve(import.meta.dirname, "../../fixtures/components/tasks"),
-  request:
+export default suite.defineCase({
+  prompt: suite.prompt(
     "In the embedded workflow builder, customers using our existing Create Task action should choose a project by name rather than find and paste its ID. Use the projects from their connected account. Keep existing integrations that already supply a project ID working. The connector is here and API.md describes the service.",
-  persona:
-    "You embed Prismatic's workflow builder for customers. They need a dropdown on the action itself, not an integration config wizard. Project names may repeat. No live partner credentials are available; publish a separate copy for review.",
-  operations: [
-    "Create Task with an account-specific project dropdown on the existing projectId input",
-  ],
-  preserved: [
-    "createTask, its projectId/title/connection inputs, apiKey connection, and ID-based API requests",
-  ],
-  criteria: [
+  ),
+  fixtures: "../../fixtures/components/tasks",
+  assertions: [
     {
+      id: "component-checks",
+      type: "command-exits-zero",
+      command: suite.componentCommand(
+        "--baseline",
+        resolve(import.meta.dirname, "../../fixtures/components/tasks"),
+        "--case",
+        resolve(import.meta.dirname, "edit-project-picklist.ts"),
+      ),
+    },
+    {
+      type: "rubric",
       id: "embedded-project-data-source",
       criteria:
         "A registered picklist data source fetches GET /projects with the configured connection and returns names as labels and stable IDs as keys. The existing createTask.projectId input references it by its actual registered data-source key so the embedded workflow builder can use it. Existing direct ID values still work. Duplicate names retain separate ID options; an empty list produces an empty picklist. A config-wizard-only example or hardcoded project model is insufficient.",
     },
+    {
+      ...suite.compatibility,
+      criteria:
+        "createTask, its projectId/title/connection inputs, apiKey connection, and ID-based API requests",
+    },
   ],
-  tests: [
-    "the registered data source uses the provided credentials",
-    "project names map to stable ID values and an empty response gives no options; equivalent meaningful identity-mapping tests are sufficient without a particular duplicate-name fixture",
-    "selecting an ID still creates a task for that project",
-  ],
-  tags: ["edit", "data-source", "embedded-workflow-builder"],
 });
 
 export const check: EditCheck = {
