@@ -1,6 +1,6 @@
 # Working on skills
 
-Use [mise.toml](mise.toml) for development tasks and [README.md](README.md#releases)
+Use [mise.toml](mise.toml) for development tasks and [CONTRIBUTING.md](CONTRIBUTING.md#releases)
 for release guidance.
 
 - Follow the [Agent Skills specification](https://agentskills.io/specification).
