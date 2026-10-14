@@ -1,7 +1,7 @@
 ---
 name: prismatic-components
 description: Build and update Prismatic custom connectors (components), including connections, actions, and triggers for use in low-code integrations. Use when a user needs a connector for a service or changes to an existing component.
-compatibility: Requires Node.js 22+, npm, Prism CLI 11 or later on PATH, and network access to documentation and packages. Publishing and platform tests also require Prismatic authentication.
+compatibility: Requires Node.js 22+, npm, Prism CLI (npm package @prismatic-io/prism) v11 or higher on PATH, and network access to documentation and packages. Platform operations also require Prismatic authentication and any connections needed for the intended environment.
 ---
 
 # Prismatic components

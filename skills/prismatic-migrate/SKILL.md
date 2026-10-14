@@ -1,7 +1,7 @@
 ---
 name: prismatic-migrate
 description: Migrate existing integrations to Prismatic from vendor exports, workflow projects, or bespoke scripts and services. Use when assessing or replacing an existing integration system while preserving its required behavior, including when the source format is unfamiliar or incomplete.
-compatibility: Implementing a CNI requires Node.js 22+, npm, Prism CLI 11 or later on PATH, and network access to documentation and packages. Platform verification also requires Prismatic authentication; running legacy code may require its original runtime.
+compatibility: Requires Node.js 22+, npm, Prism CLI (npm package @prismatic-io/prism) v11 or higher on PATH, and network access to documentation and packages. Platform operations also require Prismatic authentication and any connections needed for the intended environment.
 ---
 
 # Migrate an integration to Prismatic
