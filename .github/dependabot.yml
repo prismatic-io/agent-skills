@@ -14,5 +14,11 @@ updates:
     groups:
       # Combine production and development bumps, including major versions.
       fixture-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      # Security updates bypass the version-update group and PR limit.
+      fixture-security:
+        applies-to: security-updates
         patterns:
           - "*"
